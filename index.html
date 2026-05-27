@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>StockOS — Eirica International</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b27;--surface2:#1c2235;--surface3:#222840;
+  --border:#252d45;--border2:#2f3a5c;
+  --text:#e2e8f8;--text2:#7a88aa;--text3:#3d4d70;
+  --accent:#4f8ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+  --chat-bg:#111827;
+  --font:'Sora',sans-serif;--mono:'IBM Plex Mono',monospace;
+  --r:8px;--r2:12px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden;}
+.app{display:flex;height:100vh;}
+
+/* Sidebar */
+.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.logo{padding:18px 16px 16px;border-bottom:1px solid var(--border);}
+.logo-name{font-size:16px;font-weight:600;letter-spacing:-.5px;}
+.logo-name span{color:var(--accent);}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.05em;text-transform:uppercase;}
+.nav{flex:1;padding:8px 0;}
+.nav-sec{font-size:9px;letter-spacing:.1em;color:var(--text3);padding:12px 16px 4px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:500;transition:all .15s;border-left:2px solid transparent;user-select:none;}
+.nav-item i{font-size:15px;flex-shrink:0;}
+.nav-item:hover{color:var(--text);background:var(--surface2);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(79,142,247,.08);}
+.nav-item .badge-nav{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;margin-left:auto;}
+.sidebar-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;min-height:52px;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar h1{font-size:15px;font-weight:600;letter-spacing:-.3px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:livepulse 2s infinite;flex-shrink:0;}
+@keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5);}50%{opacity:.7;box-shadow:0 0 0 5px rgba(34,197,94,0);}}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.content{flex:1;overflow-y:auto;padding:20px;}
+
+/* Buttons */
+button{font-family:var(--font);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--surface3);border-color:var(--accent);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:#3a7de8;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-danger{border-color:rgba(239,68,68,.4);color:#f87171;}
+.btn-danger:hover{background:rgba(239,68,68,.1);border-color:#ef4444;}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text2);}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--border2);color:var(--text);}
+.btn-chat{background:linear-gradient(135deg,var(--accent),#7c3aed);border:none;color:#fff;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:600;}
+.btn-chat:hover{opacity:.9;background:linear-gradient(135deg,var(--accent),#7c3aed);}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:15px 17px;}
+.metric-icon{font-size:17px;color:var(--text3);margin-bottom:7px;}
+.metric-val{font-size:25px;font-weight:600;font-family:var(--mono);letter-spacing:-.5px;line-height:1;}
+.metric-label{font-size:11px;color:var(--text2);margin-top:4px;}
+.metric-sub{font-size:11px;margin-top:3px;}
+.ok{color:var(--green);}.warn{color:var(--amber);}.bad{color:var(--red);}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);}
+.card-hd{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
+.card-body{padding:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* Tables */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--surface2);text-align:left;padding:8px 11px;color:var(--text2);font-weight:500;font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.015);}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.b-ok{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
+.b-low{background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.25);}
+.b-critical{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+.b-transit{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2);}
+.b-draft{background:var(--surface3);color:var(--text2);border:1px solid var(--border2);}
+.b-received{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
+.b-bra{background:rgba(167,139,250,.12);color:#c4b5fd;border:1px solid rgba(167,139,250,.2);}
+.b-short{background:rgba(52,211,153,.12);color:#6ee7b7;border:1px solid rgba(52,211,153,.2);}
+.b-brief{background:rgba(251,191,36,.12);color:#fde68a;border:1px solid rgba(251,191,36,.2);}
+
+/* Forms */
+input,select,textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:12px;font-family:var(--font);padding:7px 10px;outline:none;width:100%;transition:border .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.1);}
+select option{background:var(--surface2);}
+label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-weight:500;}
+.form-row{display:grid;gap:11px;margin-bottom:12px;}
+.cols2{grid-template-columns:1fr 1fr;}
+.cols3{grid-template-columns:1fr 1fr 1fr;}
+.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:24px;width:550px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+.modal h2{font-size:15px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+.modal-sec{font-size:10px;font-weight:600;color:var(--text2);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;margin-top:2px;}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:13px;align-items:center;}
+.toolbar input{flex:1;}
+.toolbar select{width:auto;flex-shrink:0;}
+
+/* Loc pills */
+.loc-pills{display:flex;flex-wrap:wrap;gap:3px;}
+.loc-pill{font-size:10px;font-family:var(--mono);border-radius:4px;padding:2px 6px;}
+.lp-ok{background:rgba(34,197,94,.1);color:#4ade80;}
+.lp-low{background:rgba(245,158,11,.1);color:#fbbf24;}
+.lp-crit{background:rgba(239,68,68,.1);color:#f87171;}
+.lp-zero{background:var(--surface3);color:var(--text3);}
+
+/* Channel bars */
+.ch-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.ch-row:last-child{border-bottom:none;}
+.ch-bg{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.ch-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* Location cards */
+.loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.loc-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:13px;}
+
+/* Empty */
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;}
+.empty i{font-size:28px;display:block;margin-bottom:8px;}
+
+/* Misc */
+.mono{font-family:var(--mono);font-size:11px;color:var(--text2);}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;padding:10px 16px;border-radius:var(--r2);font-size:12px;font-weight:500;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;transform:translateY(8px);max-width:340px;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* Image upload in chat */
+.img-preview-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.img-preview{position:relative;width:64px;height:64px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border2);}
+.img-preview img{width:100%;height:100%;object-fit:cover;}
+.img-preview-remove{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:#fff;width:16px;height:16px;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.upload-btn{background:transparent;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:5px;font-size:18px;transition:color .15s;flex-shrink:0;}
+.upload-btn:hover{color:var(--accent);}
+.msg-img{width:100%;max-width:280px;border-radius:var(--r);margin-top:6px;border:1px solid var(--border);}
+
+.drop-zone{border:2px dashed var(--border2);border-radius:var(--r2);padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:rgba(79,142,247,.06);}
+.drop-zone i{font-size:40px;color:var(--text3);display:block;margin-bottom:12px;}
+.drop-zone.drag-over i{color:var(--accent);}
+.drop-zone p{font-size:13px;color:var(--text2);line-height:1.7;}
+.drop-zone strong{color:var(--accent);}
+.import-preview{margin-top:16px;}
+.import-row-ok{background:rgba(34,197,94,.05);}
+.import-row-new{background:rgba(79,142,247,.05);}
+.import-row-warn{background:rgba(245,158,11,.05);}
+.import-step{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--border);}
+.import-step:last-child{border-bottom:none;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-body{flex:1;}
+.step-title{font-size:13px;font-weight:600;margin-bottom:4px;}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.7;}
+.col-map{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:8px;font-size:12px;}
+.col-map-arrow{color:var(--text3);font-size:16px;text-align:center;}
+
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ══ ACCESS GATE ══════════════════════════════════════════════════════════ */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.gate-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px 40px 36px;width:360px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.6);}
+.gate-logo{font-size:22px;font-weight:600;letter-spacing:-.5px;margin-bottom:6px;}
+.gate-logo span{color:var(--accent);}
+.gate-sub{font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:32px;}
+.gate-label{font-size:11px;color:var(--text2);text-align:left;margin-bottom:6px;font-weight:500;}
+.gate-input{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;font-family:var(--mono);padding:12px 14px;outline:none;width:100%;text-align:center;letter-spacing:.1em;transition:border .15s;}
+.gate-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.15);}
+.gate-btn{width:100%;margin-top:14px;padding:12px;border-radius:var(--r);border:none;background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:opacity .15s;}
+.gate-btn:hover{opacity:.9;}
+.gate-error{color:var(--red);font-size:12px;margin-top:10px;min-height:18px;}
+.gate-shake{animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+
+/* PO line */
+.po-line-row{display:grid;grid-template-columns:1fr 65px 110px 28px;gap:7px;margin-bottom:7px;align-items:center;}
+
+/* ══ CHAT INTERFACE ═══════════════════════════════════════════════════════ */
+.chat-page{display:flex;flex-direction:column;height:100%;gap:0;}
+.chat-header{padding:0 0 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.chat-header h2{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.chat-header-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.chat-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;flex:1;min-height:0;}
+.chat-main{display:flex;flex-direction:column;min-height:0;}
+.chat-messages{flex:1;overflow-y:auto;background:var(--chat-bg);border:1px solid var(--border);border-radius:var(--r2);padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0;}
+.chat-input-area{margin-top:10px;flex-shrink:0;}
+.chat-input-wrap{display:flex;gap:8px;align-items:flex-end;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 12px;transition:border .15s;}
+.chat-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.1);}
+.chat-input-wrap textarea{background:transparent;border:none;resize:none;color:var(--text);font-size:13px;font-family:var(--font);line-height:1.5;min-height:20px;max-height:100px;flex:1;padding:0;box-shadow:none;}
+.chat-input-wrap textarea:focus{box-shadow:none;border:none;}
+.chat-input-wrap textarea::placeholder{color:var(--text3);}
+.chat-send{background:linear-gradient(135deg,var(--accent),#6d28d9);border:none;color:#fff;width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:opacity .15s;}
+.chat-send:hover{opacity:.85;}
+.chat-send:disabled{opacity:.4;cursor:not-allowed;}
+.chat-hints{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.hint-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s;}
+.hint-pill:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Chat messages */
+.msg{display:flex;gap:10px;animation:msgIn .2s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.msg-avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;}
+.msg-user .msg-avatar{background:linear-gradient(135deg,var(--accent),#6d28d9);}
+.msg-ai .msg-avatar{background:var(--surface3);border:1px solid var(--border2);}
+.msg-body{flex:1;min-width:0;}
+.msg-meta{font-size:10px;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.msg-meta strong{color:var(--text2);font-weight:600;}
+.msg-text{font-size:13px;line-height:1.6;color:var(--text);}
+.msg-user .msg-text{color:var(--text2);}
+.msg-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;margin-top:6px;font-size:12px;}
+.msg-card-title{font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.msg-card-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);}
+.msg-card-row:last-child{border-bottom:none;}
+.msg-card-row span{color:var(--text);}
+.msg-error{color:var(--red);background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-top:6px;}
+.msg-action-row{display:flex;gap:6px;margin-top:8px;}
+.typing{display:flex;align-items:center;gap:4px;padding:4px 0;}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:bounce 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-5px);}}
+
+/* Chat sidebar */
+.chat-sidebar{display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.chat-sidebar-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);}
+.cs-hd{padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--text);}
+.cs-body{padding:12px 14px;}
+.cs-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.cs-row:last-child{border-bottom:none;}
+.cs-label{color:var(--text2);}
+.cs-val{color:var(--text);font-family:var(--mono);font-weight:500;}
+.recent-sale{padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.recent-sale:last-child{border-bottom:none;}
+.recent-sale-top{display:flex;justify-content:space-between;margin-bottom:2px;}
+.recent-sale-sku{font-family:var(--mono);color:var(--text2);}
+.recent-sale-qty{font-family:var(--mono);font-weight:600;color:var(--text);}
+.recent-sale-meta{color:var(--text3);font-size:10px;}
+</style>
+</head>
+<body>
+
+<!-- Access gate -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <img src="data:image/webp;base64,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" style="width:220px;height:auto;display:block;margin:0 auto 4px;" alt="Eirica"/>
+    <div style="font-size:11px;color:#fff;letter-spacing:.08em;text-transform:uppercase;margin-bottom:20px;">Stock, Inventory &amp; Sales System</div>
+    <div class="gate-sub" style="margin-bottom:28px;margin-top:0">Stock Management System</div>
+    <div class="gate-label">Access code</div>
+    <input class="gate-input" id="gate-input" type="password" placeholder="Enter access code" autocomplete="off" />
+    <button class="gate-btn" id="gate-btn">Enter</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo" style="text-align:center;padding:16px 12px 14px;">
+      <img src="data:image/webp;base64,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" style="width:160px;height:auto;display:block;margin:0 auto;" alt="Eirica"/>
+      <div style="font-size:11px;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:8px;line-height:1.4;">Stock, Inventory &amp; Sales System</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+      <div class="nav-item" onclick="nav('master',this)"><i class="ti ti-package"></i>Master stock</div>
+      <div class="nav-item" onclick="nav('orders',this)"><i class="ti ti-truck"></i>Purchase orders</div>
+      <div class="nav-item" onclick="nav('sales',this)"><i class="ti ti-shopping-cart"></i>Sales log</div>
+      <div class="nav-item" onclick="nav('topsellers',this)"><i class="ti ti-trending-up"></i>Top Sellers</div>
+      <div class="nav-sec">Manage</div>
+      <div class="nav-item" onclick="nav('import',this)"><i class="ti ti-file-spreadsheet"></i>Excel Import</div>
+      <div class="nav-item" onclick="nav('settings',this)"><i class="ti ti-settings"></i>Settings</div>
+      <div class="nav-sec">Last Updated</div>
+      <div style="padding:6px 16px 4px;">
+        <div style="font-size:10px;color:var(--text3);line-height:1.9;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><i class="ti ti-shopping-cart" style="font-size:11px;color:var(--text3)"></i><span>Sales</span></div>
+          <div id="sb-last-sale" style="padding-left:16px;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">Amaz UK (WH)</span>
+              <span id="sb-sale-amz-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">Amaz UK (FBA)</span>
+              <span id="sb-sale-amz-ukfba" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">eBay</span>
+              <span id="sb-sale-ebay" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">Amaz India</span>
+              <span id="sb-sale-amz-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">Website (UK)</span>
+              <span id="sb-sale-web-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">Website (India)</span>
+              <span id="sb-sale-web-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.9;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><i class="ti ti-package" style="font-size:11px;color:var(--text3)"></i><span>Stock</span></div>
+          <div style="padding-left:16px;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">🇮🇳 India WH</span>
+              <span id="sb-stock-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">25 May 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">🇬🇧 UK WH</span>
+              <span id="sb-stock-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">25 May 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:9px;color:var(--text3);">🇬🇧 UK FBA</span>
+              <span id="sb-stock-ukfba" style="font-size:9px;color:var(--text2);font-family:var(--mono);">11 May 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div style="flex:1"></div>
+    <div class="nav-item" onclick="nav('chat',this)" id="nav-chat" style="border-top:1px solid var(--border);margin:0;padding:14px 16px;background:rgba(212,175,55,.08);color:#D4AF37;font-weight:600;">
+      <i class="ti ti-bolt"></i>Eirica AI
+    </div>
+
+    <div class="sidebar-foot">
+      <div style="font-size:10px;color:var(--text3);line-height:1.8;">
+        <div>© 2026 Eirica International</div>
+        <div style="color:var(--text3);">Designed &amp; Developed by</div>
+        <div style="color:var(--accent);font-weight:600;letter-spacing:.03em;">Taufique Shaikh</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="live-dot"></div>
+        <h1 id="page-title">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="nav('chat',document.getElementById('nav-chat'))" style="border-color:rgba(212,175,55,.4);color:#D4AF37;"><i class="ti ti-bolt"></i>Eirica AI</button>
+        <button class="btn btn-ghost btn-sm" onclick="showModal('sale')"><i class="ti ti-plus"></i>Log sale</button>
+        <button class="btn btn-primary btn-sm" onclick="showModal('sku')"><i class="ti ti-plus"></i>Add SKU</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="overlay" id="modal-sku" onclick="closeModalClick('sku',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2><i class="ti ti-package" style="color:var(--accent)"></i>Add new SKU variant</h2>
+    <div class="form-row cols2"><div><label>SKU code *</label><input id="f-sku-code" placeholder="e.g. SKU-50001-S-WHI"/></div><div><label>Product name *</label><input id="f-sku-name" placeholder="e.g. BRA S White"/></div></div>
+    <div class="form-row cols3">
+      <div><label>Category</label><select id="f-sku-cat"><option>BRA</option><option>Short</option><option>Brief</option><option>Other</option></select></div>
+      <div><label>Size</label><select id="f-sku-size"><option>S</option><option>M</option><option>L</option><option>XL</option></select></div>
+      <div><label>Colour</label><select id="f-sku-color"><option>White</option><option>Black</option><option>Grey</option><option>Skin</option><option>Brown</option></select></div>
+    </div>
+    <div class="form-row cols2"><div><label>Supplier</label><input id="f-sku-supplier" value="Eirica International"/></div><div><label>Reorder point</label><input id="f-sku-reorder" type="number" value="10" min="0"/></div></div>
+    <div class="modal-sec">Opening stock per location</div>
+    <div class="form-row cols4">
+      <div><label>🇮🇳 India WH</label><input id="f-loc-india" type="number" value="0" min="0"/></div>
+      <div><label>🇮🇳 India FBA</label><input id="f-loc-ifba" type="number" value="0" min="0"/></div>
+      <div><label>🇬🇧 UK WH</label><input id="f-loc-uk" type="number" value="0" min="0"/></div>
+      <div><label>🇬🇧 UK FBA</label><input id="f-loc-ufba" type="number" value="0" min="0"/></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('sku')">Cancel</button><button class="btn btn-primary" onclick="saveSKU()"><i class="ti ti-check"></i>Save SKU</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-sale" onclick="closeModalClick('sale',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2><i class="ti ti-shopping-cart" style="color:var(--green)"></i>Log a sale</h2>
+    <div class="form-row cols2"><div><label>SKU *</label><select id="f-sale-sku"></select></div><div><label>Channel *</label><select id="f-sale-ch"><option>Shopify</option><option>Amazon</option><option>eBay</option><option>Direct</option></select></div></div>
+    <div class="form-row cols2">
+      <div><label>Fulfilled from *</label><select id="f-sale-loc"><option value="india">🇮🇳 India warehouse</option><option value="india-fba">🇮🇳 India FBA</option><option value="uk">🇬🇧 UK warehouse</option><option value="uk-fba">🇬🇧 UK FBA</option></select></div>
+      <div><label>Quantity *</label><input id="f-sale-qty" type="number" value="1" min="1"/></div>
+    </div>
+    <div class="form-row cols2"><div><label>Sale price (£)</label><input id="f-sale-price" type="number" placeholder="0.00" step="0.01"/></div><div><label>Order ref</label><input id="f-sale-ref" placeholder="e.g. AMZ-12345"/></div></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('sale')">Cancel</button><button class="btn btn-primary" onclick="logSale()"><i class="ti ti-check"></i>Log sale</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-po" onclick="closeModalClick('po',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2><i class="ti ti-truck" style="color:var(--blue)"></i>Create purchase order</h2>
+    <div class="form-row cols2"><div><label>Supplier *</label><input id="f-po-supplier" value="Eirica International"/></div><div><label>Expected delivery</label><input id="f-po-date" type="date"/></div></div>
+    <div class="modal-sec">Order lines</div>
+    <div id="po-lines"></div>
+    <button class="btn btn-sm" style="margin-bottom:4px" onclick="addPOLine()"><i class="ti ti-plus"></i>Add line</button>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('po')">Cancel</button><button class="btn btn-primary" onclick="savePO()"><i class="ti ti-check"></i>Create PO</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ CONSTANTS ══════════════════════════════════════════════════════════════
+const LOCS = ['india','india-fba','uk','uk-fba'];
+const LOC_LABEL = {'india':'India WH','india-fba':'India FBA','uk':'UK WH','uk-fba':'UK FBA'};
+const LOC_FULL  = {'india':'India warehouse','india-fba':'India FBA','uk':'UK warehouse','uk-fba':'UK FBA'};
+const LOC_FLAG  = {'india':'🇮🇳','india-fba':'🇮🇳','uk':'🇬🇧','uk-fba':'🇬🇧'};
+const CHANNELS  = ['Shopify','Amazon','eBay','Direct'];
+const CH_COLOR  = {'Shopify':'#96bf48','Amazon':'#ff9900','eBay':'#e53238','Direct':'#4f8ef7'};
+const CAT_BADGE = {'BRA':'b-bra','Short':'b-short','Brief':'b-brief'};
+
+// ══ EIRICA DATA (140 variants from Excel) ══════════════════════════════════
+const EIRICA_DATA = [
+  {sku:"SKU-50001-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:15,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:13,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:8,"india-fba":0,uk:0,"uk-fba":5},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:8,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:14,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:12,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:16,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:15,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:10,"india-fba":0,uk:3,"uk-fba":4},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:14,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:17,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:13,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:16,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:11,"india-fba":0,uk:2,"uk-fba":4},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:11,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:13,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:14,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:14,"india-fba":0,uk:4,"uk-fba":3},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:14,"india-fba":0,uk:4,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:12,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:14,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:12,"india-fba":0,uk:5,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:18,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:15,"india-fba":0,uk:1,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:11,"india-fba":0,uk:1,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:14,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:13,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:15,"india-fba":0,uk:1,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:10,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:9,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:17,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:10,"india-fba":0,uk:6,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:14,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:19,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:12,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-WHI",name:"Short S White",category:"Short",size:"S",color:"White",stock:{india:23,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-WHI",name:"Short M White",category:"Short",size:"M",color:"White",stock:{india:25,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-L-WHI",name:"Short L White",category:"Short",size:"L",color:"White",stock:{india:23,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-WHI",name:"Short XL White",category:"Short",size:"XL",color:"White",stock:{india:26,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-BLA",name:"Short S Black",category:"Short",size:"S",color:"Black",stock:{india:24,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-BLA",name:"Short M Black",category:"Short",size:"M",color:"Black",stock:{india:26,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-L-BLA",name:"Short L Black",category:"Short",size:"L",color:"Black",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-BLA",name:"Short XL Black",category:"Short",size:"XL",color:"Black",stock:{india:19,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-GRE",name:"Short S Grey",category:"Short",size:"S",color:"Grey",stock:{india:27,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-GRE",name:"Short M Grey",category:"Short",size:"M",color:"Grey",stock:{india:29,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-L-GRE",name:"Short L Grey",category:"Short",size:"L",color:"Grey",stock:{india:27,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-GRE",name:"Short XL Grey",category:"Short",size:"XL",color:"Grey",stock:{india:28,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-SKI",name:"Short S Skin",category:"Short",size:"S",color:"Skin",stock:{india:28,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-SKI",name:"Short M Skin",category:"Short",size:"M",color:"Skin",stock:{india:29,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-L-SKI",name:"Short L Skin",category:"Short",size:"L",color:"Skin",stock:{india:28,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-SKI",name:"Short XL Skin",category:"Short",size:"XL",color:"Skin",stock:{india:26,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-BRO",name:"Short S Brown",category:"Short",size:"S",color:"Brown",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-BRO",name:"Short M Brown",category:"Short",size:"M",color:"Brown",stock:{india:24,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-L-BRO",name:"Short L Brown",category:"Short",size:"L",color:"Brown",stock:{india:24,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-BRO",name:"Short XL Brown",category:"Short",size:"XL",color:"Brown",stock:{india:22,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-WHI",name:"Brief S White",category:"Brief",size:"S",color:"White",stock:{india:24,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-WHI",name:"Brief M White",category:"Brief",size:"M",color:"White",stock:{india:39,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-WHI",name:"Brief L White",category:"Brief",size:"L",color:"White",stock:{india:39,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-WHI",name:"Brief XL White",category:"Brief",size:"XL",color:"White",stock:{india:23,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-BLA",name:"Brief S Black",category:"Brief",size:"S",color:"Black",stock:{india:31,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-BLA",name:"Brief M Black",category:"Brief",size:"M",color:"Black",stock:{india:29,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-BLA",name:"Brief L Black",category:"Brief",size:"L",color:"Black",stock:{india:32,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-BLA",name:"Brief XL Black",category:"Brief",size:"XL",color:"Black",stock:{india:36,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-GRE",name:"Brief S Grey",category:"Brief",size:"S",color:"Grey",stock:{india:32,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-GRE",name:"Brief M Grey",category:"Brief",size:"M",color:"Grey",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-GRE",name:"Brief L Grey",category:"Brief",size:"L",color:"Grey",stock:{india:30,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-GRE",name:"Brief XL Grey",category:"Brief",size:"XL",color:"Grey",stock:{india:36,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-SKI",name:"Brief S Skin",category:"Brief",size:"S",color:"Skin",stock:{india:36,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-SKI",name:"Brief M Skin",category:"Brief",size:"M",color:"Skin",stock:{india:28,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-SKI",name:"Brief L Skin",category:"Brief",size:"L",color:"Skin",stock:{india:28,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-SKI",name:"Brief XL Skin",category:"Brief",size:"XL",color:"Skin",stock:{india:20,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-BRO",name:"Brief S Brown",category:"Brief",size:"S",color:"Brown",stock:{india:21,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-BRO",name:"Brief M Brown",category:"Brief",size:"M",color:"Brown",stock:{india:30,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-BRO",name:"Brief L Brown",category:"Brief",size:"L",color:"Brown",stock:{india:25,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-BRO",name:"Brief XL Brown",category:"Brief",size:"XL",color:"Brown",stock:{india:20,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"}
+];
+
+// ══ STATE ══════════════════════════════════════════════════════════════════
+let S = {skus:[], sales:[], pos:[], page:'dashboard'};
+let chatHistory = [];
+
+function loadState(){
+  // Always load fresh from embedded data — don't use stale localStorage data
+  S.skus = JSON.parse(JSON.stringify(EIRICA_DATA));
+  S.sales = []; // always start fresh — sales are injected below from embedded data
+  S.pos = [];
+  // Restore only POs from localStorage
+  try{
+    const d = localStorage.getItem('eirica-v3');
+    if(d){
+      const saved = JSON.parse(d);
+      if(saved.pos) S.pos = saved.pos;
+    }
+  } catch(e){}
+  // Amazon sales 25 May 2026
+  if(!S.sales.find(x=>x.ref==='203-5849208-4713147'&&x.sku==='SKU-50001-XL-WHI')){
+    S.sales.push({sku:'SKU-50001-XL-WHI',channel:'Amazon',loc:'uk',qty:1,price:10.99,ref:'203-5849208-4713147',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='026-3323355-4330738'&&x.sku==='SKU-50006-S-BLA')){
+    S.sales.push({sku:'SKU-50006-S-BLA',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'026-3323355-4330738',date:'2026-05-25'});
+  }
+  // eBay sales 25-26 May 2026
+  if(!S.sales.find(x=>x.ref==='24-14674-51906'&&x.sku==='SKU-50007-M-SKI')){
+    S.sales.push({sku:'SKU-50007-M-SKI',channel:'eBay',loc:'uk',qty:2,price:7.2,ref:'24-14674-51906',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='03-14693-01448'&&x.sku==='SKU-50007-L-SKI')){
+    S.sales.push({sku:'SKU-50007-L-SKI',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'03-14693-01448',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='05-14690-38855'&&x.sku==='SKU-50005-XL-WHI')){
+    S.sales.push({sku:'SKU-50005-XL-WHI',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'05-14690-38855',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='16-14672-86795'&&x.sku==='SKU-50001-L-BLA')){
+    S.sales.push({sku:'SKU-50001-L-BLA',channel:'eBay',loc:'uk',qty:2,price:19.17,ref:'16-14672-86795',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='16-14672-86795'&&x.sku==='SKU-50001-M-BLA')){
+    S.sales.push({sku:'SKU-50001-M-BLA',channel:'eBay',loc:'uk',qty:2,price:19.17,ref:'16-14672-86795',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='18-14669-84215'&&x.sku==='SKU-50007-XL-SKI')){
+    S.sales.push({sku:'SKU-50007-XL-SKI',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'18-14669-84215',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='12-14679-56048'&&x.sku==='SKU-50002-L-BLA')){
+    S.sales.push({sku:'SKU-50002-L-BLA',channel:'eBay',loc:'uk',qty:2,price:10.8,ref:'12-14679-56048',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='13-14679-52075'&&x.sku==='SKU-50005-L-SKI')){
+    S.sales.push({sku:'SKU-50005-L-SKI',channel:'eBay',loc:'uk',qty:1,price:7.29,ref:'13-14679-52075',date:'2026-05-25'});
+  }
+  if(!S.sales.find(x=>x.ref==='21-14668-82474'&&x.sku==='SKU-50007-L-SKI')){
+    S.sales.push({sku:'SKU-50007-L-SKI',channel:'eBay',loc:'uk',qty:3,price:10.23,ref:'21-14668-82474',date:'2026-05-26'});
+  }
+  if(!S.sales.find(x=>x.ref==='17-14675-53744'&&x.sku==='SKU-50005-M-BLA')){
+    S.sales.push({sku:'SKU-50005-M-BLA',channel:'eBay',loc:'uk',qty:1,price:7.29,ref:'17-14675-53744',date:'2026-05-26'});
+  }
+  if(!S.sales.find(x=>x.ref==='11-14685-29832'&&x.sku==='SKU-50002-M-WHI')){
+    S.sales.push({sku:'SKU-50002-M-WHI',channel:'eBay',loc:'uk',qty:2,price:10.29,ref:'11-14685-29832',date:'2026-05-26'});
+  }
+  // Amazon sales 19-23 May 2026
+  if(!S.sales.find(x=>x.ref==='026-5917493-1045133' && x.sku==='SKU-50004-S-SKI')){
+    S.sales.push({sku:'SKU-50004-S-SKI',channel:'Amazon',loc:'uk',qty:1,price:12.99,ref:'026-5917493-1045133',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='026-4538228-9182724' && x.sku==='SKU-50004-M-BLA')){
+    S.sales.push({sku:'SKU-50004-M-BLA',channel:'Amazon',loc:'uk',qty:1,price:12.99,ref:'026-4538228-9182724',date:'2026-05-20'});
+  }
+  if(!S.sales.find(x=>x.ref==='026-4538228-9182724' && x.sku==='SKU-50004-M-SKI')){
+    S.sales.push({sku:'SKU-50004-M-SKI',channel:'Amazon',loc:'uk',qty:1,price:12.99,ref:'026-4538228-9182724',date:'2026-05-20'});
+  }
+  if(!S.sales.find(x=>x.ref==='205-3374946-0733928' && x.sku==='SKU-50006-S-BRO')){
+    S.sales.push({sku:'SKU-50006-S-BRO',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'205-3374946-0733928',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='203-1034602-1469939' && x.sku==='SKU-50001-M-BLA')){
+    S.sales.push({sku:'SKU-50001-M-BLA',channel:'Amazon',loc:'uk',qty:3,price:22.99,ref:'203-1034602-1469939',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='204-5115028-5443526' && x.sku==='SKU-50001-M-WHI')){
+    S.sales.push({sku:'SKU-50001-M-WHI',channel:'Amazon',loc:'uk',qty:1,price:10.99,ref:'204-5115028-5443526',date:'2026-05-22'});
+  }
+  if(!S.sales.find(x=>x.ref==='026-5460869-4328318' && x.sku==='SKU-50006-S-SKI')){
+    S.sales.push({sku:'SKU-50006-S-SKI',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'026-5460869-4328318',date:'2026-05-23'});
+  }
+  if(!S.sales.find(x=>x.ref==='206-7792893-1591503' && x.sku==='SKU-50007-L-WHI')){
+    S.sales.push({sku:'SKU-50007-L-WHI',channel:'Amazon',loc:'uk',qty:2,price:21.98,ref:'206-7792893-1591503',date:'2026-05-23'});
+  }
+  // eBay sales 19-23 May 2026
+  if(!S.sales.find(x=>x.ref==='23-14644-91538'&&x.sku==='SKU-50005-XL-WHI')){
+    S.sales.push({sku:'SKU-50005-XL-WHI',channel:'eBay',loc:'uk',qty:1,price:6.74,ref:'23-14644-91538',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='23-14644-91538'&&x.sku==='SKU-50005-XL-BLA')){
+    S.sales.push({sku:'SKU-50005-XL-BLA',channel:'eBay',loc:'uk',qty:1,price:6.74,ref:'23-14644-91538',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='13-14662-80458'&&x.sku==='SKU-50007-M-BLA')){
+    S.sales.push({sku:'SKU-50007-M-BLA',channel:'eBay',loc:'uk',qty:1,price:3.59,ref:'13-14662-80458',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='21-14650-49860'&&x.sku==='SKU-50005-M-BLA')){
+    S.sales.push({sku:'SKU-50005-M-BLA',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'21-14650-49860',date:'2026-05-21'});
+  }
+  if(!S.sales.find(x=>x.ref==='19-14657-12297'&&x.sku==='SKU-50001-S-WHI')){
+    S.sales.push({sku:'SKU-50001-S-WHI',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'19-14657-12297',date:'2026-05-22'});
+  }
+  if(!S.sales.find(x=>x.ref==='08-14674-62997'&&x.sku==='SKU-50007-XL-BRO')){
+    S.sales.push({sku:'SKU-50007-XL-BRO',channel:'eBay',loc:'uk',qty:1,price:3.59,ref:'08-14674-62997',date:'2026-05-22'});
+  }
+  if(!S.sales.find(x=>x.ref==='01-14687-18018'&&x.sku==='SKU-50006-M-WHI')){
+    S.sales.push({sku:'SKU-50006-M-WHI',channel:'eBay',loc:'uk',qty:1,price:4.09,ref:'01-14687-18018',date:'2026-05-22'});
+  }
+  if(!S.sales.find(x=>x.ref==='12-14671-10132'&&x.sku==='SKU-50006-XL-WHI')){
+    S.sales.push({sku:'SKU-50006-XL-WHI',channel:'eBay',loc:'uk',qty:1,price:4.09,ref:'12-14671-10132',date:'2026-05-23'});
+  }
+  if(!S.sales.find(x=>x.ref==='01-14689-96313'&&x.sku==='SKU-50005-L-GRE')){
+    S.sales.push({sku:'SKU-50005-L-GRE',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'01-14689-96313',date:'2026-05-23'});
+  }
+  if(!S.sales.find(x=>x.ref==='14-14650-76351'+'SKU-50007-M-GRE')){
+    S.sales.push({sku:'SKU-50007-M-GRE',channel:'eBay',loc:'uk',qty:1,price:3.14,ref:'14-14650-76351',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='14-14650-76351'+'SKU-50007-M-BLA')){
+    S.sales.push({sku:'SKU-50007-M-BLA',channel:'eBay',loc:'uk',qty:1,price:3.14,ref:'14-14650-76351',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='14-14650-76351'+'SKU-50007-M-SKI')){
+    S.sales.push({sku:'SKU-50007-M-SKI',channel:'eBay',loc:'uk',qty:1,price:3.14,ref:'14-14650-76351',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='26-14632-95479'+'SKU-50006-L-WHI')){
+    S.sales.push({sku:'SKU-50006-L-WHI',channel:'eBay',loc:'uk',qty:1,price:4.09,ref:'26-14632-95479',date:'2026-05-19'});
+  }
+  // Amazon sales 19 May 2026
+  if(!S.sales.find(x=>x.ref==='026-4442866-2671550')){
+    S.sales.push({sku:'SKU-50007-XL-WHI',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'026-4442866-2671550',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='206-4796616-7670711')){
+    S.sales.push({sku:'SKU-50007-M-BRO',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'206-4796616-7670711',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='204-1485030-5209933')){
+    S.sales.push({sku:'SKU-50006-M-BLA',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'204-1485030-5209933',date:'2026-05-19'});
+  }
+  if(!S.sales.find(x=>x.ref==='204-7947937-6228323')){
+    S.sales.push({sku:'SKU-50007-L-SKI',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'204-7947937-6228323',date:'2026-05-19'});
+  }
+  render();
+  setTimeout(updateSidebarStamps, 150);
+}
+{ try{ localStorage.setItem('eirica-v3',JSON.stringify(S)); }catch(e){} updateSidebarStamps(); }
+
+function updateSidebarStamps(){
+  const fmtDate = d => {
+    if(!d) return '—';
+    const dt = new Date((d+'').replace(' ','T').replace(' BST','').replace(' GMT',''));
+    if(isNaN(dt)) return d;
+    const day = dt.getDate();
+    const mon = dt.toLocaleString('en-GB',{month:'short'});
+    const yr  = dt.getFullYear();
+    return `${day} ${mon} ${yr}`;
+  };
+
+  // Per-channel last sale dates
+  const lastForChannel = (ch, loc) => {
+    const filtered = S.sales.filter(s => {
+      if(ch==='Amazon' && loc==='uk')     return s.channel==='Amazon' && (s.loc==='uk');
+      if(ch==='Amazon' && loc==='uk-fba') return s.channel==='Amazon' && (s.loc==='uk-fba');
+      if(ch==='eBay')                     return s.channel==='eBay';
+      if(ch==='Amazon' && loc==='india')  return s.channel==='Amazon' && (s.loc==='india'||s.loc==='india-fba');
+      if(ch==='Shopify' && loc==='uk')    return s.channel==='Shopify' && (s.loc==='uk'||s.loc==='uk-fba');
+      if(ch==='Shopify' && loc==='india') return s.channel==='Shopify' && (s.loc==='india'||s.loc==='india-fba');
+      return false;
+    });
+    return filtered.length ? filtered[filtered.length-1].date : null;
+  };
+
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=fmtDate(val); };
+  set('sb-sale-amz-uk',    lastForChannel('Amazon','uk'));
+  set('sb-sale-amz-ukfba', lastForChannel('Amazon','uk-fba'));
+  set('sb-sale-ebay',      lastForChannel('eBay',''));
+  set('sb-sale-amz-india', lastForChannel('Amazon','india'));
+  set('sb-sale-web-uk',    lastForChannel('Shopify','uk'));
+  set('sb-sale-web-india', lastForChannel('Shopify','india'));
+
+  // Per-warehouse stock dates
+  const indiaEl  = document.getElementById('sb-stock-india');
+  const ukEl     = document.getElementById('sb-stock-uk');
+  const ukfbaEl  = document.getElementById('sb-stock-ukfba');
+  if(indiaEl  && S.lastStockUpdateIndia)  indiaEl.textContent  = fmtDate(S.lastStockUpdateIndia);
+  if(ukEl     && S.lastStockUpdateUK)     ukEl.textContent     = fmtDate(S.lastStockUpdateUK);
+  if(ukfbaEl  && S.lastStockUpdateUKFBA)  ukfbaEl.textContent  = fmtDate(S.lastStockUpdateUKFBA);
+}
+
+// ══ HELPERS ════════════════════════════════════════════════════════════════
+const tot = s => LOCS.reduce((a,l)=>a+(s.stock[l]||0),0);
+function status(s){
+  const t=tot(s);
+  if(t===0) return 'critical';
+  if(t<5)   return 'low';
+  return 'ok';
+}
+const bdgC={'ok':'b-ok','low':'b-low','critical':'b-critical','transit':'b-transit','draft':'b-draft','received':'b-received'};
+const bdgL={'ok':'In stock','low':'Low (under 5)','critical':'Critical (zero)','transit':'In transit','draft':'Draft','received':'Received'};
+function bdg(st,lbl){ return `<span class="badge ${bdgC[st]||'b-draft'}">${lbl||bdgL[st]||st}</span>`; }
+function catBdg(c){ return `<span class="badge ${CAT_BADGE[c]||'b-draft'}">${c}</span>`; }
+function fmtGBP(n){ return '£'+Number(n||0).toFixed(2); }
+function nowStr(){ return new Date().toISOString().slice(0,16).replace('T',' '); }
+function chDot(ch){ return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]||'#888'};margin-right:5px;vertical-align:middle"></span>${ch}`; }
+function toast(msg,col='var(--green)'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  const cols={'var(--green)':'rgba(34,197,94,.15)','var(--red)':'rgba(239,68,68,.15)','var(--amber)':'rgba(245,158,11,.15)'};
+  t.style.background=cols[col]||'rgba(79,142,247,.15)';
+  t.style.border=`1px solid ${col}`; t.style.color=col;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ══ NAVIGATION ═════════════════════════════════════════════════════════════
+function nav(page, el){
+  S.page=page;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles={dashboard:'Dashboard',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',orders:'Purchase orders',sales:'Sales log',topsellers:'Top Sellers',import:'Excel Import',settings:'Settings'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  render();
+}
+
+function render(){
+  const pages={dashboard:pageDash,chat:pageChat,master:pageMaster,locations:pageLoc,orders:pageOrders,sales:pageSales,topsellers:pageTopSellers,import:pageImport,settings:pageSettings};
+  document.getElementById('content').innerHTML=(pages[S.page]||pageDash)();
+  afterRender();
+}
+
+function afterRender(){
+  ['ms-q','ms-status','ms-cat'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.addEventListener('input',renderMasterTbl);
+  });
+  renderMasterTbl();
+  // Chat setup
+  if(S.page==='chat'){
+    renderChatMessages();
+    const ta=document.getElementById('chat-ta');
+    if(ta){
+      ta.addEventListener('keydown',e=>{
+        if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendChat(); }
+      });
+      ta.focus();
+    }
+  }
+}
+
+// ══ DASHBOARD ═════════════════════════════════════════════════════════════
+function pageDash(){
+  const crit=S.skus.filter(s=>status(s)==='critical');
+  const low=S.skus.filter(s=>status(s)==='low');
+
+  // Global = union of UK + India alerts (any variant flagged in either region)
+  const ukCritSkus  = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)===0).map(s=>s.sku));
+  const ukLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.uk||0)+(s.stock['uk-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+  const inCritSkus  = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)===0).map(s=>s.sku));
+  const inLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.india||0)+(s.stock['india-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+
+  const globalCrit  = new Set([...ukCritSkus, ...inCritSkus]);
+  const globalLow   = new Set([...ukLowSkus,  ...inLowSkus].filter(s=>!globalCrit.has(s)));
+  const gCritCount  = globalCrit.size;
+  const gLowCount   = globalLow.size;
+  const ukCritCount = ukCritSkus.size;
+  const ukLowCount  = ukLowSkus.size;
+  const inCritCount = inCritSkus.size;
+  const inLowCount  = inLowSkus.size;
+  const totalU=S.skus.reduce((a,s)=>a+tot(s),0);
+  // Merge STATIC_SALES + S.sales deduplicated for accurate revenue
+  // Merge with full dedup — track ref+sku+index to allow intentional duplicates (packs)
+  const _seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const _staticFiltered=STATIC_SALES.filter(s=>!_seen.has(s.ref+'|'+s.sku));
+  // For STATIC entries with same ref+sku (pack duplicates), keep all — they are intentional
+  const _all=[..._staticFiltered,...S.sales];
+  const totalSales=_all.reduce((a,s)=>a+(s.qty||0),0);
+  const rev=_all.reduce((a,s)=>a+(s.price||0),0);
+  const openPOs=S.pos.filter(p=>p.status==='transit').length;
+  const chT={}; CHANNELS.forEach(c=>{ chT[c]=STATIC_SALES.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  const maxCh=Math.max(...Object.values(chT),1);
+  const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
+  const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
+  const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
+  const indiaFBA= S.skus.reduce((a,s)=>a+(s.stock['india-fba']||0),0);
+  const revUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').reduce((a,s)=>a+(s.price||0),0);
+  const revIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').reduce((a,s)=>a+(s.price||0),0);
+  const GBP_TO_INR = 107;
+
+  const txUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').length;
+  const txIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').length;
+  const alertsUK    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<=(s.reorder||0)&&(s.stock.uk||0)+(s.stock['uk-fba']||0)>=0).length;
+  const alertsIndia = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<=(s.reorder||0)&&(s.stock.india||0)+(s.stock['india-fba']||0)>=0).length;
+
+  return`
+
+  <!-- ── ROW 0: Stock Alerts — full width horizontal strip ── -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:0;padding:12px 16px;">
+
+      <!-- Title -->
+      <div style="width:120px;flex-shrink:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;"><i class="ti ti-alert-triangle" style="font-size:14px;color:var(--amber)"></i>Stock Alerts</div>
+      </div>
+
+      <!-- Divider -->
+      <div style="width:1px;background:var(--border);height:44px;margin:0 16px;flex-shrink:0;"></div>
+
+      <!-- Global -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🌍 Global</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:${gCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${gCritCount?"#f87171":"#4ade80"};">${gCritCount}</span>
+            <span style="font-size:9px;color:${gCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+          </div>
+          <div style="flex:1;background:${gLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${gLowCount?"#fb923c":"#4ade80"};">${gLowCount}</span>
+            <span style="font-size:9px;color:${gLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="width:1px;background:var(--border);height:44px;margin:0 16px;flex-shrink:0;"></div>
+
+      <!-- UK -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🇬🇧 UK</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:${ukCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${ukCritCount?"#f87171":"#4ade80"};">${ukCritCount}</span>
+            <span style="font-size:9px;color:${ukCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+          </div>
+          <div style="flex:1;background:${ukLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${ukLowCount?"#fb923c":"#4ade80"};">${ukLowCount}</span>
+            <span style="font-size:9px;color:${ukLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="width:1px;background:var(--border);height:44px;margin:0 16px;flex-shrink:0;"></div>
+
+      <!-- India -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🇮🇳 India</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:${inCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${inCritCount?"#f87171":"#4ade80"};">${inCritCount}</span>
+            <span style="font-size:9px;color:${inCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+          </div>
+          <div style="flex:1;background:${inLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
+            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${inLowCount?"#fb923c":"#4ade80"};">${inLowCount}</span>
+            <span style="font-size:9px;color:${inLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── ROW 1: Global Sales + Global Sales Revenue ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+
+    <!-- Global Sales -->
+    <div class="metric">
+      <div class="metric-icon"><i class="ti ti-shopping-bag"></i></div>
+      <div class="metric-val">${totalSales.toLocaleString()}</div>
+      <div class="metric-label">Global Sales (units)</div>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text2);">🇬🇧 UK</span><span style="font-family:var(--mono);font-weight:600">${txUK} orders</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;"><span style="color:var(--text2);">🇮🇳 India</span><span style="font-family:var(--mono);font-weight:600">${txIndia} orders</span></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${S.sales.length} total transactions</div>
+      </div>
+    </div>
+
+    <!-- Global Sales Revenue -->
+    <div class="metric">
+      <div class="metric-icon"><i class="ti ti-coins"></i></div>
+      <div class="metric-val" style="font-size:20px;">${fmtGBP(rev)}</div>
+      <div class="metric-label">Global sales revenue</div>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:9px;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--text2);">🇬🇧 UK (GBP)</span><span style="font-family:var(--mono);font-weight:600">${fmtGBP(revUK)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;"><span style="color:var(--text2);">🇮🇳 India (INR)</span><span style="font-family:var(--mono);font-weight:600">₹${Math.round(revIndia*GBP_TO_INR).toLocaleString()}</span></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">Est. 1 GBP = ${GBP_TO_INR} INR</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ROW 2: Stock Overview ── -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hd">
+      <div class="card-title"><i class="ti ti-package"></i>Stock Overview</div>
+      <div style="font-size:13px;font-family:var(--mono);font-weight:600;color:var(--text)">${totalU.toLocaleString()} <span style="font-size:11px;color:var(--text2);font-family:var(--font);font-weight:400">total units</span></div>
+    </div>
+    <div class="card-body"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+
+      <!-- Global total -->
+      <div style="background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(124,58,237,.08));border:1px solid rgba(79,142,247,.25);border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;font-weight:600;">🌍 Global</div>
+        <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--text)">${totalU.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">${S.skus.length} variants</div>
+      </div>
+
+      <!-- 4 location cards -->
+      ${[
+        {flag:'🇮🇳',label:'India WH',   key:'india',      total:indiaWH},
+        {flag:'🇮🇳',label:'India FBA',  key:'india-fba',  total:indiaFBA},
+        {flag:'🇬🇧',label:'UK WH',      key:'uk',         total:ukWH},
+        {flag:'🇬🇧',label:'UK FBA',     key:'uk-fba',     total:ukFBA},
+      ].map(l=>{
+        const zeros=S.skus.filter(s=>(s.stock[l.key]||0)===0).length;
+        const variants=S.skus.filter(s=>s.stock[l.key]>0).length;
+        return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;">
+          <div style="font-size:16px;margin-bottom:4px">${l.flag}</div>
+          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${l.label}</div>
+          <div style="font-size:22px;font-weight:600;font-family:var(--mono)">${l.total.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:4px">${variants} variants</div>
+          ${zeros>0?`<div style="font-size:10px;color:var(--amber);margin-top:2px">${zeros} at zero</div>`:'<div style="font-size:10px;color:var(--green);margin-top:2px">All stocked ✓</div>'}
+        </div>`;
+      }).join('')}
+
+    </div></div>
+  </div>
+
+  <!-- ── ROW 3: Sales by Channel + Most Selling Items ── -->
+  <div class="grid2" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>Sales by Channel</div></div>
+      <div class="card-body">
+        ${CHANNELS.map(ch=>`<div class="ch-row"><div style="width:68px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]};flex-shrink:0;display:inline-block"></span>${ch}</div><div class="ch-bg"><div class="ch-fill" style="width:${Math.round(chT[ch]/maxCh*100)}%;background:${CH_COLOR[ch]}"></div></div><div style="width:36px;text-align:right;font-size:12px;font-family:var(--mono)">${chT[ch]}</div></div>`).join('')}
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          ${['BRA','Short','Brief'].map(c=>{const u=S.skus.filter(s=>s.category===c).reduce((a,s)=>a+tot(s),0);return`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);">${catBdg(c)}<span style="font-family:var(--mono)">${u} units</span></div>`;}).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Most Selling Items -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-trending-up"></i>Most Selling Items</div><span style="font-size:11px;color:var(--text2)">by units sold</span></div>
+      <div style="padding:0;">
+        ${(()=>{
+          // Aggregate sales by SKU
+          const salesBySKU = {};
+          STATIC_SALES.forEach(s=>{
+            salesBySKU[s.sku] = (salesBySKU[s.sku]||0) + s.qty;
+          });
+          const sorted = Object.entries(salesBySKU).sort((a,b)=>b[1]-a[1]).slice(0,8);
+          if(!sorted.length) return '<div style="text-align:center;padding:24px;font-size:12px;color:var(--text3)">No sales logged yet</div>';
+          const maxSold = sorted[0][1];
+          return sorted.map(([sku, qty], i)=>{
+            const sk = S.skus.find(s=>s.sku===sku);
+            const name = sk ? sk.name : sku;
+            const pct = Math.round(qty/maxSold*100);
+            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+            return `<div style="padding:8px 16px;border-bottom:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span style="font-size:12px;font-weight:500">${medal} ${name}</span>
+                <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)">${qty} sold</span>
+              </div>
+              <div style="height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),#6d28d9);border-radius:2px;"></div>
+              </div>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══ AI CHAT PAGE ═══════════════════════════════════════════════════════════
+function pageChat(){
+  const recent=S.sales.slice(-5).reverse();
+  const critCount=S.skus.filter(s=>status(s)==='critical').length;
+  return `<div class="chat-page">
+    <div class="chat-header">
+      <div>
+        <h2><i class="ti ti-bolt" style="color:#D4AF37"></i>Eirica AI</h2>
+        <div class="chat-header-sub">Type naturally — log sales, check stock, ask questions. Any language or shorthand works.</div>
+      </div>
+      <button class="btn btn-sm" onclick="chatHistory=[];renderChatMessages()"><i class="ti ti-trash"></i>Clear chat</button>
+    </div>
+    <div class="chat-layout">
+      <div class="chat-main">
+        <div class="chat-messages" id="chat-msgs"></div>
+        <div class="chat-input-area">
+          <div id="img-preview-wrap" class="img-preview-wrap" style="display:none"></div>
+          <div class="chat-input-wrap">
+            <button class="upload-btn" onclick="document.getElementById('img-upload').click()" title="Upload order screenshot"><i class="ti ti-photo"></i></button>
+            <input type="file" id="img-upload" accept="image/*" multiple style="display:none" onchange="handleImgUpload(this.files)"/>
+            <textarea id="chat-ta" placeholder="Type a message or upload an order screenshot 📷" rows="1"></textarea>
+            <button class="chat-send" id="chat-send-btn" onclick="sendChat()"><i class="ti ti-send"></i></button>
+          </div>
+          <div class="chat-hints">
+            <div class="hint-pill" onclick="document.getElementById('img-upload').click()">📷 Upload order screenshot</div>
+            <div class="hint-pill" onclick="fillHint('sold 2 BRA M Black Amazon UK FBA')">sold 2 BRA M Black Amazon UK</div>
+            <div class="hint-pill" onclick="fillHint('how many BRA S Grey left?')">how many BRA S Grey left?</div>
+            <div class="hint-pill" onclick="fillHint('what needs reordering?')">what needs reordering?</div>
+            <div class="hint-pill" onclick="fillHint('undo last sale')">undo last sale</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-card">
+          <div class="cs-hd"><i class="ti ti-activity"></i>Live stats</div>
+          <div class="cs-body">
+            <div class="cs-row"><span class="cs-label">Total variants</span><span class="cs-val">${S.skus.length}</span></div>
+            <div class="cs-row"><span class="cs-label">Total units</span><span class="cs-val">${S.skus.reduce((a,s)=>a+tot(s),0).toLocaleString()}</span></div>
+            <div class="cs-row"><span class="cs-label">Critical alerts</span><span class="cs-val" style="color:${critCount?'var(--red)':'var(--green)'}">${critCount}</span></div>
+            <div class="cs-row"><span class="cs-label">Sales</span><span class="cs-val">${S.sales.length}</span></div>
+            <div class="cs-row"><span class="cs-label">Revenue</span><span class="cs-val">${fmtGBP(S.sales.reduce((a,s)=>a+(s.price||0),0))}</span></div>
+          </div>
+        </div>
+        <div class="chat-sidebar-card">
+          <div class="cs-hd"><i class="ti ti-clock"></i>Recent sales</div>
+          <div class="cs-body">
+            ${recent.length===0?'<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">No sales yet</div>':
+            recent.map(s=>{const sk=S.skus.find(k=>k.sku===s.sku);return`<div class="recent-sale"><div class="recent-sale-top"><span style="font-size:12px;font-weight:500">${sk?sk.name:s.sku}</span><span class="recent-sale-qty">×${s.qty}</span></div><div class="recent-sale-meta">${chDot(s.channel)} ${LOC_LABEL[s.loc]} · ${s.date}</div></div>`;}).join('')}
+          </div>
+        </div>
+        <div class="chat-sidebar-card">
+          <div class="cs-hd"><i class="ti ti-bulb"></i>What you can do</div>
+          <div class="cs-body" style="font-size:11px;color:var(--text2);line-height:1.8">
+            <div>📷 Upload Amazon/eBay screenshot</div>
+            <div>• "sold 3 BRA S White Amazon UK"</div>
+            <div>• "SKU-50001-M-BLA x2 eBay India"</div>
+            <div>• "how many [product] left?"</div>
+            <div>• "what's low on stock?"</div>
+            <div>• "stock summary for UK"</div>
+            <div>• "undo last entry"</div>
+            <div>• "add 10 BRA S White to India"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function fillHint(text){
+  const ta=document.getElementById('chat-ta');
+  if(ta){ ta.value=text; ta.focus(); }
+}
+
+function renderChatMessages(){
+  const el=document.getElementById('chat-msgs');
+  if(!el) return;
+  if(chatHistory.length===0){
+    el.innerHTML=`<div class="msg msg-ai">
+      <div class="msg-avatar"><i class="ti ti-robot" style="font-size:14px;color:var(--accent)"></i></div>
+      <div class="msg-body">
+        <div class="msg-meta"><strong>StockOS AI</strong> <span>ready</span></div>
+        <div class="msg-text">Hi! I'm your stock assistant for Eirica International. I can log sales, check stock levels, and answer questions about your inventory across all 4 locations.<br><br>Just type naturally — for example:<br>• <em>"sold 3 BRA S White Amazon UK FBA"</em><br>• <em>"how many Short M Black do we have?"</em><br>• <em>"what needs reordering?"</em></div>
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = chatHistory.map(m=>`
+    <div class="msg msg-${m.role}">
+      <div class="msg-avatar">${m.role==='user'?'<i class="ti ti-user" style="font-size:13px;color:#fff"></i>':'<i class="ti ti-robot" style="font-size:14px;color:var(--accent)"></i>'}</div>
+      <div class="msg-body">
+        <div class="msg-meta"><strong>${m.role==='user'?'You':'StockOS AI'}</strong> <span>${m.time}</span></div>
+        <div class="msg-text">${m.html||m.text}</div>
+      </div>
+    </div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+function addMessage(role, text, html){
+  chatHistory.push({role, text, html:html||text, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})});
+  renderChatMessages();
+}
+
+function showTyping(){
+  const el=document.getElementById('chat-msgs');
+  if(!el) return;
+  const div=document.createElement('div');
+  div.className='msg msg-ai'; div.id='typing-indicator';
+  div.innerHTML=`<div class="msg-avatar"><i class="ti ti-robot" style="font-size:14px;color:var(--accent)"></i></div><div class="msg-body"><div class="msg-meta"><strong>StockOS AI</strong></div><div class="typing"><span></span><span></span><span></span></div></div>`;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+}
+function removeTyping(){ const el=document.getElementById('typing-indicator'); if(el) el.remove(); }
+
+// ── Image upload ───────────────────────────────────────────────────────────
+let pendingImages = []; // [{base64, mediaType, previewUrl}]
+
+function handleImgUpload(files){
+  Array.from(files).forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      const base64 = dataUrl.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+      pendingImages.push({base64, mediaType, previewUrl: dataUrl, name: file.name});
+      renderImgPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImgPreviews(){
+  const wrap = document.getElementById('img-preview-wrap');
+  if(!wrap) return;
+  if(pendingImages.length===0){ wrap.style.display='none'; wrap.innerHTML=''; return; }
+  wrap.style.display='flex';
+  wrap.innerHTML = pendingImages.map((img,i)=>`
+    <div class="img-preview">
+      <img src="${img.previewUrl}" alt="order screenshot"/>
+      <button class="img-preview-remove" onclick="removeImg(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeImg(i){ pendingImages.splice(i,1); renderImgPreviews(); }
+
+async function sendChat(){
+  const ta  = document.getElementById('chat-ta');
+  const btn = document.getElementById('chat-send-btn');
+  const text = ta.value.trim();
+  const hasImages = pendingImages.length > 0;
+
+  if(!text && !hasImages) return;
+
+  const displayText = text || '📷 Order screenshot uploaded — please extract and log all sales.';
+  ta.value=''; ta.style.height='auto';
+  btn.disabled=true;
+
+  // Show user message with image previews
+  const imgHtml = pendingImages.map(img=>`<img src="${img.previewUrl}" class="msg-img" alt="order screenshot"/>`).join('');
+  addMessage('user', displayText, `<div>${displayText}</div>${imgHtml}`);
+
+  const imagesToSend = [...pendingImages];
+  pendingImages = [];
+  renderImgPreviews();
+
+  showTyping();
+  try{
+    const response = await callClaude(text || 'Please read this order screenshot carefully and log all sales shown. Extract: product name, size, colour, channel (Amazon/eBay/Shopify), quantity, price per item, and fulfil from UK warehouse unless stated otherwise.', imagesToSend);
+    removeTyping();
+    const result = processAIResponse(response);
+    addMessage('ai', result.text, result.html);
+    if(result.updated){ saveState(); nav(S.page, document.querySelector('.nav-item.active')); }
+  }catch(e){
+    removeTyping();
+    const msg = e.message||'Unknown error';
+    addMessage('ai', msg.includes('No API key')
+      ? '⚠️ No API key found. Go to Settings and paste your Claude API key.'
+      : `⚠️ Error: ${msg}. Go to Settings to check your API key.`);
+  }
+  btn.disabled=false;
+  const el=document.getElementById('chat-msgs');
+  if(el) el.scrollTop=el.scrollHeight;
+}
+
+async function callClaude(userMessage, images=[]){
+  const apiKey = localStorage.getItem('eirica-apikey')||'';
+  if(!apiKey) throw new Error('No API key');
+
+  const invContext = S.skus.map(s=>`${s.sku}|${s.name}|${s.category}|${s.size}|${s.color}|India:${s.stock.india}|IndFBA:${s.stock['india-fba']}|UK:${s.stock.uk}|UKFBA:${s.stock['uk-fba']}|Total:${tot(s)}`).join('\n');
+  const recentSales = S.sales.slice(-10).map(s=>`${s.date} ${s.sku} x${s.qty} ${s.channel} ${LOC_LABEL[s.loc]}`).join('\n');
+
+  const systemPrompt = `You are Eirica AI, an inventory assistant for Eirica International — selling BRAs, Shorts, and Briefs across India warehouse, India FBA, UK warehouse, UK FBA. Channels: Shopify, Amazon, eBay, Direct.
+
+CURRENT INVENTORY (SKU|Name|Category|Size|Colour|India|IndFBA|UK|UKFBA|Total):
+${invContext}
+
+RECENT SALES:
+${recentSales||'None yet'}
+
+COLOUR MAPPING: White=WHI, Black=BLA, Grey/Mink Grey/Silver Grey=GRE, Skin/Peach/Nude/Peach Nude=SKI, Brown=BRO
+
+When reading order screenshots:
+- Extract EVERY order line shown
+- Match product name + size + colour to the SKU list above
+- Default location: uk (UK warehouse) unless image shows FBA or India
+- Default channel: read from screenshot (Amazon.co.uk=Amazon, eBay=eBay, etc.)
+- Use the item subtotal or price shown as the sale price
+
+For SALE actions respond with:
+<action>{"type":"sale","items":[{"sku":"SKU-XXXXX-X-XXX","qty":1,"channel":"Amazon","loc":"uk","price":6.99}],"message":"Logged X sales from screenshot"}</action>
+
+For ADD STOCK:
+<action>{"type":"addstock","items":[{"sku":"SKU-XXXXX-X-XXX","qty":10,"loc":"india"}],"message":"Stock added"}</action>
+
+For UNDO:
+<action>{"type":"undo","message":"Undone."}</action>
+
+Location codes: india, india-fba, uk, uk-fba
+Always confirm every item you extracted with a summary table. If unsure about a match, pick the closest SKU and flag it.`;
+
+  // Build message content — add images first, then text
+  const userContent = [];
+  images.forEach(img=>{
+    userContent.push({
+      type: 'image',
+      source: { type: 'base64', media_type: img.mediaType, data: img.base64 }
+    });
+  });
+  userContent.push({ type: 'text', text: userMessage });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1500,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }]
+    })
+  });
+
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error?.message || 'API error ' + res.status);
+  }
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+function processAIResponse(text){
+  let html = text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`(.*?)`/g,'<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px">$1</code>');
+  let updated=false;
+  const actionMatch = text.match(/<action>([\s\S]*?)<\/action>/);
+  if(actionMatch){
+    try{
+      const action = JSON.parse(actionMatch[1]);
+      html = html.replace(/<action>[\s\S]*?<\/action>/,'');
+      if(action.type==='sale'){
+        const results=[];
+        action.items.forEach(item=>{
+          const sk=S.skus.find(s=>s.sku===item.sku);
+          if(!sk){ results.push(`<div style="color:var(--red);font-size:11px">⚠ SKU ${item.sku} not found</div>`); return; }
+          if((sk.stock[item.loc]||0)<item.qty){ results.push(`<div style="color:var(--amber);font-size:11px">⚠ Only ${sk.stock[item.loc]||0} units at ${LOC_LABEL[item.loc]} for ${sk.name}</div>`); return; }
+          sk.stock[item.loc]=(sk.stock[item.loc]||0)-item.qty;
+          S.sales.push({sku:item.sku,channel:item.channel,loc:item.loc,qty:item.qty,price:item.price||0,ref:'',date:nowStr()});
+          const newTot=tot(sk);
+          results.push(`<div class="msg-card-row"><span>${sk.name} ×${item.qty} via ${item.channel} from ${LOC_LABEL[item.loc]}</span><span>Remaining: ${newTot}${newTot<=(sk.reorder||0)?` ⚠️`:''}</span></div>`);
+          updated=true;
+        });
+        html += `<div class="msg-card"><div class="msg-card-title"><i class="ti ti-check" style="color:var(--green)"></i>Sale logged</div>${results.join('')}</div>`;
+      } else if(action.type==='addstock'){
+        const results=[];
+        action.items.forEach(item=>{
+          const sk=S.skus.find(s=>s.sku===item.sku);
+          if(!sk){ results.push(`<div style="color:var(--red);font-size:11px">⚠ SKU ${item.sku} not found</div>`); return; }
+          sk.stock[item.loc]=(sk.stock[item.loc]||0)+item.qty;
+          results.push(`<div class="msg-card-row"><span>${sk.name} +${item.qty} at ${LOC_LABEL[item.loc]}</span><span>New total: ${tot(sk)}</span></div>`);
+          updated=true;
+        });
+        if(updated) S.lastStockUpdate = nowStr();
+        html += `<div class="msg-card"><div class="msg-card-title"><i class="ti ti-plus" style="color:var(--green)"></i>Stock added</div>${results.join('')}</div>`;
+      } else if(action.type==='undo'){
+        if(S.sales.length>0){
+          const last=S.sales[S.sales.length-1];
+          const sk=S.skus.find(s=>s.sku===last.sku);
+          if(sk){ sk.stock[last.loc]=(sk.stock[last.loc]||0)+last.qty; }
+          S.sales.pop(); updated=true;
+          html += `<div class="msg-card"><div class="msg-card-title"><i class="ti ti-arrow-back-up" style="color:var(--amber)"></i>Sale undone</div><div class="msg-card-row"><span>${sk?sk.name:last.sku} ×${last.qty} returned to ${LOC_LABEL[last.loc]}</span></div></div>`;
+        } else { html += '<div class="msg-error">No sales to undo.</div>'; }
+      }
+      if(action.message) html = `<div>${action.message}</div>` + html;
+    }catch(e){ /* parse error, show raw */ }
+  }
+  return {text, html, updated};
+}
+
+// ══ MASTER STOCK ═══════════════════════════════════════════════════════════
+let masterLocView = 'all'; // 'all' | 'india' | 'uk' | 'uk-fba'
+
+const MASTER_VIEWS = {
+  all:    { label:'All locations', cols:['India WH','India FBA','UK WH','UK FBA','Total'] },
+  india:  { label:'🇮🇳 India warehouse', cols:['India WH'] },
+  'india-fba': { label:'🇮🇳 India FBA', cols:['India FBA'] },
+  uk:     { label:'🇬🇧 UK warehouse', cols:['UK WH'] },
+  'uk-fba':{ label:'🇬🇧 UK FBA', cols:['UK FBA'] },
+};
+
+function pageMaster(){
+  const tabs = [
+    {key:'all',      icon:'ti-layout-grid',   label:'All'},
+    {key:'india',    icon:'ti-building-warehouse', label:'India WH'},
+    {key:'india-fba',icon:'ti-package',        label:'India FBA'},
+    {key:'uk',       icon:'ti-building-warehouse', label:'UK WH'},
+    {key:'uk-fba',   icon:'ti-package',        label:'UK FBA'},
+  ];
+
+  const tabBar = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+    ${tabs.map(t=>`<button class="btn btn-sm${masterLocView===t.key?' btn-primary':''}" onclick="setMasterView('${t.key}')">
+      <i class="ti ${t.icon}"></i>${t.label}
+      <span style="font-family:var(--mono);font-size:10px;opacity:.7;margin-left:2px">${
+        t.key==='all'
+          ? S.skus.reduce((a,s)=>a+tot(s),0)
+          : S.skus.reduce((a,s)=>a+(s.stock[t.key]||0),0)
+      }</span>
+    </button>`).join('')}
+  </div>`;
+
+  return`
+  ${tabBar}
+  <div class="toolbar">
+    <input id="ms-q" placeholder="Search SKU, name, colour…" style="max-width:280px"/>
+    <select id="ms-cat" style="width:120px"><option value="">All categories</option><option>BRA</option><option>Short</option><option>Brief</option></select>
+    <select id="ms-status" style="width:120px"><option value="">All statuses</option><option value="ok">In stock</option><option value="low">Low</option><option value="critical">Critical</option></select>
+    <button class="btn btn-sm" onclick="exportMasterCSV()"><i class="ti ti-download"></i>Export CSV</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead id="master-thead"></thead>
+    <tbody id="master-tbody"></tbody>
+  </table></div></div>`;
+}
+
+function setMasterView(view){
+  masterLocView = view;
+  // re-render just the master page content without full nav re-render
+  document.getElementById('content').innerHTML = pageMaster();
+  afterRender();
+}
+
+function renderMasterTbl(){
+  const tb=document.getElementById('master-tbody'); if(!tb) return;
+  const th=document.getElementById('master-thead'); 
+
+  const q=(document.getElementById('ms-q')||{}).value?.toLowerCase()||'';
+  const st=(document.getElementById('ms-status')||{}).value||'';
+  const cat=(document.getElementById('ms-cat')||{}).value||'';
+
+  // Build thead based on view
+  const isAll = masterLocView==='all';
+  const viewCols = MASTER_VIEWS[masterLocView]?.cols || MASTER_VIEWS.all.cols;
+  if(th){
+    th.innerHTML=`<tr>
+      <th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th>
+      ${viewCols.map(c=>`<th>${c}</th>`).join('')}
+      ${isAll?'<th>Total</th>':'<th>Total all</th>'}
+      <th>Status</th><th>Actions</th>
+    </tr>`;
+  }
+
+  // Filter SKUs
+  let skus=S.skus.filter(s=>{
+    if(q&&!s.name.toLowerCase().includes(q)&&!s.sku.toLowerCase().includes(q)&&!s.color.toLowerCase().includes(q)) return false;
+    if(st&&status(s)!==st) return false;
+    if(cat&&s.category!==cat) return false;
+    return true;
+  });
+
+  if(!skus.length){ tb.innerHTML=`<tr><td colspan="12"><div class="empty"><i class="ti ti-search"></i>No results</div></td></tr>`; return; }
+
+  // Column→stock key map
+  const colKey = {'India WH':'india','India FBA':'india-fba','UK WH':'uk','UK FBA':'uk-fba'};
+
+  tb.innerHTML=skus.map(s=>{
+    const i=S.skus.indexOf(s);
+    const locCells = viewCols.map(c=>{
+      const key=colKey[c];
+      const qty=s.stock[key]||0;
+      const locSt=qty===0?'crit':qty<=(s.reorder||0)*.5?'crit':qty<=(s.reorder||0)?'low':'ok';
+      const col=locSt==='crit'?'var(--red)':locSt==='low'?'var(--amber)':'var(--text)';
+      return `<td style="font-family:var(--mono);font-weight:600;color:${col}">${qty}</td>`;
+    }).join('');
+
+    return`<tr>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td>
+      <td style="font-weight:600;max-width:130px">${s.name}</td>
+      <td>${catBdg(s.category)}</td>
+      <td><span style="background:var(--surface3);border-radius:4px;padding:1px 6px;font-size:11px">${s.size}</span></td>
+      <td style="font-size:12px">${s.color}</td>
+      ${locCells}
+      <td style="font-family:var(--mono);font-weight:700">${tot(s)}</td>
+      <td>${bdg(status(s))}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="editSKU(${i})"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="delSKU(${i})"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ LOCATIONS ══════════════════════════════════════════════════════════════
+function pageLoc(){
+  return LOCS.map(loc=>{
+    const total=S.skus.reduce((a,s)=>a+(s.stock[loc]||0),0);
+    const active=S.skus.filter(s=>s.stock[loc]>0).length;
+    const zeros=S.skus.filter(s=>(s.stock[loc]||0)===0).length;
+    return`<div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><div class="card-title">${LOC_FLAG[loc]} ${LOC_FULL[loc]}</div><div style="font-size:12px;color:var(--text2)">${total.toLocaleString()} units · ${active} variants${zeros>0?` · <span style="color:var(--amber)">${zeros} at zero</span>`:''}</div></div>
+      <div class="tw"><table><thead><tr><th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th><th>Units</th><th>Status</th><th>Update</th></tr></thead>
+      <tbody>${S.skus.map((s,i)=>{const q=s.stock[loc]||0;const st=q===0?'critical':q<=(s.reorder||0)*.5?'critical':q<=(s.reorder||0)?'low':'ok';
+        return`<tr><td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td><td style="font-weight:600;font-size:12px">${s.name}</td><td>${catBdg(s.category)}</td><td style="font-size:11px">${s.size}</td><td style="font-size:12px">${s.color}</td><td style="font-family:var(--mono);font-weight:700">${q}</td><td>${bdg(st)}</td>
+        <td><div style="display:flex;gap:5px;align-items:center"><input type="number" value="${q}" min="0" style="width:60px;padding:3px 7px;font-size:11px" id="lupd-${i}-${loc}"/><button class="btn btn-sm" onclick="updLoc(${i},'${loc}')">Save</button></div></td></tr>`;
+      }).join('')}</tbody></table></div></div>`;
+  }).join('');
+}
+
+// ══ PURCHASE ORDERS ════════════════════════════════════════════════════════
+let poLocView = 'orders'; // 'orders' | 'uk' | 'india'
+
+function pageOrders(){
+  const tabs = [
+    {key:'orders', icon:'ti-truck',       label:'All POs'},
+    {key:'uk',     icon:'ti-flag',        label:'🇬🇧 UK reorder'},
+    {key:'india',  icon:'ti-flag',        label:'🇮🇳 India reorder'},
+  ];
+
+  // Count low stock per region
+  const ukLow    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0) < 10).length;
+  const indiaLow = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0) < 10).length;
+  const counts   = {orders:'', uk:ukLow, india:indiaLow};
+
+  const tabBar = `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+    <div style="display:flex;gap:6px;">
+      ${tabs.map(t=>`<button class="btn btn-sm${poLocView===t.key?' btn-primary':''}" onclick="setPOView('${t.key}')">
+        <i class="ti ${t.icon}"></i>${t.label}
+        ${counts[t.key]?`<span style="background:rgba(239,68,68,.25);color:#f87171;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:2px">${counts[t.key]}</span>`:''}
+      </button>`).join('')}
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showModal('po')"><i class="ti ti-plus"></i>New purchase order</button>
+  </div>`;
+
+  if(poLocView==='uk')     return tabBar + renderReorderPanel('uk');
+  if(poLocView==='india')  return tabBar + renderReorderPanel('india');
+
+  // Default: all POs list
+  const pos=[...S.pos].reverse();
+  const critQ=S.skus.filter(s=>status(s)==='critical');
+  const lowQ=S.skus.filter(s=>status(s)==='low');
+  return tabBar + `<div class="card" style="margin-bottom:16px;"><div class="tw"><table>
+    <thead><tr><th>PO #</th><th>Supplier</th><th>Lines</th><th>Units</th><th>Status</th><th>Expected</th><th>Actions</th></tr></thead>
+    <tbody>${pos.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-truck"></i>No purchase orders yet. Use the UK or India reorder tabs to auto-generate one.</div></td></tr>`:
+    pos.map((p,i)=>{
+      const ri=S.pos.length-1-i;
+      const units=p.lines.reduce((a,l)=>a+(l.qty||0),0);
+      return`<tr>
+        <td style="font-family:var(--mono);font-size:11px">${p.num}</td>
+        <td style="font-weight:500">${p.supplier}</td>
+        <td>${p.lines.length} SKU${p.lines.length!==1?'s':''}</td>
+        <td style="font-family:var(--mono)">${units}</td>
+        <td>${bdg(p.status)}</td>
+        <td style="font-size:11px;color:var(--text2)">${p.date||'—'}</td>
+        <td style="white-space:nowrap;display:flex;gap:6px">
+          ${p.status==='draft'?`<button class="btn btn-sm" onclick="setPOSt(${ri},'transit')">Mark sent</button>`:''}
+          ${p.status==='transit'?`<button class="btn btn-primary btn-sm" onclick="rcvPO(${ri})"><i class="ti ti-check"></i>Receive</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="delPO(${ri})"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table></div></div>
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title"><i class="ti ti-alert-circle"></i>Reorder Queue</div>
+      <span class="badge ${critQ.length+lowQ.length?'b-critical':'b-ok'}">${critQ.length+lowQ.length}</span>
+    </div>
+    ${critQ.length+lowQ.length===0
+      ?'<div class="empty"><i class="ti ti-circle-check"></i>All stock levels healthy</div>'
+      :[...critQ,...lowQ].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;"><div><span style="font-weight:600">${s.name}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-left:6px">${s.sku}</span><div style="font-size:10px;color:var(--text2);margin-top:2px">${LOCS.map(l=>`${LOC_LABEL[l]}:${s.stock[l]||0}`).join(' · ')}</div></div><div style="display:flex;gap:8px;align-items:center">${bdg(status(s))}<button class="btn btn-sm" onclick="showModal('po')">Create PO</button></div></div>`).join('')}
+  </div>`;
+}
+
+function setPOView(view){
+  poLocView = view;
+  document.getElementById('content').innerHTML = pageOrders();
+}
+
+function renderReorderPanel(region){
+  const isUK = region==='uk';
+  const flag  = isUK ? '🇬🇧' : '🇮🇳';
+  const locs  = isUK ? ['uk','uk-fba'] : ['india','india-fba'];
+  const locNames = isUK ? ['UK Warehouse','UK FBA'] : ['India Warehouse','India FBA'];
+  const THRESHOLD = 10;
+
+  // All variants where total for this region is below threshold
+  const lowSkus = S.skus.filter(s => {
+    const regionTotal = locs.reduce((a,l)=>a+(s.stock[l]||0),0);
+    return regionTotal < THRESHOLD;
+  }).map(s => {
+    const regionTotal = locs.reduce((a,l)=>a+(s.stock[l]||0),0);
+    const suggested   = THRESHOLD - regionTotal + 10; // suggest enough to bring to 20
+    return { s, regionTotal, suggested, locs };
+  }).sort((a,b) => a.regionTotal - b.regionTotal);
+
+  // Which loc to send PO to (warehouse, not FBA)
+  const poLoc = isUK ? 'uk' : 'india';
+
+  const summary = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <div class="metric">
+        <div class="metric-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div class="metric-val" style="color:${lowSkus.length?'var(--red)':'var(--green)'};">${lowSkus.length}</div>
+        <div class="metric-label">Variants below ${THRESHOLD} units</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon"><i class="ti ti-package-off"></i></div>
+        <div class="metric-val">${lowSkus.filter(r=>r.regionTotal===0).length}</div>
+        <div class="metric-label">Completely out of stock</div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon"><i class="ti ti-arrows-sort"></i></div>
+        <div class="metric-val">${lowSkus.reduce((a,r)=>a+r.suggested,0)}</div>
+        <div class="metric-label">Suggested units to order</div>
+      </div>
+    </div>`;
+
+  if(!lowSkus.length) return `${summary}
+    <div class="card"><div class="card-body" style="text-align:center;padding:40px">
+      <i class="ti ti-circle-check" style="font-size:36px;color:var(--green);display:block;margin-bottom:10px"></i>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">All ${flag} ${isUK?'UK':'India'} stock is healthy</div>
+      <div style="font-size:12px;color:var(--text2)">No variants are below the ${THRESHOLD}-unit threshold.</div>
+    </div></div>`;
+
+  const rows = lowSkus.map((r,i) => {
+    const {s, regionTotal, suggested} = r;
+    const urgency = regionTotal===0?'b-critical':regionTotal<=5?'b-low':'b-draft';
+    const urgencyLabel = regionTotal===0?'Out of stock':regionTotal<=5?'Critical':'Low';
+    return `<tr>
+      <td><input type="checkbox" class="po-chk" data-idx="${i}" checked style="width:auto;cursor:pointer"/></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td>
+      <td style="font-weight:600;font-size:12px">${s.name}</td>
+      <td>${catBdg(s.category)}</td>
+      <td style="font-size:11px">${s.size}</td>
+      <td style="font-size:12px">${s.color}</td>
+      <td>
+        ${locs.map((l,li)=>`<div style="font-size:11px;color:var(--text2)">${locNames[li]}: <span style="font-family:var(--mono);color:${(s.stock[l]||0)===0?'var(--red)':'var(--text)'};">${s.stock[l]||0}</span></div>`).join('')}
+      </td>
+      <td style="font-family:var(--mono);font-weight:700;color:${regionTotal===0?'var(--red)':regionTotal<=5?'var(--amber)':'var(--text)'};">${regionTotal}</td>
+      <td><span class="badge ${urgency}">${urgencyLabel}</span></td>
+      <td><input type="number" class="po-qty" data-idx="${i}" value="${suggested}" min="1" style="width:65px;padding:3px 7px;font-size:12px"/></td>
+    </tr>`;
+  }).join('');
+
+  return `${summary}
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title"><i class="ti ti-alert-circle"></i>${flag} ${isUK?'UK':'India'} — variants below ${THRESHOLD} units (${locs.map(l=>LOC_FULL[l]).join(' + ')})</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-sm" onclick="selectAllPO(true)">Select all</button>
+          <button class="btn btn-sm" onclick="selectAllPO(false)">Deselect all</button>
+          <button class="btn btn-primary btn-sm" onclick="createPOFromReorder('${poLoc}','${region}')"><i class="ti ti-plus"></i>Create PO for selected</button>
+        </div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th style="width:32px"></th><th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th><th>Stock breakdown</th><th>Region total</th><th>Urgency</th><th>Order qty</th></tr></thead>
+        <tbody id="reorder-tbody">${rows}</tbody>
+      </table></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text2)">
+        Suggested order qty = enough to bring each variant to 20 units. Adjust as needed before creating the PO.
+      </div>
+    </div>`;
+}
+
+function selectAllPO(checked){
+  document.querySelectorAll('.po-chk').forEach(el=>el.checked=checked);
+}
+
+function createPOFromReorder(loc, region){
+  const isUK = region==='uk';
+  const locs  = isUK ? ['uk','uk-fba'] : ['india','india-fba'];
+  const lowSkus = S.skus.filter(s=>locs.reduce((a,l)=>a+(s.stock[l]||0),0)<10);
+
+  const checkboxes = document.querySelectorAll('.po-chk');
+  const qtys       = document.querySelectorAll('.po-qty');
+  const lines = [];
+  checkboxes.forEach((chk,i)=>{
+    if(!chk.checked) return;
+    const s = lowSkus[i];
+    const qty = parseInt(qtys[i]?.value)||0;
+    if(s && qty>0) lines.push({sku:s.sku, qty, loc});
+  });
+
+  if(!lines.length){ toast('Select at least one variant','var(--amber)'); return; }
+
+  const num = 'PO-'+(1000+S.pos.length+1);
+  const supplier = document.getElementById('f-po-supplier')?.value || 'Eirica International';
+  S.pos.push({num, supplier, date:'', lines, status:'draft', region});
+  saveState();
+  toast(`${num} created with ${lines.length} lines ✓`);
+  poLocView='orders';
+  document.getElementById('content').innerHTML = pageOrders();
+}
+
+
+const STATIC_SALES=[{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"202-5839563-8527537","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-WHI","qty":1,"price":6.99,"ref":"203-3668494-9881147","channel":"Amazon","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50007-L-WHI","qty":4,"price":21.98,"ref":"206-7792893-1591503","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"026-5460869-4328318","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":1,"price":10.99,"ref":"204-5115028-5443526","channel":"Amazon","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"204-0035692-7173162","channel":"Amazon","loc":"uk-fba","date":"2026-05-22"},{"sku":"SKU-50003-XL-BLA","qty":1,"price":9.99,"ref":"202-1772788-2671544","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50003-M-WHI","qty":1,"price":9.99,"ref":"206-0592710-4178749","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-BLA","qty":1,"price":9.99,"ref":"202-3607924-9159533","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-GRE","qty":1,"price":9.99,"ref":"205-1672842-7529904","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"206-1079854-8029158","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"026-5097909-8329925","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50001-M-BLA","qty":3,"price":22.99,"ref":"203-1034602-1469939","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"205-3374946-0733928","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50004-M-BLA","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-S-SKI","qty":1,"price":12.99,"ref":"026-5917493-1045133","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"204-7947937-6228323","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-BLA","qty":1,"price":6.99,"ref":"204-1485030-5209933","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BRO","qty":1,"price":6.99,"ref":"206-4796616-7670711","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-XL-WHI","qty":1,"price":6.99,"ref":"026-4442866-2671550","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-SKI","qty":1,"price":6.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50001-XL-SKI","qty":2,"price":14.99,"ref":"202-0617578-9732337","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50006-M-WHI","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-M-BRO","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"203-2903816-9701953","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"026-5178476-3594723","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"205-0138204-3101922","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50007-S-BLA","qty":1,"price":6.99,"ref":"026-6001275-0971511","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50006-S-BLA","qty":2,"price":13.98,"ref":"204-6105005-0544327","channel":"Amazon","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":9.99,"ref":"204-6570023-8934731","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"205-4848345-8851565","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50002-M-SKI","qty":1,"price":11.99,"ref":"026-7136271-0990740","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50007-L-GRE","qty":2,"price":13.98,"ref":"204-5357333-8630757","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"205-6700622-6629917","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50001-M-BLA","qty":1,"price":11.99,"ref":"206-5677436-1802723","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50002-M-BLA","qty":1,"price":12.99,"ref":"026-9747993-3880331","channel":"Amazon","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":12.99,"ref":"202-5267975-1829111","channel":"Amazon","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50001-M-BRO","qty":1,"price":12.99,"ref":"202-0254131-2281964","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":12.99,"ref":"202-7074398-9218700","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":12.99,"ref":"206-1513124-3993933","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-M-WHI","qty":1,"price":12.99,"ref":"026-1699064-1327557","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-L-WHI","qty":1,"price":13.99,"ref":"204-2858428-2525131","channel":"Amazon","loc":"uk","date":"2026-04-30"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":13.99,"ref":"203-0173994-9877171","channel":"Amazon","loc":"uk","date":"2026-04-28"},{"sku":"SKU-50006-L-WHI","qty":1,"price":8.99,"ref":"205-8130205-5540365","channel":"Amazon","loc":"uk","date":"2026-04-27"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":13.99,"ref":"202-1813010-3606723","channel":"Amazon","loc":"uk","date":"2026-04-26"},{"sku":"SKU-50001-M-SKI","qty":1,"price":13.99,"ref":"206-4722251-0047550","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":13.99,"ref":"205-4290048-5017949","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50006-M-BLA","qty":2,"price":15.98,"ref":"09-14518-83517","channel":"eBay","loc":"uk","date":"2026-04-17"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":10.99,"ref":"11-14528-17255","channel":"eBay","loc":"uk","date":"2026-04-20"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":8.99,"ref":"19-14563-91748","channel":"eBay","loc":"uk","date":"2026-05-01"},{"sku":"SKU-50001-XL-SKI","qty":1,"price":8.99,"ref":"20-14580-99010","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-SKI","qty":1,"price":5.99,"ref":"02-14610-07148","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-BLA","qty":1,"price":5.99,"ref":"02-14619-17807","channel":"eBay","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50004-L-BLA","qty":1,"price":8.99,"ref":"25-14595-16450","channel":"eBay","loc":"uk","date":"2026-05-10"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50003-XL-WHI","qty":1,"price":9.99,"ref":"15-14639-84348","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":9.99,"ref":"04-14657-50461","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-L-BLA","qty":2,"price":7.58,"ref":"04-14657-54598","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"14-14643-48206","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50007-XL-BRO","qty":2,"price":13.7,"ref":"03-14664-72372","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-XL-BLA","qty":1,"price":3.49,"ref":"10-14653-83788","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-M-GRE","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-SKI","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-L-WHI","qty":1,"price":4.09,"ref":"26-14632-95479","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50005-XL-WHI","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.59,"ref":"13-14662-80458","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.09,"ref":"21-14650-49860","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50001-S-WHI","qty":1,"price":7.09,"ref":"19-14657-12297","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50007-XL-BRO","qty":1,"price":3.59,"ref":"08-14674-62997","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-M-WHI","qty":1,"price":4.09,"ref":"01-14687-18018","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-XL-WHI","qty":1,"price":4.09,"ref":"12-14671-10132","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50005-L-GRE","qty":1,"price":10.09,"ref":"01-14689-96313","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"27-14648-66586","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"06-14682-10712","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":10.09,"ref":"02-14691-31636","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-L-WHI","qty":1,"price":3.79,"ref":"02-14692-29257","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50003-S-BRO","qty":1,"price":10.09,"ref":"25-14655-68429","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-M-SKI","qty":2,"price":7.2,"ref":"24-14674-51906","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":1,"price":3.79,"ref":"03-14693-01448","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-XL-WHI","qty":2,"price":10.09,"ref":"05-14690-38855","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-L-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-M-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-XL-SKI","qty":1,"price":3.79,"ref":"18-14669-84215","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50002-L-BLA","qty":2,"price":10.8,"ref":"12-14679-56048","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-L-SKI","qty":1,"price":7.29,"ref":"13-14679-52075","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":3,"price":10.23,"ref":"21-14668-82474","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.29,"ref":"17-14675-53744","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50002-M-WHI","qty":2,"price":10.29,"ref":"11-14685-29832","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":10.99,"ref":"203-5849208-4713147","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"026-3323355-4330738","channel":"Amazon","loc":"uk","date":"2026-05-25"}];
+const STATIC_BY_SKU={"SKU-50007-L-SKI":{"units":6,"revenue":28.0,"orders":4,"amazon":2,"ebay":4},"SKU-50006-S-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-M-WHI":{"units":7,"revenue":56.97,"orders":3,"amazon":7,"ebay":0},"SKU-50007-L-WHI":{"units":5,"revenue":25.77,"orders":2,"amazon":4,"ebay":1},"SKU-50006-S-SKI":{"units":2,"revenue":13.98,"orders":2,"amazon":2,"ebay":0},"SKU-50001-M-BLA":{"units":10,"revenue":88.31,"orders":7,"amazon":6,"ebay":4},"SKU-50003-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50003-M-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-GRE":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-BLA":{"units":4,"revenue":40.06,"orders":4,"amazon":2,"ebay":2},"SKU-50006-S-BRO":{"units":3,"revenue":20.97,"orders":3,"amazon":3,"ebay":0},"SKU-50004-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-M-SKI":{"units":2,"revenue":25.98,"orders":2,"amazon":2,"ebay":0},"SKU-50004-S-SKI":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-BLA":{"units":3,"revenue":22.97,"orders":2,"amazon":1,"ebay":2},"SKU-50007-M-BRO":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-XL-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-SKI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-SKI":{"units":3,"revenue":23.98,"orders":2,"amazon":2,"ebay":1},"SKU-50006-M-WHI":{"units":2,"revenue":11.08,"orders":2,"amazon":1,"ebay":1},"SKU-50006-M-BRO":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-S-BLA":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-S-BLA":{"units":4,"revenue":27.96,"orders":3,"amazon":4,"ebay":0},"SKU-50001-XL-BRO":{"units":2,"revenue":23.98,"orders":2,"amazon":2,"ebay":0},"SKU-50002-M-SKI":{"units":1,"revenue":11.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-L-GRE":{"units":2,"revenue":13.98,"orders":1,"amazon":2,"ebay":0},"SKU-50002-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-WHI":{"units":3,"revenue":33.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-M-BRO":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-WHI":{"units":3,"revenue":36.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-XL-BLA":{"units":2,"revenue":26.98,"orders":2,"amazon":2,"ebay":0},"SKU-50002-M-WHI":{"units":3,"revenue":23.28,"orders":2,"amazon":1,"ebay":2},"SKU-50002-L-WHI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-L-WHI":{"units":2,"revenue":13.08,"orders":2,"amazon":1,"ebay":1},"SKU-50001-M-SKI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50005-XL-BLA":{"units":3,"revenue":26.72,"orders":3,"amazon":0,"ebay":3},"SKU-50006-L-SKI":{"units":1,"revenue":5.99,"orders":1,"amazon":0,"ebay":1},"SKU-50006-L-BLA":{"units":3,"revenue":13.57,"orders":2,"amazon":0,"ebay":3},"SKU-50004-L-BLA":{"units":1,"revenue":8.99,"orders":1,"amazon":0,"ebay":1},"SKU-50002-XL-SKI":{"units":2,"revenue":19.98,"orders":2,"amazon":0,"ebay":2},"SKU-50003-XL-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":0,"ebay":1},"SKU-50007-XL-BRO":{"units":3,"revenue":17.29,"orders":2,"amazon":0,"ebay":3},"SKU-50007-XL-BLA":{"units":1,"revenue":3.49,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-GRE":{"units":1,"revenue":3.14,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-BLA":{"units":2,"revenue":6.73,"orders":2,"amazon":0,"ebay":2},"SKU-50007-M-SKI":{"units":3,"revenue":10.34,"orders":2,"amazon":0,"ebay":3},"SKU-50005-XL-WHI":{"units":3,"revenue":16.83,"orders":2,"amazon":0,"ebay":3},"SKU-50005-M-BLA":{"units":2,"revenue":14.379999999999999,"orders":2,"amazon":0,"ebay":2},"SKU-50001-S-WHI":{"units":1,"revenue":7.09,"orders":1,"amazon":0,"ebay":1},"SKU-50006-XL-WHI":{"units":1,"revenue":4.09,"orders":1,"amazon":0,"ebay":1},"SKU-50005-L-GRE":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50003-S-BRO":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50001-L-BLA":{"units":2,"revenue":19.17,"orders":1,"amazon":0,"ebay":2},"SKU-50007-XL-SKI":{"units":1,"revenue":3.79,"orders":1,"amazon":0,"ebay":1},"SKU-50002-L-BLA":{"units":2,"revenue":10.8,"orders":1,"amazon":0,"ebay":2},"SKU-50005-L-SKI":{"units":1,"revenue":7.29,"orders":1,"amazon":0,"ebay":1}};
+// ══ TOP SELLERS PAGE ═══════════════════════════════════════════════════════
+function pageTopSellers(){
+  const allSales=STATIC_SALES;
+  const bySKU={},byCategory={},byChannel={},byLocation={};
+  CHANNELS.forEach(ch=>byChannel[ch]={units:0,revenue:0});
+  LOCS.forEach(l=>byLocation[l]={units:0,revenue:0});
+  allSales.forEach(s=>{
+    if(!bySKU[s.sku])bySKU[s.sku]={units:0,revenue:0,orders:0};
+    bySKU[s.sku].units+=(s.qty||0);bySKU[s.sku].revenue+=(s.price||0);bySKU[s.sku].orders+=1;
+    if(byChannel[s.channel]){byChannel[s.channel].units+=(s.qty||0);byChannel[s.channel].revenue+=(s.price||0);}
+    if(byLocation[s.loc]){byLocation[s.loc].units+=(s.qty||0);byLocation[s.loc].revenue+=(s.price||0);}
+    const sk=S.skus.find(k=>k.sku===s.sku);const cat=sk?sk.category:'Other';
+    if(!byCategory[cat])byCategory[cat]={units:0,revenue:0};
+    byCategory[cat].units+=(s.qty||0);byCategory[cat].revenue+=(s.price||0);
+  });
+  const totalUnits=allSales.reduce((a,s)=>a+(s.qty||0),0);
+  const totalRevenue=allSales.reduce((a,s)=>a+(s.price||0),0);
+  const totalOrders=allSales.length;
+  const topBySKU=Object.entries(bySKU).sort((a,b)=>b[1].units-a[1].units);
+  const maxUnits=topBySKU[0]?.[1]?.units||1;
+  const maxCh=Math.max(...Object.values(byChannel).map(c=>c.units),1);
+  const maxLoc=Math.max(...Object.values(byLocation).map(l=>l.units),1);
+  const CH_CLR={Shopify:'#96bf48',Amazon:'#ff9900',eBay:'#e53238',Direct:'#4f8ef7'};
+  return `
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
+    <div class="metric"><div class="metric-icon"><i class="ti ti-receipt"></i></div><div class="metric-val">${totalOrders}</div><div class="metric-label">Total orders</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-shopping-bag"></i></div><div class="metric-val">${totalUnits}</div><div class="metric-label">Units sold</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-coins"></i></div><div class="metric-val" style="font-size:18px">${fmtGBP(totalRevenue)}</div><div class="metric-label">Total revenue</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-chart-line"></i></div><div class="metric-val" style="font-size:18px">${fmtGBP(totalOrders?totalRevenue/totalOrders:0)}</div><div class="metric-label">Avg order value</div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hd"><div class="card-title"><i class="ti ti-trophy"></i>Top Selling Variants</div><span style="font-size:11px;color:var(--text2)">Amazon & eBay - 17 Apr to 26 May 2026</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th><th>Units</th><th>Revenue</th><th>Orders</th><th>Share</th></tr></thead>
+      <tbody>${topBySKU.map(([sku,d],i)=>{
+        const sk=S.skus.find(s=>s.sku===sku);
+        const pct=Math.round(d.units/maxUnits*100);
+        const medals=['Gold','Silver','Bronze'];
+        const medal=i<3?`<span title="${medals[i]}">${['#1','#2','#3'][i]}</span>`:`<span style="color:var(--text3);font-size:11px">${i+1}</span>`;
+        return`<tr><td style="text-align:center;font-weight:700;color:var(--accent)">${i===0?'1st':i===1?'2nd':i===2?'3rd':i+1}</td><td class="mono">${sku}</td>
+          <td style="font-weight:600;font-size:12px">${sk?sk.name:sku}</td><td>${sk?catBdg(sk.category):''}</td>
+          <td style="font-size:11px">${sk?sk.size:'--'}</td><td style="font-size:12px">${sk?sk.color:'--'}</td>
+          <td><div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;min-width:50px">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),#6d28d9);border-radius:3px"></div>
+            </div><span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${d.units}</span>
+          </div></td>
+          <td style="font-family:var(--mono);font-weight:600">${fmtGBP(d.revenue)}</td>
+          <td style="font-family:var(--mono);color:var(--text2)">${d.orders}</td>
+          <td style="font-size:11px;color:var(--text2)">${Math.round(d.units/totalUnits*100)}%</td></tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+    <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-tag"></i>By Category</div></div><div class="card-body">
+      ${Object.entries(byCategory).sort((a,b)=>b[1].units-a[1].units).map(([cat,d])=>{
+        const mx=Math.max(...Object.values(byCategory).map(x=>x.units),1);
+        return`<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;">${catBdg(cat)}<span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${d.units} units</span></div>
+          <div style="height:5px;background:var(--surface3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(d.units/mx*100)}%;background:linear-gradient(90deg,var(--accent),#6d28d9);border-radius:3px"></div></div>
+          <div style="font-size:10px;color:var(--text2);margin-top:3px">${fmtGBP(d.revenue)} revenue</div></div>`;
+      }).join('')}
+    </div></div>
+    <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>By Channel</div></div><div class="card-body">
+      ${CHANNELS.map(ch=>{const d=byChannel[ch]||{units:0,revenue:0};
+        return`<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_CLR[ch]};display:inline-block"></span>${ch}</span>
+          <span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${d.units}</span></div>
+          <div style="height:5px;background:var(--surface3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(d.units/maxCh*100)}%;background:${CH_CLR[ch]};border-radius:3px"></div></div>
+          <div style="font-size:10px;color:var(--text2);margin-top:3px">${fmtGBP(d.revenue)} · ${totalUnits?Math.round(d.units/totalUnits*100):0}%</div></div>`;
+      }).join('')}
+    </div></div>
+    <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-map-pin"></i>By Location</div></div><div class="card-body">
+      ${LOCS.map(loc=>{const d=byLocation[loc]||{units:0,revenue:0};
+        return`<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;">
+          <span>${LOC_FLAG[loc]} ${LOC_LABEL[loc]}</span>
+          <span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${d.units}</span></div>
+          <div style="height:5px;background:var(--surface3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(d.units/maxLoc*100)}%;background:linear-gradient(90deg,var(--accent),#6d28d9);border-radius:3px"></div></div>
+          <div style="font-size:10px;color:var(--text2);margin-top:3px">${fmtGBP(d.revenue)} · ${totalUnits?Math.round(d.units/totalUnits*100):0}%</div></div>`;
+      }).join('')}
+    </div></div>
+  </div>
+  ${(()=>{
+    const atRisk=topBySKU.slice(0,10).filter(([sku])=>{const sk=S.skus.find(s=>s.sku===sku);return sk&&(status(sk)==='critical'||status(sk)==='low');});
+    if(!atRisk.length)return'';
+    return`<div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-alert-triangle" style="color:var(--amber)"></i>Top sellers running low</div><span class="badge b-low">${atRisk.length}</span></div>
+      ${atRisk.map(([sku,d])=>{const sk=S.skus.find(s=>s.sku===sku);
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;">
+          <div><span style="font-weight:600">${sk?sk.name:sku}</span><span class="mono" style="margin-left:8px">${sku}</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--text2);font-size:11px">${d.units} sold</span>${bdg(status(sk))}<span style="font-family:var(--mono);font-size:11px">${tot(sk)} left</span></div>
+        </div>`;}).join('')}</div>`;
+  })()}`;
+}
+
+function pageSales(){
+  const sales=[...S.sales].reverse();
+  return`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="showModal('sale')"><i class="ti ti-plus"></i>Log sale</button></div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Date</th><th>SKU</th><th>Product</th><th>Channel</th><th>Location</th><th>Qty</th><th>Price</th><th>Ref</th></tr></thead>
+    <tbody>${sales.length===0?`<tr><td colspan="8"><div class="empty"><i class="ti ti-shopping-cart"></i>No sales yet — use the AI Chat or Log Sale button</div></td></tr>`:
+    sales.map(s=>{const sk=S.skus.find(k=>k.sku===s.sku);
+      return`<tr><td style="font-size:10px;font-family:var(--mono)">${s.date}</td><td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td><td style="font-size:12px">${sk?sk.name:s.sku}</td><td style="font-size:12px">${chDot(s.channel)}</td>
+      <td>${bdg(s.loc.includes('india')?'transit':'ok',LOC_LABEL[s.loc])}</td><td style="font-family:var(--mono)">${s.qty}</td><td style="font-family:var(--mono)">${s.price?fmtGBP(s.price):'—'}</td><td style="font-size:11px;color:var(--text2)">${s.ref||'—'}</td></tr>`;
+    }).join('')}</tbody></table></div></div>`;
+}
+
+// ══ SETTINGS ═══════════════════════════════════════════════════════════════
+function pageSettings(){
+  const key=localStorage.getItem('eirica-apikey')||'';
+  return`<div class="card" style="margin-bottom:14px">
+    <div class="card-hd"><div class="card-title"><i class="ti ti-key"></i>Eirica AI — API Key</div></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7">To use Eirica AI, you need a Claude API key from <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a>. The key is stored only in this browser.</p>
+      <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">
+        <div style="flex:1"><label>Claude API key</label><input id="api-key-input" type="text" value="${key}" placeholder="sk-ant-api03-…"/></div>
+        <button class="btn btn-primary" onclick="saveAPIKey()"><i class="ti ti-check"></i>Save key</button>
+        ${key?`<button class="btn btn-danger" onclick="localStorage.removeItem('eirica-apikey');render();toast('Key removed','var(--amber)')"><i class="ti ti-trash"></i></button>`:''}
+      </div>
+      ${key
+        ?`<div style="margin-top:4px;font-size:11px;color:var(--green);margin-bottom:12px">✓ API key saved (${key.slice(0,18)}…)</div>`
+        :`<div style="margin-top:4px;font-size:11px;color:var(--amber);margin-bottom:12px">⚠ No API key saved</div>`}
+      <button class="btn btn-sm" onclick="testAPIKey()"><i class="ti ti-plug"></i>Test connection</button>
+      <div id="api-test-result" style="margin-top:10px;font-size:12px;line-height:1.7"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><div class="card-title"><i class="ti ti-database"></i>Data management</div></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Data saves in this browser. Export CSV for backups and to share across the team.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="btn" onclick="exportMasterCSV()"><i class="ti ti-download"></i>Export master stock</button>
+        <button class="btn" onclick="exportSalesCSV()"><i class="ti ti-download"></i>Export sales log</button>
+        <button class="btn" onclick="reimport()"><i class="ti ti-refresh"></i>Reset to May 2026 data</button>
+        <button class="btn btn-danger" onclick="if(confirm('Clear all data?'))clearAll()"><i class="ti ti-trash"></i>Clear all</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+        ${[['Variants',S.skus.length],['Sales',S.sales.length],['POs',S.pos.length],['Channels','Shopify · Amazon · eBay · Direct'],['Locations','India WH · India FBA · UK WH · UK FBA'],['Data','May 2026 import']].map(([k,v])=>`<div style="padding:10px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)"><div style="font-size:10px;color:var(--text2);margin-bottom:2px">${k}</div><div style="font-weight:600">${v}</div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function saveAPIKey(){ const k=document.getElementById('api-key-input').value.trim(); localStorage.setItem('eirica-apikey',k); toast('API key saved ✓'); render(); }
+
+async function testAPIKey(){
+  const el=document.getElementById('api-test-result');
+  const key=localStorage.getItem('eirica-apikey')||'';
+  if(!key){ el.innerHTML='<span style="color:var(--red)">⚠ No API key saved. Paste your key above and click Save first.</span>'; return; }
+  el.innerHTML='<span style="color:var(--text2)">Testing connection…</span>';
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:20,
+        messages:[{role:'user',content:'Reply with just: OK'}]
+      })
+    });
+    const data=await res.json();
+    if(res.ok){
+      el.innerHTML=`<span style="color:var(--green)">✓ Connected! Eirica AI is working. Response: "${data.content?.[0]?.text||'OK'}"</span>`;
+    } else {
+      el.innerHTML=`<span style="color:var(--red)">✗ Error ${res.status}: ${data.error?.message||'Unknown error'}. Check your API key is correct and has credits.</span>`;
+    }
+  } catch(e){
+    el.innerHTML=`<span style="color:var(--red)">✗ Network error: ${e.message}. This usually means the browser is blocking the request. Try opening the file in Chrome.</span>`;
+  }
+}
+
+// ══ ACTIONS ════════════════════════════════════════════════════════════════
+function saveSKU(){
+  const code=document.getElementById('f-sku-code').value.trim();
+  const name=document.getElementById('f-sku-name').value.trim();
+  if(!code||!name){ toast('SKU code and name required','var(--red)'); return; }
+  S.skus.push({sku:code,name,category:document.getElementById('f-sku-cat').value,size:document.getElementById('f-sku-size').value,color:document.getElementById('f-sku-color').value,supplier:document.getElementById('f-sku-supplier').value,reorder:parseInt(document.getElementById('f-sku-reorder').value)||10,cost:0,price:0,stock:{india:parseInt(document.getElementById('f-loc-india').value)||0,'india-fba':parseInt(document.getElementById('f-loc-ifba').value)||0,uk:parseInt(document.getElementById('f-loc-uk').value)||0,'uk-fba':parseInt(document.getElementById('f-loc-ufba').value)||0}});
+  saveState(); closeModal('sku'); toast('SKU added ✓'); render();
+}
+function editSKU(i){ const s=S.skus[i]; const v=prompt(`Edit stock for: ${s.name}\nEnter: India WH, India FBA, UK WH, UK FBA (comma separated)\nCurrent: ${LOCS.map(l=>s.stock[l]||0).join(', ')}`); if(!v) return; const pts=v.split(',').map(p=>parseInt(p.trim())||0); LOCS.forEach((l,j)=>{ if(!isNaN(pts[j])) s.stock[l]=pts[j]; }); saveState(); toast('Updated ✓'); render(); }
+function delSKU(i){ if(!confirm(`Delete "${S.skus[i].name}"?`)) return; S.skus.splice(i,1); saveState(); toast('Deleted','var(--amber)'); render(); }
+function updLoc(i,loc){
+  const el=document.getElementById(`lupd-${i}-${loc}`); if(!el) return;
+  S.skus[i].stock[loc]=parseInt(el.value)||0;
+  const now=nowStr();
+  if(loc==='india'||loc==='india-fba') S.lastStockUpdateIndia=now;
+  if(loc==='uk') S.lastStockUpdateUK=now;
+  if(loc==='uk-fba') S.lastStockUpdateUKFBA=now;
+  saveState(); toast('Updated ✓');
+}
+
+function logSale(){
+  const skuCode=document.getElementById('f-sale-sku').value;
+  const qty=parseInt(document.getElementById('f-sale-qty').value)||1;
+  const loc=document.getElementById('f-sale-loc').value;
+  if(!skuCode){ toast('Select a SKU','var(--red)'); return; }
+  const sk=S.skus.find(s=>s.sku===skuCode);
+  if(!sk){ toast('SKU not found','var(--red)'); return; }
+  if((sk.stock[loc]||0)<qty){ toast(`Only ${sk.stock[loc]||0} available at ${LOC_LABEL[loc]}`,'var(--amber)'); return; }
+  sk.stock[loc]=(sk.stock[loc]||0)-qty;
+  S.sales.push({sku:skuCode,channel:document.getElementById('f-sale-ch').value,loc,qty,price:parseFloat(document.getElementById('f-sale-price').value)||0,ref:document.getElementById('f-sale-ref').value,date:nowStr()});
+  saveState(); closeModal('sale'); toast(`Sale logged — ${qty} unit(s) deducted ✓`); render();
+}
+
+let poLines=[];
+function addPOLine(){ const w=document.getElementById('po-lines'); const i=poLines.length; poLines.push({sku:'',qty:0,loc:'uk'}); const d=document.createElement('div'); d.className='po-line-row'; d.innerHTML=`<select onchange="poLines[${i}].sku=this.value" style="font-size:12px"><option value="">Select SKU…</option>${S.skus.map(s=>`<option value="${s.sku}">${s.sku} — ${s.name}</option>`).join('')}</select><input type="number" placeholder="Qty" min="1" style="font-size:12px" oninput="poLines[${i}].qty=parseInt(this.value)||0"/><select onchange="poLines[${i}].loc=this.value" style="font-size:12px">${LOCS.map(l=>`<option value="${l}">${LOC_FLAG[l]} ${LOC_LABEL[l]}</option>`).join('')}</select><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`; w.appendChild(d); }
+function savePO(){ const sup=document.getElementById('f-po-supplier').value.trim(); if(!sup){ toast('Supplier required','var(--red)'); return; } const lines=poLines.filter(l=>l.sku&&l.qty>0); if(!lines.length){ toast('Add at least one line','var(--red)'); return; } const num='PO-'+(1000+S.pos.length+1); S.pos.push({num,supplier:sup,date:document.getElementById('f-po-date').value,lines,status:'draft'}); saveState(); poLines=[]; closeModal('po'); toast(`${num} created ✓`); render(); }
+function setPOSt(i,s){ S.pos[i].status=s; saveState(); toast('Updated'); render(); }
+function rcvPO(i){
+  const po=S.pos[i]; const now=nowStr();
+  po.lines.forEach(l=>{
+    const sk=S.skus.find(s=>s.sku===l.sku); if(sk) sk.stock[l.loc]=(sk.stock[l.loc]||0)+l.qty;
+    if(l.loc==='india'||l.loc==='india-fba') S.lastStockUpdateIndia=now;
+    if(l.loc==='uk') S.lastStockUpdateUK=now;
+    if(l.loc==='uk-fba') S.lastStockUpdateUKFBA=now;
+  });
+  po.status='received'; saveState(); toast(`${po.num} received — stock updated ✓`); render();
+}
+function delPO(i){ if(!confirm('Delete this PO?')) return; S.pos.splice(i,1); saveState(); render(); }
+function clearAll(){ S={skus:[],sales:[],pos:[],page:'dashboard'}; saveState(); toast('Cleared','var(--amber)'); render(); }
+function reimport(){ if(!confirm('Reset SKUs to May 2026 data? Sales and POs kept.')) return; S.skus=JSON.parse(JSON.stringify(EIRICA_DATA)); saveState(); toast('Reimported ✓'); render(); }
+function exportMasterCSV(){ const rows=[['SKU','Product','Category','Size','Colour','India WH','India FBA','UK WH','UK FBA','Total','Reorder','Status']]; S.skus.forEach(s=>rows.push([s.sku,s.name,s.category,s.size,s.color,s.stock.india||0,s.stock['india-fba']||0,s.stock.uk||0,s.stock['uk-fba']||0,tot(s),s.reorder,status(s)])); dlCSV(rows,'eirica-master.csv'); }
+function exportSalesCSV(){ const rows=[['Date','SKU','Product','Channel','Location','Qty','Price','Ref']]; S.sales.forEach(s=>{ const sk=S.skus.find(k=>k.sku===s.sku); rows.push([s.date,s.sku,sk?sk.name:'',s.channel,LOC_FULL[s.loc]||s.loc,s.qty,(s.price||0).toFixed(2),s.ref||'']); }); dlCSV(rows,'eirica-sales.csv'); }
+function dlCSV(rows,name){ const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n'); const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv); a.download=name; a.click(); toast('Exported ✓'); }
+
+// ══ MODALS ═════════════════════════════════════════════════════════════════
+function showModal(name){ if(name==='sale'){ const sel=document.getElementById('f-sale-sku'); sel.innerHTML='<option value="">Select SKU…</option>'+S.skus.map(s=>`<option value="${s.sku}">${s.sku} — ${s.name}</option>`).join(''); } if(name==='po'){ poLines=[]; document.getElementById('po-lines').innerHTML=''; addPOLine(); } document.getElementById('modal-'+name).classList.add('open'); }
+function closeModal(name){ document.getElementById('modal-'+name).classList.remove('open'); }
+function closeModalClick(name,e){ if(e.target===document.getElementById('modal-'+name)) closeModal(name); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') ['sku','sale','po'].forEach(closeModal); });
+
+// ══ EXCEL IMPORT PAGE ══════════════════════════════════════════════════════
+function pageImport(){
+  return `
+  <div style="max-width:820px">
+    <div style="margin-bottom:20px">
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px"><i class="ti ti-file-spreadsheet" style="color:var(--accent)"></i>Excel bulk import</h2>
+      <p style="font-size:13px;color:var(--text2);line-height:1.7">Upload your Excel file to update stock quantities across all locations at once. Works with your existing Eirica format or our template.</p>
+    </div>
+
+    <!-- How it works -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-info-circle"></i>How it works</div>
+        <button class="btn btn-sm btn-primary" onclick="downloadTemplate()"><i class="ti ti-download"></i>Download template</button>
+      </div>
+      <div class="card-body" style="padding:0 18px">
+        <div class="import-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Download the template (or use your own Excel)</div>
+            <div class="step-desc">Click "Download template" above to get a ready-made spreadsheet with all your current SKUs pre-filled. Or use any Excel file — as long as it has columns for SKU, India WH, India FBA, UK WH and UK FBA quantities.</div>
+          </div>
+        </div>
+        <div class="import-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Fill in the quantities</div>
+            <div class="step-desc">Update the stock numbers per location for each variant. Leave blank or zero for no change. You can delete rows you don't want to update.</div>
+          </div>
+        </div>
+        <div class="import-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Upload and review</div>
+            <div class="step-desc">Drag and drop or click to upload. The system shows a preview before applying — you confirm, it updates. Choose between <strong>Replace</strong> (overwrite current numbers) or <strong>Add</strong> (add to existing stock).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-upload"></i>Upload Excel file</div></div>
+      <div class="card-body">
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('xl-file-input').click()" ondragover="dzDrag(event,true)" ondragleave="dzDrag(event,false)" ondrop="dzDrop(event)">
+          <i class="ti ti-file-spreadsheet"></i>
+          <p><strong>Click to browse</strong> or drag and drop your Excel file here<br><span style="font-size:11px;color:var(--text3)">Supports .xlsx · .xls · .csv</span></p>
+        </div>
+        <input type="file" id="xl-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleXLFile(this.files[0])"/>
+
+        <!-- Mode selector -->
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;font-size:13px">
+          <span style="color:var(--text2);font-weight:500">Import mode:</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;margin-bottom:0">
+            <input type="radio" name="import-mode" value="replace" checked style="width:auto;cursor:pointer"/> Replace — overwrite stock with file values
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;margin-bottom:0">
+            <input type="radio" name="import-mode" value="add" style="width:auto;cursor:pointer"/> Add — add file values to existing stock
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview area -->
+    <div id="import-preview-area"></div>
+  </div>`;
+}
+
+function dzDrag(e,over){ e.preventDefault(); document.getElementById('drop-zone').classList.toggle('drag-over',over); }
+function dzDrop(e){ e.preventDefault(); dzDrag(e,false); const f=e.dataTransfer.files[0]; if(f) handleXLFile(f); }
+
+let importRows = [];
+
+function handleXLFile(file){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      let rows = [];
+      if(ext==='csv'){
+        rows = parseCSV(e.target.result);
+      } else {
+        if(!window.XLSX){ toast('Loading Excel parser…','var(--blue)'); loadSheetJS(()=>parseXL(e.target.result, file.name)); return; }
+        rows = parseXLData(e.target.result);
+      }
+      buildImportPreview(rows, file.name);
+    }catch(err){ toast('Could not read file: '+err.message,'var(--red)'); }
+  };
+  if(ext==='csv') reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
+}
+
+function loadSheetJS(cb){
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=cb; document.head.appendChild(s);
+}
+
+function parseXL(arrayBuffer, fname){
+  try{ const rows=parseXLData(arrayBuffer); buildImportPreview(rows,fname); }
+  catch(err){ toast('Excel parse error: '+err.message,'var(--red)'); }
+}
+
+function parseXLData(arrayBuffer){
+  const wb = window.XLSX.read(arrayBuffer,{type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  return window.XLSX.utils.sheet_to_json(ws,{defval:''});
+}
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const vals = line.split(',').map(v=>v.replace(/"/g,'').trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=vals[i]||'');
+    return obj;
+  });
+}
+
+function findCol(row, ...names){
+  for(const k of Object.keys(row)){
+    const kl=k.toLowerCase().replace(/[\s_\-]/g,'');
+    for(const n of names){ if(kl.includes(n.toLowerCase().replace(/[\s_\-]/g,''))) return k; }
+  }
+  return null;
+}
+
+function buildImportPreview(rawRows, fname){
+  if(!rawRows||rawRows.length===0){ toast('No data rows found in file','var(--amber)'); return; }
+
+  // Auto-detect columns from first row
+  const sample = rawRows[0];
+  const skuCol    = findCol(sample,'sku','code','ref');
+  const indiaCol  = findCol(sample,'indiawh','indiawarehouse','india wh','india_wh','india') ;
+  const ifbaCol   = findCol(sample,'indiafba','india fba','india_fba','ifba');
+  const ukCol     = findCol(sample,'ukwh','uk wh','ukwarehouse','uk_wh','uk warehouse');
+  const ufbaCol   = findCol(sample,'ukfba','uk fba','uk_fba','ufba');
+  const nameCol   = findCol(sample,'name','product','item');
+
+  if(!skuCol){ toast('Could not find a SKU column. Use "SKU" as the column header.','var(--red)'); return; }
+
+  // Build preview rows
+  importRows = [];
+  rawRows.forEach(row=>{
+    const skuVal = String(row[skuCol]||'').trim();
+    if(!skuVal) return;
+    const matched = S.skus.find(s=>s.sku.toLowerCase()===skuVal.toLowerCase());
+    const indiaQ = parseInt(row[indiaCol])||0;
+    const ifbaQ  = parseInt(row[ifbaCol])||0;
+    const ukQ    = parseInt(row[ukCol])||0;
+    const ufbaQ  = parseInt(row[ufbaCol])||0;
+    importRows.push({ skuVal, matched, indiaQ, ifbaQ, ukQ, ufbaQ, name: row[nameCol]||'' });
+  });
+
+  const matched   = importRows.filter(r=>r.matched).length;
+  const unmatched = importRows.filter(r=>!r.matched).length;
+
+  const previewHTML = `
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title"><i class="ti ti-table"></i>Preview — ${fname}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge b-ok">${matched} matched</span>
+          ${unmatched>0?`<span class="badge b-critical">${unmatched} not found</span>`:''}
+          <button class="btn btn-primary" onclick="applyImport()" ${matched===0?'disabled':''}><i class="ti ti-check"></i>Apply import</button>
+          <button class="btn" onclick="document.getElementById('import-preview-area').innerHTML=''"><i class="ti ti-x"></i>Cancel</button>
+        </div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>SKU from file</th><th>Match</th><th>India WH</th><th>India FBA</th><th>UK WH</th><th>UK FBA</th><th>Status</th></tr></thead>
+        <tbody>
+          ${importRows.map(r=>{
+            const cls = r.matched ? (r.skuVal===r.matched.sku?'':'import-row-ok') : 'import-row-warn';
+            return `<tr class="${cls}">
+              <td style="font-family:var(--mono);font-size:11px">${r.skuVal}</td>
+              <td style="font-size:11px">${r.matched?`<span style="color:var(--green)">✓ ${r.matched.name}</span>`:`<span style="color:var(--amber)">⚠ Not found</span>`}</td>
+              <td style="font-family:var(--mono)">${r.indiaQ||'—'}</td>
+              <td style="font-family:var(--mono)">${r.ifbaQ||'—'}</td>
+              <td style="font-family:var(--mono)">${r.ukQ||'—'}</td>
+              <td style="font-family:var(--mono)">${r.ufbaQ||'—'}</td>
+              <td>${r.matched?`<span class="badge b-ok">Ready</span>`:`<span class="badge b-low">Skip</span>`}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+      ${unmatched>0?`<div style="padding:12px 16px;font-size:11px;color:var(--amber);border-top:1px solid var(--border)">⚠ ${unmatched} SKU(s) not found in master stock and will be skipped. Check SKU codes match exactly.</div>`:''}
+    </div>`;
+
+  document.getElementById('import-preview-area').innerHTML = previewHTML;
+}
+
+function applyImport(){
+  const mode = document.querySelector('input[name="import-mode"]:checked').value;
+  let updated=0;
+  importRows.filter(r=>r.matched).forEach(r=>{
+    const sk = r.matched;
+    if(mode==='replace'){
+      if(r.indiaQ||r.indiaQ===0) sk.stock.india = r.indiaQ;
+      if(r.ifbaQ||r.ifbaQ===0)   sk.stock['india-fba'] = r.ifbaQ;
+      if(r.ukQ||r.ukQ===0)       sk.stock.uk = r.ukQ;
+      if(r.ufbaQ||r.ufbaQ===0)   sk.stock['uk-fba'] = r.ufbaQ;
+    } else {
+      sk.stock.india         = (sk.stock.india||0) + r.indiaQ;
+      sk.stock['india-fba']  = (sk.stock['india-fba']||0) + r.ifbaQ;
+      sk.stock.uk            = (sk.stock.uk||0) + r.ukQ;
+      sk.stock['uk-fba']     = (sk.stock['uk-fba']||0) + r.ufbaQ;
+    }
+    updated++;
+  });
+  saveState();
+  S.lastStockUpdate = nowStr();
+  saveState();
+  toast(`✓ ${updated} variants updated (${mode} mode)`);
+  document.getElementById('import-preview-area').innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px 20px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:10px"><i class="ti ti-circle-check" style="font-size:20px"></i><div><strong>${updated} variants updated successfully</strong><div style="font-size:12px;margin-top:3px;color:var(--text2)">Mode: ${mode==='replace'?'Replace (values overwritten)':'Add (values added to existing stock)'}. Check the Dashboard or Master Stock to confirm.</div></div></div>`;
+  importRows=[];
+}
+
+function downloadTemplate(){
+  // Build CSV template with all current SKUs
+  const rows = [['SKU','Product Name','Category','Size','Colour','India WH','India FBA','UK WH','UK FBA','Notes']];
+  S.skus.forEach(s=>rows.push([s.sku, s.name, s.category, s.size, s.color, s.stock.india||0, s.stock['india-fba']||0, s.stock.uk||0, s.stock['uk-fba']||0, '']));
+  const csv = rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='eirica-stock-update-template.csv';
+  a.click();
+  toast('Template downloaded ✓');
+}
+
+// Auto-load SheetJS on page load so it's ready
+window.addEventListener('load',()=>{ if(!window.XLSX) loadSheetJS(()=>{}); });
+
+// ══ ACCESS GATE ════════════════════════════════════════════════════════════
+const ACCESS_CODE = 'Eirica@485926';
+// API key — set via Settings page in the dashboard
+
+function checkGate(){
+  const val = document.getElementById('gate-input').value;
+  if(val === ACCESS_CODE){
+    localStorage.setItem('eirica-auth', btoa(ACCESS_CODE));
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display  = 'flex';
+    loadState();
+  } else {
+    const err = document.getElementById('gate-error');
+    const box = document.querySelector('.gate-box');
+    err.textContent = 'Incorrect access code. Please try again.';
+    box.classList.remove('gate-shake');
+    void box.offsetWidth; // reflow to restart animation
+    box.classList.add('gate-shake');
+    document.getElementById('gate-input').value = '';
+    document.getElementById('gate-input').focus();
+  }
+}
+
+function initGate(){
+  var btn = document.getElementById('gate-btn');
+  var inp = document.getElementById('gate-input');
+  if(btn) btn.onclick = checkGate;
+  if(inp) inp.onkeydown = function(e){ if(e.key==='Enter') checkGate(); };
+  var stored = localStorage.getItem('eirica-auth');
+  if(stored && atob(stored) === ACCESS_CODE){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display  = 'flex';
+    loadState();
+  } else {
+    if(inp) setTimeout(function(){ inp.focus(); }, 100);
+  }
+}
+
+// ══ INIT ═══════════════════════════════════════════════════════════════════
+window.onload = initGate;
+</script>
+</body>
+</html>
