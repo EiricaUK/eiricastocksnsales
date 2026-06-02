@@ -85,6 +85,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
 
 /* Badges */
 .badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.b-negative{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3);}
 .b-ok{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
 .b-low{background:rgba(249,115,22,.15);color:#fb923c;border:1px solid rgba(249,115,22,.25);}
 .b-critical{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25);}
@@ -257,6 +258,7 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
 .recent-sale-qty{font-family:var(--mono);font-weight:600;color:var(--text);}
 .recent-sale-meta{color:var(--text3);font-size:10px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -430,26 +432,26 @@ const CAT_BADGE = {'BRA':'b-bra','Short':'b-short','Brief':'b-brief'};
 
 // ══ EIRICA DATA (140 variants from Excel) ══════════════════════════════════
 const EIRICA_DATA = [
-  {sku:"SKU-50001-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:15,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:13,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:16,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:15,"india-fba":0,uk:-4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:13,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:8,"india-fba":0,uk:0,"uk-fba":5},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:8,"india-fba":0,uk:-3,"uk-fba":5},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:8,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:8,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:14,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:14,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:12,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:16,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50001-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:15,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50001-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:10,"india-fba":0,uk:3,"uk-fba":4},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50001-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:10,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:14,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:17,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:13,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
@@ -463,9 +465,9 @@ const EIRICA_DATA = [
   {sku:"SKU-50002-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:13,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50002-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50002-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50002-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:16,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:14,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50002-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
@@ -475,16 +477,16 @@ const EIRICA_DATA = [
   {sku:"SKU-50003-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:15,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50003-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:14,"india-fba":0,uk:4,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50003-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:12,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:14,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:12,"india-fba":0,uk:-1,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50003-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:14,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:14,"india-fba":0,uk:-2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:3,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50003-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50003-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:-2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50003-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:12,"india-fba":0,uk:5,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
@@ -503,73 +505,73 @@ const EIRICA_DATA = [
   {sku:"SKU-50004-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50004-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:0,"uk-fba":1},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:15,"india-fba":0,uk:1,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50004-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:10,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50004-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:10,"india-fba":0,uk:2,"uk-fba":1},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:15,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50004-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:16,"india-fba":0,uk:2,"uk-fba":2},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-S-WHI",name:"BRA S White",category:"BRA",size:"S",color:"White",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-M-WHI",name:"BRA M White",category:"BRA",size:"M",color:"White",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-L-WHI",name:"BRA L White",category:"BRA",size:"L",color:"White",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50005-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:9,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-WHI",name:"BRA XL White",category:"BRA",size:"XL",color:"White",stock:{india:9,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-S-BLA",name:"BRA S Black",category:"BRA",size:"S",color:"Black",stock:{india:17,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-M-BLA",name:"BRA M Black",category:"BRA",size:"M",color:"Black",stock:{india:14,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50005-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:10,"india-fba":0,uk:6,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50005-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:14,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-BLA",name:"BRA L Black",category:"BRA",size:"L",color:"Black",stock:{india:10,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-XL-BLA",name:"BRA XL Black",category:"BRA",size:"XL",color:"Black",stock:{india:14,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-S-GRE",name:"BRA S Grey",category:"BRA",size:"S",color:"Grey",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-M-GRE",name:"BRA M Grey",category:"BRA",size:"M",color:"Grey",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-L-GRE",name:"BRA L Grey",category:"BRA",size:"L",color:"Grey",stock:{india:19,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-XL-GRE",name:"BRA XL Grey",category:"BRA",size:"XL",color:"Grey",stock:{india:12,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-S-SKI",name:"BRA S Skin",category:"BRA",size:"S",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-M-SKI",name:"BRA M Skin",category:"BRA",size:"M",color:"Skin",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50005-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50005-L-SKI",name:"BRA L Skin",category:"BRA",size:"L",color:"Skin",stock:{india:16,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-XL-SKI",name:"BRA XL Skin",category:"BRA",size:"XL",color:"Skin",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-S-BRO",name:"BRA S Brown",category:"BRA",size:"S",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-M-BRO",name:"BRA M Brown",category:"BRA",size:"M",color:"Brown",stock:{india:15,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-L-BRO",name:"BRA L Brown",category:"BRA",size:"L",color:"Brown",stock:{india:16,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50005-XL-BRO",name:"BRA XL Brown",category:"BRA",size:"XL",color:"Brown",stock:{india:16,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-S-WHI",name:"Short S White",category:"Short",size:"S",color:"White",stock:{india:23,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50006-M-WHI",name:"Short M White",category:"Short",size:"M",color:"White",stock:{india:25,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-WHI",name:"Short M White",category:"Short",size:"M",color:"White",stock:{india:25,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-L-WHI",name:"Short L White",category:"Short",size:"L",color:"White",stock:{india:23,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-XL-WHI",name:"Short XL White",category:"Short",size:"XL",color:"White",stock:{india:26,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-S-BLA",name:"Short S Black",category:"Short",size:"S",color:"Black",stock:{india:24,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50006-M-BLA",name:"Short M Black",category:"Short",size:"M",color:"Black",stock:{india:26,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-BLA",name:"Short M Black",category:"Short",size:"M",color:"Black",stock:{india:26,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-L-BLA",name:"Short L Black",category:"Short",size:"L",color:"Black",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-XL-BLA",name:"Short XL Black",category:"Short",size:"XL",color:"Black",stock:{india:19,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-S-GRE",name:"Short S Grey",category:"Short",size:"S",color:"Grey",stock:{india:27,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-M-GRE",name:"Short M Grey",category:"Short",size:"M",color:"Grey",stock:{india:29,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-L-GRE",name:"Short L Grey",category:"Short",size:"L",color:"Grey",stock:{india:27,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-XL-GRE",name:"Short XL Grey",category:"Short",size:"XL",color:"Grey",stock:{india:28,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50006-S-SKI",name:"Short S Skin",category:"Short",size:"S",color:"Skin",stock:{india:28,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-S-SKI",name:"Short S Skin",category:"Short",size:"S",color:"Skin",stock:{india:28,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-M-SKI",name:"Short M Skin",category:"Short",size:"M",color:"Skin",stock:{india:29,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-L-SKI",name:"Short L Skin",category:"Short",size:"L",color:"Skin",stock:{india:28,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-XL-SKI",name:"Short XL Skin",category:"Short",size:"XL",color:"Skin",stock:{india:26,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-S-BRO",name:"Short S Brown",category:"Short",size:"S",color:"Brown",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50006-M-BRO",name:"Short M Brown",category:"Short",size:"M",color:"Brown",stock:{india:24,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-M-BRO",name:"Short M Brown",category:"Short",size:"M",color:"Brown",stock:{india:24,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50006-L-BRO",name:"Short L Brown",category:"Short",size:"L",color:"Brown",stock:{india:24,"india-fba":0,uk:5,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50006-XL-BRO",name:"Short XL Brown",category:"Short",size:"XL",color:"Brown",stock:{india:22,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50006-XL-BRO",name:"Short XL Brown",category:"Short",size:"XL",color:"Brown",stock:{india:22,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-S-WHI",name:"Brief S White",category:"Brief",size:"S",color:"White",stock:{india:24,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-M-WHI",name:"Brief M White",category:"Brief",size:"M",color:"White",stock:{india:39,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-L-WHI",name:"Brief L White",category:"Brief",size:"L",color:"White",stock:{india:39,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-WHI",name:"Brief M White",category:"Brief",size:"M",color:"White",stock:{india:39,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-WHI",name:"Brief L White",category:"Brief",size:"L",color:"White",stock:{india:39,"india-fba":0,uk:-3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-XL-WHI",name:"Brief XL White",category:"Brief",size:"XL",color:"White",stock:{india:23,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-S-BLA",name:"Brief S Black",category:"Brief",size:"S",color:"Black",stock:{india:31,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-BLA",name:"Brief S Black",category:"Brief",size:"S",color:"Black",stock:{india:31,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-M-BLA",name:"Brief M Black",category:"Brief",size:"M",color:"Black",stock:{india:29,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-L-BLA",name:"Brief L Black",category:"Brief",size:"L",color:"Black",stock:{india:32,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-BLA",name:"Brief L Black",category:"Brief",size:"L",color:"Black",stock:{india:32,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-XL-BLA",name:"Brief XL Black",category:"Brief",size:"XL",color:"Black",stock:{india:36,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-S-GRE",name:"Brief S Grey",category:"Brief",size:"S",color:"Grey",stock:{india:32,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-M-GRE",name:"Brief M Grey",category:"Brief",size:"M",color:"Grey",stock:{india:24,"india-fba":0,uk:1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-L-GRE",name:"Brief L Grey",category:"Brief",size:"L",color:"Grey",stock:{india:30,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
   {sku:"SKU-50007-XL-GRE",name:"Brief XL Grey",category:"Brief",size:"XL",color:"Grey",stock:{india:36,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-S-SKI",name:"Brief S Skin",category:"Brief",size:"S",color:"Skin",stock:{india:36,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-M-SKI",name:"Brief M Skin",category:"Brief",size:"M",color:"Skin",stock:{india:28,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-L-SKI",name:"Brief L Skin",category:"Brief",size:"L",color:"Skin",stock:{india:28,"india-fba":0,uk:0,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-XL-SKI",name:"Brief XL Skin",category:"Brief",size:"XL",color:"Skin",stock:{india:20,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-S-BRO",name:"Brief S Brown",category:"Brief",size:"S",color:"Brown",stock:{india:21,"india-fba":0,uk:4,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-M-BRO",name:"Brief M Brown",category:"Brief",size:"M",color:"Brown",stock:{india:30,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-L-BRO",name:"Brief L Brown",category:"Brief",size:"L",color:"Brown",stock:{india:25,"india-fba":0,uk:3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
-  {sku:"SKU-50007-XL-BRO",name:"Brief XL Brown",category:"Brief",size:"XL",color:"Brown",stock:{india:20,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"}
+  {sku:"SKU-50007-S-SKI",name:"Brief S Skin",category:"Brief",size:"S",color:"Skin",stock:{india:36,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-SKI",name:"Brief M Skin",category:"Brief",size:"M",color:"Skin",stock:{india:28,"india-fba":0,uk:-3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-SKI",name:"Brief L Skin",category:"Brief",size:"L",color:"Skin",stock:{india:28,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-SKI",name:"Brief XL Skin",category:"Brief",size:"XL",color:"Skin",stock:{india:20,"india-fba":0,uk:-3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-S-BRO",name:"Brief S Brown",category:"Brief",size:"S",color:"Brown",stock:{india:21,"india-fba":0,uk:2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-M-BRO",name:"Brief M Brown",category:"Brief",size:"M",color:"Brown",stock:{india:30,"india-fba":0,uk:-1,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-L-BRO",name:"Brief L Brown",category:"Brief",size:"L",color:"Brown",stock:{india:25,"india-fba":0,uk:-3,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"},
+  {sku:"SKU-50007-XL-BRO",name:"Brief XL Brown",category:"Brief",size:"XL",color:"Brown",stock:{india:20,"india-fba":0,uk:-2,"uk-fba":0},reorder:10,cost:0,price:0,supplier:"Eirica International"}
 ];
 
 // ══ STATE ══════════════════════════════════════════════════════════════════
@@ -596,6 +598,51 @@ function loadState(){
   if(!S.sales.find(x=>x.ref==='026-3323355-4330738'&&x.sku==='SKU-50006-S-BLA')){
     S.sales.push({sku:'SKU-50006-S-BLA',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'026-3323355-4330738',date:'2026-05-25'});
   }
+  // eBay sales May-Jun 2026
+  if(!S.sales.find(x=>x.ref==='04-14721-45653'&&x.sku==='SKU-50001-M-BLA')){S.sales.push({sku:'SKU-50001-M-BLA',channel:'eBay',loc:'uk',qty:3,price:14.99,ref:'04-14721-45653',date:'2026-06-01'});}
+  if(!S.sales.find(x=>x.ref==='01-14723-75769'&&x.sku==='SKU-50007-M-BRO')){S.sales.push({sku:'SKU-50007-M-BRO',channel:'eBay',loc:'uk',qty:1,price:3.89,ref:'01-14723-75769',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='07-14712-89997'&&x.sku==='SKU-50003-M-BLA')){S.sales.push({sku:'SKU-50003-M-BLA',channel:'eBay',loc:'uk',qty:2,price:9.58,ref:'07-14712-89997',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='07-14712-89997'&&x.sku==='SKU-50003-M-GRE')){S.sales.push({sku:'SKU-50003-M-GRE',channel:'eBay',loc:'uk',qty:2,price:9.59,ref:'07-14712-89997',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='11-14705-76560'&&x.sku==='SKU-50007-L-WHI')){S.sales.push({sku:'SKU-50007-L-WHI',channel:'eBay',loc:'uk',qty:2,price:6.45,ref:'11-14705-76560',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='11-14705-76560'&&x.sku==='SKU-50007-L-BLA')){S.sales.push({sku:'SKU-50007-L-BLA',channel:'eBay',loc:'uk',qty:2,price:6.45,ref:'11-14705-76560',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='19-14693-05312'&&x.sku==='SKU-50007-M-BRO')){S.sales.push({sku:'SKU-50007-M-BRO',channel:'eBay',loc:'uk',qty:4,price:6.45,ref:'19-14693-05312',date:'2026-05-31'});}
+  if(!S.sales.find(x=>x.ref==='26-14680-32574'&&x.sku==='SKU-50001-XL-GRE')){S.sales.push({sku:'SKU-50001-XL-GRE',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'26-14680-32574',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='06-14712-27001'&&x.sku==='SKU-50006-M-BLA')){S.sales.push({sku:'SKU-50006-M-BLA',channel:'eBay',loc:'uk',qty:1,price:4.29,ref:'06-14712-27001',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='06-14712-16037'&&x.sku==='SKU-50005-XL-WHI')){S.sales.push({sku:'SKU-50005-XL-WHI',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'06-14712-16037',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='24-14696-84949'&&x.sku==='SKU-50006-M-BLA')){S.sales.push({sku:'SKU-50006-M-BLA',channel:'eBay',loc:'uk',qty:1,price:4.29,ref:'24-14696-84949',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='06-14710-79480'&&x.sku==='SKU-50007-XL-SKI')){S.sales.push({sku:'SKU-50007-XL-SKI',channel:'eBay',loc:'uk',qty:3,price:9.79,ref:'06-14710-79480',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='08-14706-98850'&&x.sku==='SKU-50007-L-BRO')){S.sales.push({sku:'SKU-50007-L-BRO',channel:'eBay',loc:'uk',qty:3,price:9.79,ref:'08-14706-98850',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='17-14692-65904'&&x.sku==='SKU-50001-S-WHI')){S.sales.push({sku:'SKU-50001-S-WHI',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'17-14692-65904',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='20-14685-94813'&&x.sku==='SKU-50007-L-BRO')){S.sales.push({sku:'SKU-50007-L-BRO',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'20-14685-94813',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='14-14695-38543'&&x.sku==='SKU-50002-M-SKI')){S.sales.push({sku:'SKU-50002-M-SKI',channel:'eBay',loc:'uk',qty:2,price:10.29,ref:'14-14695-38543',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='13-14696-70599'&&x.sku==='SKU-50007-M-BRO')){S.sales.push({sku:'SKU-50007-M-BRO',channel:'eBay',loc:'uk',qty:3,price:3.5,ref:'13-14696-70599',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='24-14692-81762'&&x.sku==='SKU-50007-XL-SKI')){S.sales.push({sku:'SKU-50007-XL-SKI',channel:'eBay',loc:'uk',qty:1,price:3.89,ref:'24-14692-81762',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='20-14683-13927'&&x.sku==='SKU-50001-L-WHI')){S.sales.push({sku:'SKU-50001-L-WHI',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'20-14683-13927',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='11-14694-93424'&&x.sku==='SKU-50007-L-SKI')){S.sales.push({sku:'SKU-50007-L-SKI',channel:'eBay',loc:'uk',qty:1,price:3.89,ref:'11-14694-93424',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='09-14697-97269'&&x.sku==='SKU-50001-M-WHI')){S.sales.push({sku:'SKU-50001-M-WHI',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'09-14697-97269',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='14-14689-76608'&&x.sku==='SKU-50005-XL-BLA')){S.sales.push({sku:'SKU-50005-XL-BLA',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'14-14689-76608',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='07-14700-83447'&&x.sku==='SKU-50006-M-WHI')){S.sales.push({sku:'SKU-50006-M-WHI',channel:'eBay',loc:'uk',qty:1,price:4.08,ref:'07-14700-83447',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='07-14700-83447'&&x.sku==='SKU-50006-M-BLA')){S.sales.push({sku:'SKU-50006-M-BLA',channel:'eBay',loc:'uk',qty:1,price:4.07,ref:'07-14700-83447',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='23-14675-16908'&&x.sku==='SKU-50007-XL-SKI')){S.sales.push({sku:'SKU-50007-XL-SKI',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'23-14675-16908',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='08-14698-10212'&&x.sku==='SKU-50007-S-BRO')){S.sales.push({sku:'SKU-50007-S-BRO',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'08-14698-10212',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='21-14677-04156'&&x.sku==='SKU-50007-M-SKI')){S.sales.push({sku:'SKU-50007-M-SKI',channel:'eBay',loc:'uk',qty:3,price:3.41,ref:'21-14677-04156',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='01-14708-80317'&&x.sku==='SKU-50003-L-SKI')){S.sales.push({sku:'SKU-50003-L-SKI',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'01-14708-80317',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='19-14679-00226'&&x.sku==='SKU-50007-L-SKI')){S.sales.push({sku:'SKU-50007-L-SKI',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'19-14679-00226',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='19-14678-60821'&&x.sku==='SKU-50002-XL-SKI')){S.sales.push({sku:'SKU-50002-XL-SKI',channel:'eBay',loc:'uk',qty:2,price:10.29,ref:'19-14678-60821',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='03-14703-21124'&&x.sku==='SKU-50007-M-WHI')){S.sales.push({sku:'SKU-50007-M-WHI',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'03-14703-21124',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='24-14684-54404'&&x.sku==='SKU-50005-L-SKI')){S.sales.push({sku:'SKU-50005-L-SKI',channel:'eBay',loc:'uk',qty:1,price:7.29,ref:'24-14684-54404',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='12-14688-27204'&&x.sku==='SKU-50001-XL-BLA')){S.sales.push({sku:'SKU-50001-XL-BLA',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'12-14688-27204',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='23-14670-74661'&&x.sku==='SKU-50007-L-BLA')){S.sales.push({sku:'SKU-50007-L-BLA',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'23-14670-74661',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='09-14692-73857'&&x.sku==='SKU-50007-XL-BRO')){S.sales.push({sku:'SKU-50007-XL-BRO',channel:'eBay',loc:'uk',qty:2,price:6.95,ref:'09-14692-73857',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='22-14671-64442'&&x.sku==='SKU-50007-L-BLA')){S.sales.push({sku:'SKU-50007-L-BLA',channel:'eBay',loc:'uk',qty:2,price:6.79,ref:'22-14671-64442',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='18-14677-67789'&&x.sku==='SKU-50007-S-SKI')){S.sales.push({sku:'SKU-50007-S-SKI',channel:'eBay',loc:'uk',qty:1,price:3.6,ref:'18-14677-67789',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='18-14677-67789'&&x.sku==='SKU-50007-S-BLA')){S.sales.push({sku:'SKU-50007-S-BLA',channel:'eBay',loc:'uk',qty:1,price:3.6,ref:'18-14677-67789',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='11-14688-63494'&&x.sku==='SKU-50006-M-BRO')){S.sales.push({sku:'SKU-50006-M-BRO',channel:'eBay',loc:'uk',qty:2,price:7.99,ref:'11-14688-63494',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='16-14679-24950'&&x.sku==='SKU-50007-L-BLA')){S.sales.push({sku:'SKU-50007-L-BLA',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'16-14679-24950',date:'2026-05-26'});}
+  if(!S.sales.find(x=>x.ref==='08-14690-85158'&&x.sku==='SKU-50007-M-BRO')){S.sales.push({sku:'SKU-50007-M-BRO',channel:'eBay',loc:'uk',qty:1,price:3.79,ref:'08-14690-85158',date:'2026-05-26'});}
+  if(!S.sales.find(x=>x.ref==='24-14680-58557'&&x.sku==='SKU-50003-L-BLA')){S.sales.push({sku:'SKU-50003-L-BLA',channel:'eBay',loc:'uk',qty:2,price:10.09,ref:'24-14680-58557',date:'2026-05-26'});}
+  if(!S.sales.find(x=>x.ref==='06-14693-88380'&&x.sku==='SKU-50007-M-BRO')){S.sales.push({sku:'SKU-50007-M-BRO',channel:'eBay',loc:'uk',qty:7,price:3.22,ref:'06-14693-88380',date:'2026-05-26'});}
+  if(!S.sales.find(x=>x.ref==='06-14682-10712'&&x.sku==='SKU-50005-L-BLA')){S.sales.push({sku:'SKU-50005-L-BLA',channel:'eBay',loc:'uk',qty:1,price:7.09,ref:'06-14682-10712',date:'2026-05-23'});}
   // eBay sales 25-26 May 2026
   if(!S.sales.find(x=>x.ref==='24-14674-51906'&&x.sku==='SKU-50007-M-SKI')){
     S.sales.push({sku:'SKU-50007-M-SKI',channel:'eBay',loc:'uk',qty:2,price:7.2,ref:'24-14674-51906',date:'2026-05-25'});
@@ -630,6 +677,17 @@ function loadState(){
   if(!S.sales.find(x=>x.ref==='11-14685-29832'&&x.sku==='SKU-50002-M-WHI')){
     S.sales.push({sku:'SKU-50002-M-WHI',channel:'eBay',loc:'uk',qty:2,price:10.29,ref:'11-14685-29832',date:'2026-05-26'});
   }
+  // Amazon sales May 2026 (monthly report)
+  if(!S.sales.find(x=>x.ref==='204-2835490-6397923'&&x.sku==='SKU-50001-M-WHI')){S.sales.push({sku:'SKU-50001-M-WHI',channel:'Amazon',loc:'uk',qty:3,price:22.99,ref:'204-2835490-6397923',date:'2026-05-30'});}
+  if(!S.sales.find(x=>x.ref==='204-7185161-6087517'&&x.sku==='SKU-50001-XL-SKI')){S.sales.push({sku:'SKU-50001-XL-SKI',channel:'Amazon',loc:'uk',qty:3,price:22.99,ref:'204-7185161-6087517',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='203-7614320-4425117'&&x.sku==='SKU-50001-XL-BRO')){S.sales.push({sku:'SKU-50001-XL-BRO',channel:'Amazon',loc:'uk-fba',qty:1,price:9.99,ref:'203-7614320-4425117',date:'2026-05-29'});}
+  if(!S.sales.find(x=>x.ref==='202-3742873-4283512'&&x.sku==='SKU-50006-S-SKI')){S.sales.push({sku:'SKU-50006-S-SKI',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'202-3742873-4283512',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='204-9966990-1746769'&&x.sku==='SKU-50006-XL-BRO')){S.sales.push({sku:'SKU-50006-XL-BRO',channel:'Amazon',loc:'uk',qty:2,price:13.98,ref:'204-9966990-1746769',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='203-8876604-8258723'&&x.sku==='SKU-50007-L-WHI')){S.sales.push({sku:'SKU-50007-L-WHI',channel:'Amazon',loc:'uk',qty:1,price:6.99,ref:'203-8876604-8258723',date:'2026-05-28'});}
+  if(!S.sales.find(x=>x.ref==='205-6610839-0877121'&&x.sku==='SKU-50007-M-WHI')){S.sales.push({sku:'SKU-50007-M-WHI',channel:'Amazon',loc:'uk',qty:3,price:16.99,ref:'205-6610839-0877121',date:'2026-05-27'});}
+  if(!S.sales.find(x=>x.ref==='205-7805429-9910767'&&x.sku==='SKU-50001-XL-BRO')){S.sales.push({sku:'SKU-50001-XL-BRO',channel:'Amazon',loc:'uk-fba',qty:1,price:9.99,ref:'205-7805429-9910767',date:'2026-05-26'});}
+  if(!S.sales.find(x=>x.ref==='026-4108629-2065142'&&x.sku==='SKU-50004-M-SKI')){S.sales.push({sku:'SKU-50004-M-SKI',channel:'Amazon',loc:'uk-fba',qty:1,price:9.99,ref:'026-4108629-2065142',date:'2026-05-25'});}
+  if(!S.sales.find(x=>x.ref==='026-4108629-2065142'&&x.sku==='SKU-50004-M-BRO')){S.sales.push({sku:'SKU-50004-M-BRO',channel:'Amazon',loc:'uk-fba',qty:1,price:9.99,ref:'026-4108629-2065142',date:'2026-05-25'});}
   // Amazon sales 19-23 May 2026
   if(!S.sales.find(x=>x.ref==='026-5917493-1045133' && x.sku==='SKU-50004-S-SKI')){
     S.sales.push({sku:'SKU-50004-S-SKI',channel:'Amazon',loc:'uk',qty:1,price:12.99,ref:'026-5917493-1045133',date:'2026-05-19'});
@@ -711,60 +769,58 @@ function loadState(){
   render();
   setTimeout(updateSidebarStamps, 150);
 }
-{ try{ localStorage.setItem('eirica-v3',JSON.stringify(S)); }catch(e){} updateSidebarStamps(); }
+function saveState(){ try{ localStorage.setItem('eirica-v3',JSON.stringify(S)); }catch(e){} updateSidebarStamps(); }
 
 function updateSidebarStamps(){
+  try{ if(!STATIC_SALES) return; } catch(e){ return; }
   const fmtDate = d => {
     if(!d) return '—';
     const dt = new Date((d+'').replace(' ','T').replace(' BST','').replace(' GMT',''));
     if(isNaN(dt)) return d;
-    const day = dt.getDate();
-    const mon = dt.toLocaleString('en-GB',{month:'short'});
-    const yr  = dt.getFullYear();
-    return `${day} ${mon} ${yr}`;
+    return dt.getDate()+' '+dt.toLocaleString('en-GB',{month:'short'})+' '+dt.getFullYear();
   };
 
-  // Per-channel last sale dates
-  const lastForChannel = (ch, loc) => {
-    const filtered = S.sales.filter(s => {
-      if(ch==='Amazon' && loc==='uk')     return s.channel==='Amazon' && (s.loc==='uk');
-      if(ch==='Amazon' && loc==='uk-fba') return s.channel==='Amazon' && (s.loc==='uk-fba');
-      if(ch==='eBay')                     return s.channel==='eBay';
-      if(ch==='Amazon' && loc==='india')  return s.channel==='Amazon' && (s.loc==='india'||s.loc==='india-fba');
-      if(ch==='Shopify' && loc==='uk')    return s.channel==='Shopify' && (s.loc==='uk'||s.loc==='uk-fba');
-      if(ch==='Shopify' && loc==='india') return s.channel==='Shopify' && (s.loc==='india'||s.loc==='india-fba');
-      return false;
-    });
-    return filtered.length ? filtered[filtered.length-1].date : null;
+  // Merge all sales for date calculations
+  const seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales=[...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)),...S.sales];
+
+  // Last sale date per channel+loc combination
+  const lastFor = (chFn, locFn) => {
+    const matches = allSales.filter(s=>chFn(s)&&locFn(s));
+    if(!matches.length) return null;
+    return matches.map(s=>s.date).sort().pop();
   };
 
-  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=fmtDate(val); };
-  set('sb-sale-amz-uk',    lastForChannel('Amazon','uk'));
-  set('sb-sale-amz-ukfba', lastForChannel('Amazon','uk-fba'));
-  set('sb-sale-ebay',      lastForChannel('eBay',''));
-  set('sb-sale-amz-india', lastForChannel('Amazon','india'));
-  set('sb-sale-web-uk',    lastForChannel('Shopify','uk'));
-  set('sb-sale-web-india', lastForChannel('Shopify','india'));
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val?fmtDate(val):'—'; };
 
-  // Per-warehouse stock dates
+  // Sales channels
+  set('sb-sale-amz-uk',    lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk'));
+  set('sb-sale-amz-ukfba', lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk-fba'));
+  set('sb-sale-ebay',      lastFor(s=>s.channel==='eBay',   s=>true));
+  set('sb-sale-amz-india', lastFor(s=>s.channel==='Amazon', s=>s.loc==='india'||s.loc==='india-fba'));
+  set('sb-sale-web-uk',    lastFor(s=>s.channel==='Shopify',s=>s.loc==='uk'||s.loc==='uk-fba'));
+  set('sb-sale-web-india', lastFor(s=>s.channel==='Shopify',s=>s.loc==='india'||s.loc==='india-fba'));
+
+  // Stock warehouse dates — use S.lastStockUpdate* or hardcoded if set
   const indiaEl  = document.getElementById('sb-stock-india');
   const ukEl     = document.getElementById('sb-stock-uk');
   const ukfbaEl  = document.getElementById('sb-stock-ukfba');
-  if(indiaEl  && S.lastStockUpdateIndia)  indiaEl.textContent  = fmtDate(S.lastStockUpdateIndia);
-  if(ukEl     && S.lastStockUpdateUK)     ukEl.textContent     = fmtDate(S.lastStockUpdateUK);
-  if(ukfbaEl  && S.lastStockUpdateUKFBA)  ukfbaEl.textContent  = fmtDate(S.lastStockUpdateUKFBA);
+  if(indiaEl)  indiaEl.textContent  = S.lastStockUpdateIndia  ? fmtDate(S.lastStockUpdateIndia)  : '19 May 2026';
+  if(ukEl)     ukEl.textContent     = S.lastStockUpdateUK     ? fmtDate(S.lastStockUpdateUK)     : '25 May 2026';
+  if(ukfbaEl)  ukfbaEl.textContent  = S.lastStockUpdateUKFBA  ? fmtDate(S.lastStockUpdateUKFBA)  : '11 May 2026';
 }
 
 // ══ HELPERS ════════════════════════════════════════════════════════════════
 const tot = s => LOCS.reduce((a,l)=>a+(s.stock[l]||0),0);
 function status(s){
   const t=tot(s);
+  if(t<0)  return 'negative';
   if(t===0) return 'critical';
   if(t<5)   return 'low';
   return 'ok';
 }
-const bdgC={'ok':'b-ok','low':'b-low','critical':'b-critical','transit':'b-transit','draft':'b-draft','received':'b-received'};
-const bdgL={'ok':'In stock','low':'Low (under 5)','critical':'Critical (zero)','transit':'In transit','draft':'Draft','received':'Received'};
+const bdgC={'ok':'b-ok','low':'b-low','critical':'b-critical','negative':'b-negative','transit':'b-transit','draft':'b-draft','received':'b-received'};
+const bdgL={'ok':'In stock','low':'Low (under 5)','critical':'Critical (zero)','negative':'Negative','transit':'In transit','draft':'Draft','received':'Received'};
 function bdg(st,lbl){ return `<span class="badge ${bdgC[st]||'b-draft'}">${lbl||bdgL[st]||st}</span>`; }
 function catBdg(c){ return `<span class="badge ${CAT_BADGE[c]||'b-draft'}">${c}</span>`; }
 function fmtGBP(n){ return '£'+Number(n||0).toFixed(2); }
@@ -817,19 +873,26 @@ function afterRender(){
 function pageDash(){
   const crit=S.skus.filter(s=>status(s)==='critical');
   const low=S.skus.filter(s=>status(s)==='low');
+  const neg=S.skus.filter(s=>status(s)==='negative');
 
   // Global = union of UK + India alerts (any variant flagged in either region)
+  const ukNegSkus   = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<0).map(s=>s.sku));
   const ukCritSkus  = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)===0).map(s=>s.sku));
   const ukLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.uk||0)+(s.stock['uk-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+  const inNegSkus   = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<0).map(s=>s.sku));
   const inCritSkus  = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)===0).map(s=>s.sku));
   const inLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.india||0)+(s.stock['india-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
 
+  const globalNeg   = new Set([...ukNegSkus,  ...inNegSkus]);
   const globalCrit  = new Set([...ukCritSkus, ...inCritSkus]);
   const globalLow   = new Set([...ukLowSkus,  ...inLowSkus].filter(s=>!globalCrit.has(s)));
+  const gNegCount   = globalNeg.size;
   const gCritCount  = globalCrit.size;
   const gLowCount   = globalLow.size;
+  const ukNegCount  = ukNegSkus.size;
   const ukCritCount = ukCritSkus.size;
   const ukLowCount  = ukLowSkus.size;
+  const inNegCount  = inNegSkus.size;
   const inCritCount = inCritSkus.size;
   const inLowCount  = inLowSkus.size;
   const totalU=S.skus.reduce((a,s)=>a+tot(s),0);
@@ -874,14 +937,18 @@ function pageDash(){
       <!-- Global -->
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
         <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🌍 Global</div>
-        <div style="display:flex;gap:6px;">
-          <div style="flex:1;background:${gCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${gCritCount?"#f87171":"#4ade80"};">${gCritCount}</span>
-            <span style="font-size:9px;color:${gCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+        <div style="display:flex;gap:4px;">
+          <div style="flex:1;background:${gNegCount?"rgba(168,85,247,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gNegCount?"rgba(168,85,247,.25)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${gNegCount?"#c084fc":"#4ade80"};">${gNegCount}</span>
+            <span style="font-size:8px;color:${gNegCount?"#c084fc":"#4ade80"};margin-left:2px;">Neg</span>
           </div>
-          <div style="flex:1;background:${gLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${gLowCount?"#fb923c":"#4ade80"};">${gLowCount}</span>
-            <span style="font-size:9px;color:${gLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          <div style="flex:1;background:${gCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${gCritCount?"#f87171":"#4ade80"};">${gCritCount}</span>
+            <span style="font-size:8px;color:${gCritCount?"#f87171":"#4ade80"};margin-left:2px;">Zero</span>
+          </div>
+          <div style="flex:1;background:${gLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${gLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${gLowCount?"#fb923c":"#4ade80"};">${gLowCount}</span>
+            <span style="font-size:8px;color:${gLowCount?"#fb923c":"#4ade80"};margin-left:2px;">Low</span>
           </div>
         </div>
       </div>
@@ -892,14 +959,18 @@ function pageDash(){
       <!-- UK -->
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
         <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🇬🇧 UK</div>
-        <div style="display:flex;gap:6px;">
-          <div style="flex:1;background:${ukCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${ukCritCount?"#f87171":"#4ade80"};">${ukCritCount}</span>
-            <span style="font-size:9px;color:${ukCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+        <div style="display:flex;gap:4px;">
+          <div style="flex:1;background:${ukNegCount?"rgba(168,85,247,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukNegCount?"rgba(168,85,247,.25)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${ukNegCount?"#c084fc":"#4ade80"};">${ukNegCount}</span>
+            <span style="font-size:8px;color:${ukNegCount?"#c084fc":"#4ade80"};margin-left:2px;">Neg</span>
           </div>
-          <div style="flex:1;background:${ukLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${ukLowCount?"#fb923c":"#4ade80"};">${ukLowCount}</span>
-            <span style="font-size:9px;color:${ukLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          <div style="flex:1;background:${ukCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${ukCritCount?"#f87171":"#4ade80"};">${ukCritCount}</span>
+            <span style="font-size:8px;color:${ukCritCount?"#f87171":"#4ade80"};margin-left:2px;">Zero</span>
+          </div>
+          <div style="flex:1;background:${ukLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${ukLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${ukLowCount?"#fb923c":"#4ade80"};">${ukLowCount}</span>
+            <span style="font-size:8px;color:${ukLowCount?"#fb923c":"#4ade80"};margin-left:2px;">Low</span>
           </div>
         </div>
       </div>
@@ -910,14 +981,18 @@ function pageDash(){
       <!-- India -->
       <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
         <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;">🇮🇳 India</div>
-        <div style="display:flex;gap:6px;">
-          <div style="flex:1;background:${inCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${inCritCount?"#f87171":"#4ade80"};">${inCritCount}</span>
-            <span style="font-size:9px;color:${inCritCount?"#f87171":"#4ade80"};margin-left:3px;">Critical</span>
+        <div style="display:flex;gap:4px;">
+          <div style="flex:1;background:${inNegCount?"rgba(168,85,247,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inNegCount?"rgba(168,85,247,.25)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${inNegCount?"#c084fc":"#4ade80"};">${inNegCount}</span>
+            <span style="font-size:8px;color:${inNegCount?"#c084fc":"#4ade80"};margin-left:2px;">Neg</span>
           </div>
-          <div style="flex:1;background:${inLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 6px;text-align:center;">
-            <span style="font-size:15px;font-weight:700;font-family:var(--mono);color:${inLowCount?"#fb923c":"#4ade80"};">${inLowCount}</span>
-            <span style="font-size:9px;color:${inLowCount?"#fb923c":"#4ade80"};margin-left:3px;">Low</span>
+          <div style="flex:1;background:${inCritCount?"rgba(239,68,68,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inCritCount?"rgba(239,68,68,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${inCritCount?"#f87171":"#4ade80"};">${inCritCount}</span>
+            <span style="font-size:8px;color:${inCritCount?"#f87171":"#4ade80"};margin-left:2px;">Zero</span>
+          </div>
+          <div style="flex:1;background:${inLowCount?"rgba(249,115,22,.08)":"rgba(34,197,94,.08)"};border:1px solid ${inLowCount?"rgba(249,115,22,.2)":"rgba(34,197,94,.2)"};border-radius:5px;padding:3px 5px;text-align:center;">
+            <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${inLowCount?"#fb923c":"#4ade80"};">${inLowCount}</span>
+            <span style="font-size:8px;color:${inLowCount?"#fb923c":"#4ade80"};margin-left:2px;">Low</span>
           </div>
         </div>
       </div>
@@ -1054,13 +1129,13 @@ function pageChat(){
         <div class="chat-input-area">
           <div id="img-preview-wrap" class="img-preview-wrap" style="display:none"></div>
           <div class="chat-input-wrap">
-            <button class="upload-btn" onclick="document.getElementById('img-upload').click()" title="Upload order screenshot"><i class="ti ti-photo"></i></button>
-            <input type="file" id="img-upload" accept="image/*" multiple style="display:none" onchange="handleImgUpload(this.files)"/>
+            <button class="upload-btn" onclick="document.getElementById('img-upload').click()" title="Upload screenshot or Excel file"><i class="ti ti-paperclip"></i></button>
+            <input type="file" id="img-upload" accept="image/*,.xlsx,.xls,.csv" multiple style="display:none" onchange="handleImgUpload(this.files)"/>
             <textarea id="chat-ta" placeholder="Type a message or upload an order screenshot 📷" rows="1"></textarea>
             <button class="chat-send" id="chat-send-btn" onclick="sendChat()"><i class="ti ti-send"></i></button>
           </div>
           <div class="chat-hints">
-            <div class="hint-pill" onclick="document.getElementById('img-upload').click()">📷 Upload order screenshot</div>
+            <div class="hint-pill" onclick="document.getElementById('img-upload').click()">📎 Upload screenshot or Excel</div>
             <div class="hint-pill" onclick="fillHint('sold 2 BRA M Black Amazon UK FBA')">sold 2 BRA M Black Amazon UK</div>
             <div class="hint-pill" onclick="fillHint('how many BRA S Grey left?')">how many BRA S Grey left?</div>
             <div class="hint-pill" onclick="fillHint('what needs reordering?')">what needs reordering?</div>
@@ -1153,16 +1228,61 @@ function removeTyping(){ const el=document.getElementById('typing-indicator'); i
 let pendingImages = []; // [{base64, mediaType, previewUrl}]
 
 function handleImgUpload(files){
+  const ALLOWED_IMG = ['image/jpeg','image/png','image/gif','image/webp'];
+  const EXCEL_TYPES = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                       'application/vnd.ms-excel','text/csv','application/csv'];
+
   Array.from(files).forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = e => {
-      const dataUrl = e.target.result;
-      const base64 = dataUrl.split(',')[1];
-      const mediaType = file.type || 'image/jpeg';
-      pendingImages.push({base64, mediaType, previewUrl: dataUrl, name: file.name});
-      renderImgPreviews();
-    };
-    reader.readAsDataURL(file);
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isExcel = ['xlsx','xls','csv'].includes(ext) || EXCEL_TYPES.includes(file.type);
+
+    if(isExcel){
+      // Read Excel/CSV and convert to text for Claude
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          let text = '';
+          if(ext === 'csv'){
+            text = e.target.result;
+          } else {
+            // Use SheetJS if available, otherwise read as binary
+            if(typeof XLSX !== 'undefined'){
+              const wb = XLSX.read(e.target.result, {type:'binary'});
+              wb.SheetNames.forEach(sn=>{
+                text += `Sheet: ${sn}\n`;
+                text += XLSX.utils.sheet_to_csv(wb.Sheets[sn]) + '\n\n';
+              });
+            } else {
+              text = `[Excel file: ${file.name} - ${Math.round(file.size/1024)}KB uploaded]`;
+            }
+          }
+          pendingImages.push({
+            type:'excel', name:file.name, text,
+            previewUrl: null,
+            mediaType: null
+          });
+          renderImgPreviews();
+        } catch(err){
+          console.error('Excel read error:', err);
+          toast('Could not read Excel file — try saving as CSV first','var(--amber)');
+        }
+      };
+      if(ext === 'csv') reader.readAsText(file);
+      else reader.readAsBinaryString(file);
+    } else {
+      // Image file
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target.result;
+        const base64 = dataUrl.split(',')[1];
+        let mediaType = file.type || 'image/jpeg';
+        if(mediaType === 'image/jpg') mediaType = 'image/jpeg';
+        if(!ALLOWED_IMG.includes(mediaType)) mediaType = 'image/jpeg';
+        pendingImages.push({type:'image', base64, mediaType, previewUrl: dataUrl, name: file.name});
+        renderImgPreviews();
+      };
+      reader.readAsDataURL(file);
+    }
   });
 }
 
@@ -1172,9 +1292,11 @@ function renderImgPreviews(){
   if(pendingImages.length===0){ wrap.style.display='none'; wrap.innerHTML=''; return; }
   wrap.style.display='flex';
   wrap.innerHTML = pendingImages.map((img,i)=>`
-    <div class="img-preview">
-      <img src="${img.previewUrl}" alt="order screenshot"/>
-      <button class="img-preview-remove" onclick="removeImg(${i})">✕</button>
+    <div class="img-preview" style="${img.type==='excel'?'width:auto;padding:0 10px;background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);display:flex;align-items:center;gap:6px;':''}">
+      ${img.type==='excel'
+        ?`<i class="ti ti-table" style="color:#4ade80;font-size:16px"></i><span style="font-size:11px;color:#4ade80;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${img.name}</span>`
+        :`<img src="${img.previewUrl}" alt="screenshot" style="width:100%;height:100%;object-fit:cover"/>`}
+      <button class="img-preview-remove" onclick="removeImg(${i})" style="${img.type==='excel'?'position:static;background:none;color:#f87171;':''}">✕</button>
     </div>`).join('');
 }
 
@@ -1226,7 +1348,7 @@ async function callClaude(userMessage, images=[]){
   const invContext = S.skus.map(s=>`${s.sku}|${s.name}|${s.category}|${s.size}|${s.color}|India:${s.stock.india}|IndFBA:${s.stock['india-fba']}|UK:${s.stock.uk}|UKFBA:${s.stock['uk-fba']}|Total:${tot(s)}`).join('\n');
   const recentSales = S.sales.slice(-10).map(s=>`${s.date} ${s.sku} x${s.qty} ${s.channel} ${LOC_LABEL[s.loc]}`).join('\n');
 
-  const systemPrompt = `You are Eirica AI, an inventory assistant for Eirica International — selling BRAs, Shorts, and Briefs across India warehouse, India FBA, UK warehouse, UK FBA. Channels: Shopify, Amazon, eBay, Direct.
+  const systemPrompt = `You are Eirica AI, a smart inventory assistant for Eirica International — selling BRAs, Shorts, and Briefs across India warehouse, India FBA, UK warehouse, UK FBA. Channels: Shopify, Amazon, eBay, Direct.
 
 CURRENT INVENTORY (SKU|Name|Category|Size|Colour|India|IndFBA|UK|UKFBA|Total):
 ${invContext}
@@ -1236,15 +1358,32 @@ ${recentSales||'None yet'}
 
 COLOUR MAPPING: White=WHI, Black=BLA, Grey/Mink Grey/Silver Grey=GRE, Skin/Peach/Nude/Peach Nude=SKI, Brown=BRO
 
-When reading order screenshots:
-- Extract EVERY order line shown
-- Match product name + size + colour to the SKU list above
-- Default location: uk (UK warehouse) unless image shows FBA or India
-- Default channel: read from screenshot (Amazon.co.uk=Amazon, eBay=eBay, etc.)
-- Use the item subtotal or price shown as the sale price
+SIZE MAPPING: S, M, L, XL only
+
+SKU FORMAT: SKU-{50001-50007}-{S/M/L/XL}-{WHI/BLA/GRE/SKI/BRO}
+- BRAs = SKU-50001 to SKU-50005
+- Shorts = SKU-50006
+- Briefs = SKU-50007
+
+PACK RULES: If item is "Pack of 2" multiply qty by 2. If "Pack of 3" multiply qty by 3.
+
+CRITICAL INSTRUCTIONS — ALWAYS DO THIS AUTOMATICALLY:
+1. When ANY data is uploaded (screenshot, CSV, Excel) — IMMEDIATELY extract ALL items and respond with the action block. Do NOT ask for confirmation first.
+2. When user says "update", "log", "process" — DO IT immediately with whatever data is available in the conversation.
+3. NEVER say "I don't see any data" if data was provided earlier in the conversation — reference it and process it.
+4. If user asks to update sales from a file already shown — USE that data immediately.
+5. Always default location to UK warehouse (uk) unless explicitly stated otherwise.
+6. Always default channel to eBay for eBay files, Amazon for Amazon files.
+
+PROCESSING ORDER FILES:
+- Extract every line item: product, size, colour, qty, price
+- Map to correct SKU using colour and size mapping above
+- For packs: multiply quantity by pack size
+- Group all items into ONE action block
+- Show a summary table confirming what was processed
 
 For SALE actions respond with:
-<action>{"type":"sale","items":[{"sku":"SKU-XXXXX-X-XXX","qty":1,"channel":"Amazon","loc":"uk","price":6.99}],"message":"Logged X sales from screenshot"}</action>
+<action>{"type":"sale","items":[{"sku":"SKU-XXXXX-X-XXX","qty":1,"channel":"eBay","loc":"uk","price":3.99}],"message":"Logged X sales"}</action>
 
 For ADD STOCK:
 <action>{"type":"addstock","items":[{"sku":"SKU-XXXXX-X-XXX","qty":10,"loc":"india"}],"message":"Stock added"}</action>
@@ -1253,15 +1392,22 @@ For UNDO:
 <action>{"type":"undo","message":"Undone."}</action>
 
 Location codes: india, india-fba, uk, uk-fba
-Always confirm every item you extracted with a summary table. If unsure about a match, pick the closest SKU and flag it.`;
+Always show a confirmation table after processing. Flag any SKUs you could not match.`;
 
-  // Build message content — add images first, then text
+  // Build message content — Excel as text, images as base64
   const userContent = [];
   images.forEach(img=>{
-    userContent.push({
-      type: 'image',
-      source: { type: 'base64', media_type: img.mediaType, data: img.base64 }
-    });
+    if(img.type === 'excel'){
+      userContent.push({
+        type: 'text',
+        text: `[Excel file uploaded: ${img.name}]\n\n${img.text}`
+      });
+    } else {
+      userContent.push({
+        type: 'image',
+        source: { type: 'base64', media_type: img.mediaType, data: img.base64 }
+      });
+    }
   });
   userContent.push({ type: 'text', text: userMessage });
 
@@ -1274,8 +1420,8 @@ Always confirm every item you extracted with a summary table. If unsure about a 
       'anthropic-dangerous-direct-browser-access': 'true'
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      model: 'claude-sonnet-4-5',
+      max_tokens: 4000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }]
     })
@@ -1388,27 +1534,43 @@ function setMasterView(view){
   afterRender();
 }
 
+let masterSort={col:'name',dir:'asc'};
+
+function masterSortBy(col){
+  if(masterSort.col===col) masterSort.dir=masterSort.dir==='asc'?'desc':'asc';
+  else { masterSort.col=col; masterSort.dir='asc'; }
+  renderMasterTbl();
+}
+
 function renderMasterTbl(){
   const tb=document.getElementById('master-tbody'); if(!tb) return;
-  const th=document.getElementById('master-thead'); 
+  const th=document.getElementById('master-thead');
 
   const q=(document.getElementById('ms-q')||{}).value?.toLowerCase()||'';
   const st=(document.getElementById('ms-status')||{}).value||'';
   const cat=(document.getElementById('ms-cat')||{}).value||'';
 
-  // Build thead based on view
   const isAll = masterLocView==='all';
   const viewCols = MASTER_VIEWS[masterLocView]?.cols || MASTER_VIEWS.all.cols;
+  const colKey = {'India WH':'india','India FBA':'india-fba','UK WH':'uk','UK FBA':'uk-fba'};
+
+  const si=(col)=>masterSort.col===col?(masterSort.dir==='asc'?'↑':'↓'):'↕';
+  const ts='cursor:pointer;user-select:none;';
+
   if(th){
     th.innerHTML=`<tr>
-      <th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th>
-      ${viewCols.map(c=>`<th>${c}</th>`).join('')}
-      ${isAll?'<th>Total</th>':'<th>Total all</th>'}
-      <th>Status</th><th>Actions</th>
+      <th style="${ts}" onclick="masterSortBy('sku')">SKU ${si('sku')}</th>
+      <th style="${ts}" onclick="masterSortBy('name')">Product ${si('name')}</th>
+      <th style="${ts}" onclick="masterSortBy('category')">Cat ${si('category')}</th>
+      <th style="${ts}" onclick="masterSortBy('size')">Size ${si('size')}</th>
+      <th style="${ts}" onclick="masterSortBy('color')">Colour ${si('color')}</th>
+      ${viewCols.map(c=>`<th style="${ts}" onclick="masterSortBy('${c}')">${c} ${si(c)}</th>`).join('')}
+      <th style="${ts}" onclick="masterSortBy('total')">${isAll?'Total':'Total all'} ${si('total')}</th>
+      <th style="${ts}" onclick="masterSortBy('status')">Status ${si('status')}</th>
+      <th>Actions</th>
     </tr>`;
   }
 
-  // Filter SKUs
   let skus=S.skus.filter(s=>{
     if(q&&!s.name.toLowerCase().includes(q)&&!s.sku.toLowerCase().includes(q)&&!s.color.toLowerCase().includes(q)) return false;
     if(st&&status(s)!==st) return false;
@@ -1416,18 +1578,26 @@ function renderMasterTbl(){
     return true;
   });
 
-  if(!skus.length){ tb.innerHTML=`<tr><td colspan="12"><div class="empty"><i class="ti ti-search"></i>No results</div></td></tr>`; return; }
+  // Sort
+  skus=[...skus].sort((a,b)=>{
+    let av, bv;
+    const col=masterSort.col;
+    if(col==='total'){av=tot(a);bv=tot(b);}
+    else if(col==='status'){av=status(a);bv=status(b);}
+    else if(viewCols.includes(col)){av=a.stock[colKey[col]]||0;bv=b.stock[colKey[col]]||0;}
+    else{av=(a[col]||'').toString().toLowerCase();bv=(b[col]||'').toString().toLowerCase();}
+    const r=av<bv?-1:av>bv?1:0;
+    return masterSort.dir==='asc'?r:-r;
+  });
 
-  // Column→stock key map
-  const colKey = {'India WH':'india','India FBA':'india-fba','UK WH':'uk','UK FBA':'uk-fba'};
+  if(!skus.length){ tb.innerHTML=`<tr><td colspan="12"><div class="empty"><i class="ti ti-search"></i>No results</div></td></tr>`; return; }
 
   tb.innerHTML=skus.map(s=>{
     const i=S.skus.indexOf(s);
     const locCells = viewCols.map(c=>{
       const key=colKey[c];
       const qty=s.stock[key]||0;
-      const locSt=qty===0?'crit':qty<=(s.reorder||0)*.5?'crit':qty<=(s.reorder||0)?'low':'ok';
-      const col=locSt==='crit'?'var(--red)':locSt==='low'?'var(--amber)':'var(--text)';
+      const col=qty<0?'#c084fc':qty===0?'var(--red)':qty<=(s.reorder||0)?'var(--amber)':'var(--text)';
       return `<td style="font-family:var(--mono);font-weight:600;color:${col}">${qty}</td>`;
     }).join('');
 
@@ -1438,7 +1608,7 @@ function renderMasterTbl(){
       <td><span style="background:var(--surface3);border-radius:4px;padding:1px 6px;font-size:11px">${s.size}</span></td>
       <td style="font-size:12px">${s.color}</td>
       ${locCells}
-      <td style="font-family:var(--mono);font-weight:700">${tot(s)}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:${tot(s)<0?'#c084fc':''}">${tot(s)}</td>
       <td>${bdg(status(s))}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editSKU(${i})"><i class="ti ti-edit"></i></button>
@@ -1649,8 +1819,8 @@ function createPOFromReorder(loc, region){
 }
 
 
-const STATIC_SALES=[{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"202-5839563-8527537","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-WHI","qty":1,"price":6.99,"ref":"203-3668494-9881147","channel":"Amazon","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50007-L-WHI","qty":4,"price":21.98,"ref":"206-7792893-1591503","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"026-5460869-4328318","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":1,"price":10.99,"ref":"204-5115028-5443526","channel":"Amazon","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"204-0035692-7173162","channel":"Amazon","loc":"uk-fba","date":"2026-05-22"},{"sku":"SKU-50003-XL-BLA","qty":1,"price":9.99,"ref":"202-1772788-2671544","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50003-M-WHI","qty":1,"price":9.99,"ref":"206-0592710-4178749","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-BLA","qty":1,"price":9.99,"ref":"202-3607924-9159533","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-GRE","qty":1,"price":9.99,"ref":"205-1672842-7529904","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"206-1079854-8029158","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"026-5097909-8329925","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50001-M-BLA","qty":3,"price":22.99,"ref":"203-1034602-1469939","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"205-3374946-0733928","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50004-M-BLA","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-S-SKI","qty":1,"price":12.99,"ref":"026-5917493-1045133","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"204-7947937-6228323","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-BLA","qty":1,"price":6.99,"ref":"204-1485030-5209933","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BRO","qty":1,"price":6.99,"ref":"206-4796616-7670711","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-XL-WHI","qty":1,"price":6.99,"ref":"026-4442866-2671550","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-SKI","qty":1,"price":6.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50001-XL-SKI","qty":2,"price":14.99,"ref":"202-0617578-9732337","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50006-M-WHI","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-M-BRO","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"203-2903816-9701953","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"026-5178476-3594723","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"205-0138204-3101922","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50007-S-BLA","qty":1,"price":6.99,"ref":"026-6001275-0971511","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50006-S-BLA","qty":2,"price":13.98,"ref":"204-6105005-0544327","channel":"Amazon","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":9.99,"ref":"204-6570023-8934731","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"205-4848345-8851565","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50002-M-SKI","qty":1,"price":11.99,"ref":"026-7136271-0990740","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50007-L-GRE","qty":2,"price":13.98,"ref":"204-5357333-8630757","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"205-6700622-6629917","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50001-M-BLA","qty":1,"price":11.99,"ref":"206-5677436-1802723","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50002-M-BLA","qty":1,"price":12.99,"ref":"026-9747993-3880331","channel":"Amazon","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":12.99,"ref":"202-5267975-1829111","channel":"Amazon","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50001-M-BRO","qty":1,"price":12.99,"ref":"202-0254131-2281964","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":12.99,"ref":"202-7074398-9218700","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":12.99,"ref":"206-1513124-3993933","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-M-WHI","qty":1,"price":12.99,"ref":"026-1699064-1327557","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-L-WHI","qty":1,"price":13.99,"ref":"204-2858428-2525131","channel":"Amazon","loc":"uk","date":"2026-04-30"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":13.99,"ref":"203-0173994-9877171","channel":"Amazon","loc":"uk","date":"2026-04-28"},{"sku":"SKU-50006-L-WHI","qty":1,"price":8.99,"ref":"205-8130205-5540365","channel":"Amazon","loc":"uk","date":"2026-04-27"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":13.99,"ref":"202-1813010-3606723","channel":"Amazon","loc":"uk","date":"2026-04-26"},{"sku":"SKU-50001-M-SKI","qty":1,"price":13.99,"ref":"206-4722251-0047550","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":13.99,"ref":"205-4290048-5017949","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50006-M-BLA","qty":2,"price":15.98,"ref":"09-14518-83517","channel":"eBay","loc":"uk","date":"2026-04-17"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":10.99,"ref":"11-14528-17255","channel":"eBay","loc":"uk","date":"2026-04-20"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":8.99,"ref":"19-14563-91748","channel":"eBay","loc":"uk","date":"2026-05-01"},{"sku":"SKU-50001-XL-SKI","qty":1,"price":8.99,"ref":"20-14580-99010","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-SKI","qty":1,"price":5.99,"ref":"02-14610-07148","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-BLA","qty":1,"price":5.99,"ref":"02-14619-17807","channel":"eBay","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50004-L-BLA","qty":1,"price":8.99,"ref":"25-14595-16450","channel":"eBay","loc":"uk","date":"2026-05-10"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50003-XL-WHI","qty":1,"price":9.99,"ref":"15-14639-84348","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":9.99,"ref":"04-14657-50461","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-L-BLA","qty":2,"price":7.58,"ref":"04-14657-54598","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"14-14643-48206","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50007-XL-BRO","qty":2,"price":13.7,"ref":"03-14664-72372","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-XL-BLA","qty":1,"price":3.49,"ref":"10-14653-83788","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-M-GRE","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-SKI","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-L-WHI","qty":1,"price":4.09,"ref":"26-14632-95479","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50005-XL-WHI","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.59,"ref":"13-14662-80458","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.09,"ref":"21-14650-49860","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50001-S-WHI","qty":1,"price":7.09,"ref":"19-14657-12297","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50007-XL-BRO","qty":1,"price":3.59,"ref":"08-14674-62997","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-M-WHI","qty":1,"price":4.09,"ref":"01-14687-18018","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-XL-WHI","qty":1,"price":4.09,"ref":"12-14671-10132","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50005-L-GRE","qty":1,"price":10.09,"ref":"01-14689-96313","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"27-14648-66586","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"06-14682-10712","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":10.09,"ref":"02-14691-31636","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-L-WHI","qty":1,"price":3.79,"ref":"02-14692-29257","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50003-S-BRO","qty":1,"price":10.09,"ref":"25-14655-68429","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-M-SKI","qty":2,"price":7.2,"ref":"24-14674-51906","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":1,"price":3.79,"ref":"03-14693-01448","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-XL-WHI","qty":2,"price":10.09,"ref":"05-14690-38855","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-L-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-M-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-XL-SKI","qty":1,"price":3.79,"ref":"18-14669-84215","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50002-L-BLA","qty":2,"price":10.8,"ref":"12-14679-56048","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-L-SKI","qty":1,"price":7.29,"ref":"13-14679-52075","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":3,"price":10.23,"ref":"21-14668-82474","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.29,"ref":"17-14675-53744","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50002-M-WHI","qty":2,"price":10.29,"ref":"11-14685-29832","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":10.99,"ref":"203-5849208-4713147","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"026-3323355-4330738","channel":"Amazon","loc":"uk","date":"2026-05-25"}];
-const STATIC_BY_SKU={"SKU-50007-L-SKI":{"units":6,"revenue":28.0,"orders":4,"amazon":2,"ebay":4},"SKU-50006-S-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-M-WHI":{"units":7,"revenue":56.97,"orders":3,"amazon":7,"ebay":0},"SKU-50007-L-WHI":{"units":5,"revenue":25.77,"orders":2,"amazon":4,"ebay":1},"SKU-50006-S-SKI":{"units":2,"revenue":13.98,"orders":2,"amazon":2,"ebay":0},"SKU-50001-M-BLA":{"units":10,"revenue":88.31,"orders":7,"amazon":6,"ebay":4},"SKU-50003-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50003-M-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-GRE":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-BLA":{"units":4,"revenue":40.06,"orders":4,"amazon":2,"ebay":2},"SKU-50006-S-BRO":{"units":3,"revenue":20.97,"orders":3,"amazon":3,"ebay":0},"SKU-50004-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-M-SKI":{"units":2,"revenue":25.98,"orders":2,"amazon":2,"ebay":0},"SKU-50004-S-SKI":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-BLA":{"units":3,"revenue":22.97,"orders":2,"amazon":1,"ebay":2},"SKU-50007-M-BRO":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-XL-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-SKI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-SKI":{"units":3,"revenue":23.98,"orders":2,"amazon":2,"ebay":1},"SKU-50006-M-WHI":{"units":2,"revenue":11.08,"orders":2,"amazon":1,"ebay":1},"SKU-50006-M-BRO":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-S-BLA":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-S-BLA":{"units":4,"revenue":27.96,"orders":3,"amazon":4,"ebay":0},"SKU-50001-XL-BRO":{"units":2,"revenue":23.98,"orders":2,"amazon":2,"ebay":0},"SKU-50002-M-SKI":{"units":1,"revenue":11.99,"orders":1,"amazon":1,"ebay":0},"SKU-50007-L-GRE":{"units":2,"revenue":13.98,"orders":1,"amazon":2,"ebay":0},"SKU-50002-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-WHI":{"units":3,"revenue":33.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-M-BRO":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-WHI":{"units":3,"revenue":36.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-XL-BLA":{"units":2,"revenue":26.98,"orders":2,"amazon":2,"ebay":0},"SKU-50002-M-WHI":{"units":3,"revenue":23.28,"orders":2,"amazon":1,"ebay":2},"SKU-50002-L-WHI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-L-WHI":{"units":2,"revenue":13.08,"orders":2,"amazon":1,"ebay":1},"SKU-50001-M-SKI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50005-XL-BLA":{"units":3,"revenue":26.72,"orders":3,"amazon":0,"ebay":3},"SKU-50006-L-SKI":{"units":1,"revenue":5.99,"orders":1,"amazon":0,"ebay":1},"SKU-50006-L-BLA":{"units":3,"revenue":13.57,"orders":2,"amazon":0,"ebay":3},"SKU-50004-L-BLA":{"units":1,"revenue":8.99,"orders":1,"amazon":0,"ebay":1},"SKU-50002-XL-SKI":{"units":2,"revenue":19.98,"orders":2,"amazon":0,"ebay":2},"SKU-50003-XL-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":0,"ebay":1},"SKU-50007-XL-BRO":{"units":3,"revenue":17.29,"orders":2,"amazon":0,"ebay":3},"SKU-50007-XL-BLA":{"units":1,"revenue":3.49,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-GRE":{"units":1,"revenue":3.14,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-BLA":{"units":2,"revenue":6.73,"orders":2,"amazon":0,"ebay":2},"SKU-50007-M-SKI":{"units":3,"revenue":10.34,"orders":2,"amazon":0,"ebay":3},"SKU-50005-XL-WHI":{"units":3,"revenue":16.83,"orders":2,"amazon":0,"ebay":3},"SKU-50005-M-BLA":{"units":2,"revenue":14.379999999999999,"orders":2,"amazon":0,"ebay":2},"SKU-50001-S-WHI":{"units":1,"revenue":7.09,"orders":1,"amazon":0,"ebay":1},"SKU-50006-XL-WHI":{"units":1,"revenue":4.09,"orders":1,"amazon":0,"ebay":1},"SKU-50005-L-GRE":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50003-S-BRO":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50001-L-BLA":{"units":2,"revenue":19.17,"orders":1,"amazon":0,"ebay":2},"SKU-50007-XL-SKI":{"units":1,"revenue":3.79,"orders":1,"amazon":0,"ebay":1},"SKU-50002-L-BLA":{"units":2,"revenue":10.8,"orders":1,"amazon":0,"ebay":2},"SKU-50005-L-SKI":{"units":1,"revenue":7.29,"orders":1,"amazon":0,"ebay":1}};
+const STATIC_SALES=[{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"202-5839563-8527537","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-WHI","qty":1,"price":6.99,"ref":"203-3668494-9881147","channel":"Amazon","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"203-6549530-7908351","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50007-L-WHI","qty":4,"price":21.98,"ref":"206-7792893-1591503","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"026-5460869-4328318","channel":"Amazon","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":1,"price":10.99,"ref":"204-5115028-5443526","channel":"Amazon","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"204-0035692-7173162","channel":"Amazon","loc":"uk-fba","date":"2026-05-22"},{"sku":"SKU-50003-XL-BLA","qty":1,"price":9.99,"ref":"202-1772788-2671544","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50003-M-WHI","qty":1,"price":9.99,"ref":"206-0592710-4178749","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-BLA","qty":1,"price":9.99,"ref":"202-3607924-9159533","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50004-XL-GRE","qty":1,"price":9.99,"ref":"205-1672842-7529904","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"206-1079854-8029158","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"026-5097909-8329925","channel":"Amazon","loc":"uk-fba","date":"2026-05-21"},{"sku":"SKU-50001-M-BLA","qty":3,"price":22.99,"ref":"203-1034602-1469939","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"205-3374946-0733928","channel":"Amazon","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50004-M-BLA","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"026-4538228-9182724","channel":"Amazon","loc":"uk","date":"2026-05-20"},{"sku":"SKU-50004-S-SKI","qty":1,"price":12.99,"ref":"026-5917493-1045133","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-L-SKI","qty":1,"price":6.99,"ref":"204-7947937-6228323","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-BLA","qty":1,"price":6.99,"ref":"204-1485030-5209933","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BRO","qty":1,"price":6.99,"ref":"206-4796616-7670711","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-XL-WHI","qty":1,"price":6.99,"ref":"026-4442866-2671550","channel":"Amazon","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-M-SKI","qty":1,"price":6.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50004-M-SKI","qty":1,"price":12.99,"ref":"203-4807028-8930713","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50001-XL-SKI","qty":2,"price":14.99,"ref":"202-0617578-9732337","channel":"Amazon","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50006-M-WHI","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-M-BRO","qty":1,"price":6.99,"ref":"203-2591754-6530742","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"203-2903816-9701953","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-BRO","qty":1,"price":6.99,"ref":"026-5178476-3594723","channel":"Amazon","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"205-0138204-3101922","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50007-S-BLA","qty":1,"price":6.99,"ref":"026-6001275-0971511","channel":"Amazon","loc":"uk","date":"2026-05-16"},{"sku":"SKU-50006-S-BLA","qty":2,"price":13.98,"ref":"204-6105005-0544327","channel":"Amazon","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":9.99,"ref":"204-6570023-8934731","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50001-M-BLA","qty":1,"price":9.99,"ref":"205-4848345-8851565","channel":"Amazon","loc":"uk-fba","date":"2026-05-15"},{"sku":"SKU-50002-M-SKI","qty":1,"price":11.99,"ref":"026-7136271-0990740","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50007-L-GRE","qty":2,"price":13.98,"ref":"204-5357333-8630757","channel":"Amazon","loc":"uk","date":"2026-05-14"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"205-6700622-6629917","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50001-M-BLA","qty":1,"price":11.99,"ref":"206-5677436-1802723","channel":"Amazon","loc":"uk","date":"2026-05-12"},{"sku":"SKU-50002-M-BLA","qty":1,"price":12.99,"ref":"026-9747993-3880331","channel":"Amazon","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":12.99,"ref":"202-5267975-1829111","channel":"Amazon","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50001-M-BRO","qty":1,"price":12.99,"ref":"202-0254131-2281964","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":12.99,"ref":"202-7074398-9218700","channel":"Amazon","loc":"uk","date":"2026-05-04"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":12.99,"ref":"206-1513124-3993933","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-M-WHI","qty":1,"price":12.99,"ref":"026-1699064-1327557","channel":"Amazon","loc":"uk","date":"2026-05-03"},{"sku":"SKU-50002-L-WHI","qty":1,"price":13.99,"ref":"204-2858428-2525131","channel":"Amazon","loc":"uk","date":"2026-04-30"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":13.99,"ref":"203-0173994-9877171","channel":"Amazon","loc":"uk","date":"2026-04-28"},{"sku":"SKU-50006-L-WHI","qty":1,"price":8.99,"ref":"205-8130205-5540365","channel":"Amazon","loc":"uk","date":"2026-04-27"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":13.99,"ref":"202-1813010-3606723","channel":"Amazon","loc":"uk","date":"2026-04-26"},{"sku":"SKU-50001-M-SKI","qty":1,"price":13.99,"ref":"206-4722251-0047550","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50001-XL-BLA","qty":1,"price":13.99,"ref":"205-4290048-5017949","channel":"Amazon","loc":"uk","date":"2026-04-25"},{"sku":"SKU-50006-M-BLA","qty":2,"price":15.98,"ref":"09-14518-83517","channel":"eBay","loc":"uk","date":"2026-04-17"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":10.99,"ref":"11-14528-17255","channel":"eBay","loc":"uk","date":"2026-04-20"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":8.99,"ref":"19-14563-91748","channel":"eBay","loc":"uk","date":"2026-05-01"},{"sku":"SKU-50001-XL-SKI","qty":1,"price":8.99,"ref":"20-14580-99010","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-SKI","qty":1,"price":5.99,"ref":"02-14610-07148","channel":"eBay","loc":"uk","date":"2026-05-05"},{"sku":"SKU-50006-L-BLA","qty":1,"price":5.99,"ref":"02-14619-17807","channel":"eBay","loc":"uk","date":"2026-05-07"},{"sku":"SKU-50004-L-BLA","qty":1,"price":8.99,"ref":"25-14595-16450","channel":"eBay","loc":"uk","date":"2026-05-10"},{"sku":"SKU-50002-XL-WHI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":9.99,"ref":"05-14649-92489","channel":"eBay","loc":"uk","date":"2026-05-15"},{"sku":"SKU-50003-XL-WHI","qty":1,"price":9.99,"ref":"15-14639-84348","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":9.99,"ref":"04-14657-50461","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50006-L-BLA","qty":2,"price":7.58,"ref":"04-14657-54598","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50002-XL-SKI","qty":1,"price":9.99,"ref":"14-14643-48206","channel":"eBay","loc":"uk","date":"2026-05-17"},{"sku":"SKU-50007-XL-BRO","qty":2,"price":13.7,"ref":"03-14664-72372","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-XL-BLA","qty":1,"price":3.49,"ref":"10-14653-83788","channel":"eBay","loc":"uk","date":"2026-05-18"},{"sku":"SKU-50007-M-GRE","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50007-M-SKI","qty":1,"price":3.14,"ref":"14-14650-76351","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50006-L-WHI","qty":1,"price":4.09,"ref":"26-14632-95479","channel":"eBay","loc":"uk","date":"2026-05-19"},{"sku":"SKU-50005-XL-WHI","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-XL-BLA","qty":1,"price":6.74,"ref":"23-14644-91538","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50007-M-BLA","qty":1,"price":3.59,"ref":"13-14662-80458","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.09,"ref":"21-14650-49860","channel":"eBay","loc":"uk","date":"2026-05-21"},{"sku":"SKU-50001-S-WHI","qty":1,"price":7.09,"ref":"19-14657-12297","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50007-XL-BRO","qty":1,"price":3.59,"ref":"08-14674-62997","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-M-WHI","qty":1,"price":4.09,"ref":"01-14687-18018","channel":"eBay","loc":"uk","date":"2026-05-22"},{"sku":"SKU-50006-XL-WHI","qty":1,"price":4.09,"ref":"12-14671-10132","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50005-L-GRE","qty":1,"price":10.09,"ref":"01-14689-96313","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"27-14648-66586","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-BLA","qty":1,"price":7.09,"ref":"06-14682-10712","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50002-XL-BLA","qty":1,"price":10.09,"ref":"02-14691-31636","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-L-WHI","qty":1,"price":3.79,"ref":"02-14692-29257","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50003-S-BRO","qty":1,"price":10.09,"ref":"25-14655-68429","channel":"eBay","loc":"uk","date":"2026-05-24"},{"sku":"SKU-50007-M-SKI","qty":2,"price":7.2,"ref":"24-14674-51906","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":1,"price":3.79,"ref":"03-14693-01448","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-XL-WHI","qty":2,"price":10.09,"ref":"05-14690-38855","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-L-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-M-BLA","qty":2,"price":19.17,"ref":"16-14672-86795","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-XL-SKI","qty":1,"price":3.79,"ref":"18-14669-84215","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50002-L-BLA","qty":2,"price":10.8,"ref":"12-14679-56048","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50005-L-SKI","qty":1,"price":7.29,"ref":"13-14679-52075","channel":"eBay","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50007-L-SKI","qty":3,"price":10.23,"ref":"21-14668-82474","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50005-M-BLA","qty":1,"price":7.29,"ref":"17-14675-53744","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50002-M-WHI","qty":2,"price":10.29,"ref":"11-14685-29832","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50001-XL-WHI","qty":1,"price":10.99,"ref":"203-5849208-4713147","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50006-S-BLA","qty":1,"price":6.99,"ref":"026-3323355-4330738","channel":"Amazon","loc":"uk","date":"2026-05-25"},{"sku":"SKU-50001-M-BLA","qty":3,"price":14.99,"ref":"04-14721-45653","channel":"eBay","loc":"uk","date":"2026-06-01"},{"sku":"SKU-50007-M-BRO","qty":1,"price":3.89,"ref":"01-14723-75769","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50003-M-BLA","qty":2,"price":9.58,"ref":"07-14712-89997","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50003-M-GRE","qty":2,"price":9.59,"ref":"07-14712-89997","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50007-L-WHI","qty":2,"price":6.45,"ref":"11-14705-76560","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50007-L-BLA","qty":2,"price":6.45,"ref":"11-14705-76560","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50007-M-BRO","qty":4,"price":6.45,"ref":"19-14693-05312","channel":"eBay","loc":"uk","date":"2026-05-31"},{"sku":"SKU-50001-XL-GRE","qty":2,"price":10.09,"ref":"26-14680-32574","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50006-M-BLA","qty":1,"price":4.29,"ref":"06-14712-27001","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50005-XL-WHI","qty":2,"price":10.09,"ref":"06-14712-16037","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50006-M-BLA","qty":1,"price":4.29,"ref":"24-14696-84949","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50007-XL-SKI","qty":3,"price":9.79,"ref":"06-14710-79480","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50007-L-BRO","qty":3,"price":9.79,"ref":"08-14706-98850","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50001-S-WHI","qty":1,"price":7.09,"ref":"17-14692-65904","channel":"eBay","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50007-L-BRO","qty":1,"price":7.09,"ref":"20-14685-94813","channel":"eBay","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50002-M-SKI","qty":2,"price":10.29,"ref":"14-14695-38543","channel":"eBay","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50007-M-BRO","qty":3,"price":3.5,"ref":"13-14696-70599","channel":"eBay","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50007-XL-SKI","qty":1,"price":3.89,"ref":"24-14692-81762","channel":"eBay","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50001-L-WHI","qty":2,"price":10.09,"ref":"20-14683-13927","channel":"eBay","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50007-L-SKI","qty":1,"price":3.89,"ref":"11-14694-93424","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50001-M-WHI","qty":1,"price":7.09,"ref":"09-14697-97269","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50005-XL-BLA","qty":2,"price":10.09,"ref":"14-14689-76608","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50006-M-WHI","qty":1,"price":4.08,"ref":"07-14700-83447","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50006-M-BLA","qty":1,"price":4.07,"ref":"07-14700-83447","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50007-XL-SKI","qty":1,"price":3.79,"ref":"23-14675-16908","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50007-S-BRO","qty":1,"price":3.79,"ref":"08-14698-10212","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50007-M-SKI","qty":3,"price":3.41,"ref":"21-14677-04156","channel":"eBay","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50003-L-SKI","qty":2,"price":10.09,"ref":"01-14708-80317","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-L-SKI","qty":1,"price":3.79,"ref":"19-14679-00226","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50002-XL-SKI","qty":2,"price":10.29,"ref":"19-14678-60821","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-M-WHI","qty":1,"price":7.09,"ref":"03-14703-21124","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50005-L-SKI","qty":1,"price":7.29,"ref":"24-14684-54404","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50001-XL-BLA","qty":2,"price":10.09,"ref":"12-14688-27204","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-L-BLA","qty":1,"price":3.79,"ref":"23-14670-74661","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-XL-BRO","qty":2,"price":6.95,"ref":"09-14692-73857","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-L-BLA","qty":2,"price":6.79,"ref":"22-14671-64442","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-S-SKI","qty":1,"price":3.6,"ref":"18-14677-67789","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-S-BLA","qty":1,"price":3.6,"ref":"18-14677-67789","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50006-M-BRO","qty":2,"price":7.99,"ref":"11-14688-63494","channel":"eBay","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50007-L-BLA","qty":1,"price":3.79,"ref":"16-14679-24950","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50007-M-BRO","qty":1,"price":3.79,"ref":"08-14690-85158","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50003-L-BLA","qty":2,"price":10.09,"ref":"24-14680-58557","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50007-M-BRO","qty":7,"price":3.22,"ref":"06-14693-88380","channel":"eBay","loc":"uk","date":"2026-05-26"},{"sku":"SKU-50005-L-BLA","qty":1,"price":7.09,"ref":"06-14682-10712","channel":"eBay","loc":"uk","date":"2026-05-23"},{"sku":"SKU-50001-M-WHI","qty":3,"price":22.99,"ref":"204-2835490-6397923","channel":"Amazon","loc":"uk","date":"2026-05-30"},{"sku":"SKU-50001-XL-SKI","qty":3,"price":22.99,"ref":"204-7185161-6087517","channel":"Amazon","loc":"uk","date":"2026-05-29"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":9.99,"ref":"203-7614320-4425117","channel":"Amazon","loc":"uk-fba","date":"2026-05-29"},{"sku":"SKU-50006-S-SKI","qty":1,"price":6.99,"ref":"202-3742873-4283512","channel":"Amazon","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50006-XL-BRO","qty":2,"price":13.98,"ref":"204-9966990-1746769","channel":"Amazon","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50007-L-WHI","qty":1,"price":6.99,"ref":"203-8876604-8258723","channel":"Amazon","loc":"uk","date":"2026-05-28"},{"sku":"SKU-50007-M-WHI","qty":3,"price":16.99,"ref":"205-6610839-0877121","channel":"Amazon","loc":"uk","date":"2026-05-27"},{"sku":"SKU-50001-XL-BRO","qty":1,"price":9.99,"ref":"205-7805429-9910767","channel":"Amazon","loc":"uk-fba","date":"2026-05-26"},{"sku":"SKU-50004-M-SKI","qty":1,"price":9.99,"ref":"026-4108629-2065142","channel":"Amazon","loc":"uk-fba","date":"2026-05-25"},{"sku":"SKU-50004-M-BRO","qty":1,"price":9.99,"ref":"026-4108629-2065142","channel":"Amazon","loc":"uk-fba","date":"2026-05-25"}];
+const STATIC_BY_SKU={"SKU-50007-L-SKI":{"units":8,"revenue":35.68,"orders":6,"amazon":2,"ebay":6},"SKU-50006-S-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-M-WHI":{"units":11,"revenue":87.05,"orders":5,"amazon":10,"ebay":1},"SKU-50007-L-WHI":{"units":8,"revenue":39.21,"orders":4,"amazon":5,"ebay":3},"SKU-50006-S-SKI":{"units":3,"revenue":20.97,"orders":3,"amazon":3,"ebay":0},"SKU-50001-M-BLA":{"units":13,"revenue":103.3,"orders":8,"amazon":6,"ebay":7},"SKU-50003-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50003-M-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-BLA":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-XL-GRE":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-BLA":{"units":4,"revenue":40.06,"orders":4,"amazon":2,"ebay":2},"SKU-50006-S-BRO":{"units":3,"revenue":20.97,"orders":3,"amazon":3,"ebay":0},"SKU-50004-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50004-M-SKI":{"units":3,"revenue":35.97,"orders":3,"amazon":3,"ebay":0},"SKU-50004-S-SKI":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-BLA":{"units":6,"revenue":35.62,"orders":5,"amazon":1,"ebay":5},"SKU-50007-M-BRO":{"units":17,"revenue":27.84,"orders":6,"amazon":1,"ebay":16},"SKU-50007-XL-WHI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-M-SKI":{"units":1,"revenue":6.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-SKI":{"units":6,"revenue":46.97,"orders":3,"amazon":5,"ebay":1},"SKU-50006-M-WHI":{"units":3,"revenue":15.16,"orders":3,"amazon":1,"ebay":2},"SKU-50006-M-BRO":{"units":3,"revenue":14.98,"orders":2,"amazon":1,"ebay":2},"SKU-50007-S-BLA":{"units":2,"revenue":10.59,"orders":2,"amazon":1,"ebay":1},"SKU-50006-S-BLA":{"units":4,"revenue":27.96,"orders":3,"amazon":4,"ebay":0},"SKU-50001-XL-BRO":{"units":4,"revenue":43.96,"orders":4,"amazon":4,"ebay":0},"SKU-50002-M-SKI":{"units":3,"revenue":22.28,"orders":2,"amazon":1,"ebay":2},"SKU-50007-L-GRE":{"units":2,"revenue":13.98,"orders":1,"amazon":2,"ebay":0},"SKU-50002-M-BLA":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50001-XL-WHI":{"units":3,"revenue":33.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-M-BRO":{"units":1,"revenue":12.99,"orders":1,"amazon":1,"ebay":0},"SKU-50002-XL-WHI":{"units":3,"revenue":36.97,"orders":3,"amazon":2,"ebay":1},"SKU-50001-XL-BLA":{"units":4,"revenue":37.07,"orders":3,"amazon":2,"ebay":2},"SKU-50002-M-WHI":{"units":3,"revenue":23.28,"orders":2,"amazon":1,"ebay":2},"SKU-50002-L-WHI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50006-L-WHI":{"units":2,"revenue":13.08,"orders":2,"amazon":1,"ebay":1},"SKU-50001-M-SKI":{"units":1,"revenue":13.99,"orders":1,"amazon":1,"ebay":0},"SKU-50005-XL-BLA":{"units":5,"revenue":36.81,"orders":4,"amazon":0,"ebay":5},"SKU-50006-L-SKI":{"units":1,"revenue":5.99,"orders":1,"amazon":0,"ebay":1},"SKU-50006-L-BLA":{"units":3,"revenue":13.57,"orders":2,"amazon":0,"ebay":3},"SKU-50004-L-BLA":{"units":1,"revenue":8.99,"orders":1,"amazon":0,"ebay":1},"SKU-50002-XL-SKI":{"units":4,"revenue":30.27,"orders":3,"amazon":0,"ebay":4},"SKU-50003-XL-WHI":{"units":1,"revenue":9.99,"orders":1,"amazon":0,"ebay":1},"SKU-50007-XL-BRO":{"units":5,"revenue":24.24,"orders":3,"amazon":0,"ebay":5},"SKU-50007-XL-BLA":{"units":1,"revenue":3.49,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-GRE":{"units":1,"revenue":3.14,"orders":1,"amazon":0,"ebay":1},"SKU-50007-M-BLA":{"units":2,"revenue":6.73,"orders":2,"amazon":0,"ebay":2},"SKU-50007-M-SKI":{"units":6,"revenue":13.75,"orders":3,"amazon":0,"ebay":6},"SKU-50005-XL-WHI":{"units":5,"revenue":26.919999999999998,"orders":3,"amazon":0,"ebay":5},"SKU-50005-M-BLA":{"units":2,"revenue":14.379999999999999,"orders":2,"amazon":0,"ebay":2},"SKU-50001-S-WHI":{"units":2,"revenue":14.18,"orders":2,"amazon":0,"ebay":2},"SKU-50006-XL-WHI":{"units":1,"revenue":4.09,"orders":1,"amazon":0,"ebay":1},"SKU-50005-L-GRE":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50003-S-BRO":{"units":1,"revenue":10.09,"orders":1,"amazon":0,"ebay":1},"SKU-50001-L-BLA":{"units":2,"revenue":19.17,"orders":1,"amazon":0,"ebay":2},"SKU-50007-XL-SKI":{"units":6,"revenue":21.259999999999998,"orders":4,"amazon":0,"ebay":6},"SKU-50002-L-BLA":{"units":2,"revenue":10.8,"orders":1,"amazon":0,"ebay":2},"SKU-50005-L-SKI":{"units":2,"revenue":14.58,"orders":2,"amazon":0,"ebay":2},"SKU-50003-M-BLA":{"units":2,"revenue":9.58,"orders":1,"amazon":0,"ebay":2},"SKU-50003-M-GRE":{"units":2,"revenue":9.59,"orders":1,"amazon":0,"ebay":2},"SKU-50007-L-BLA":{"units":6,"revenue":20.82,"orders":4,"amazon":0,"ebay":6},"SKU-50001-XL-GRE":{"units":2,"revenue":10.09,"orders":1,"amazon":0,"ebay":2},"SKU-50007-L-BRO":{"units":4,"revenue":16.88,"orders":2,"amazon":0,"ebay":4},"SKU-50001-L-WHI":{"units":2,"revenue":10.09,"orders":1,"amazon":0,"ebay":2},"SKU-50007-S-BRO":{"units":1,"revenue":3.79,"orders":1,"amazon":0,"ebay":1},"SKU-50003-L-SKI":{"units":2,"revenue":10.09,"orders":1,"amazon":0,"ebay":2},"SKU-50007-M-WHI":{"units":4,"revenue":24.08,"orders":2,"amazon":3,"ebay":1},"SKU-50007-S-SKI":{"units":1,"revenue":3.6,"orders":1,"amazon":0,"ebay":1},"SKU-50003-L-BLA":{"units":2,"revenue":10.09,"orders":1,"amazon":0,"ebay":2},"SKU-50005-L-BLA":{"units":1,"revenue":7.09,"orders":1,"amazon":0,"ebay":1},"SKU-50006-XL-BRO":{"units":2,"revenue":13.98,"orders":1,"amazon":2,"ebay":0},"SKU-50004-M-BRO":{"units":1,"revenue":9.99,"orders":1,"amazon":1,"ebay":0}};
 // ══ TOP SELLERS PAGE ═══════════════════════════════════════════════════════
 function pageTopSellers(){
   const allSales=STATIC_SALES;
@@ -1682,7 +1852,12 @@ function pageTopSellers(){
     <div class="metric"><div class="metric-icon"><i class="ti ti-chart-line"></i></div><div class="metric-val" style="font-size:18px">${fmtGBP(totalOrders?totalRevenue/totalOrders:0)}</div><div class="metric-label">Avg order value</div></div>
   </div>
   <div class="card" style="margin-bottom:14px;">
-    <div class="card-hd"><div class="card-title"><i class="ti ti-trophy"></i>Top Selling Variants</div><span style="font-size:11px;color:var(--text2)">Amazon & eBay - 17 Apr to 26 May 2026</span></div>
+    <div class="card-hd"><div class="card-title"><i class="ti ti-trophy"></i>Top Selling Variants</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:var(--text2)">Amazon & eBay - 17 Apr to 1 Jun 2026</span>
+        <button class="btn btn-sm" onclick="exportTopSellers()"><i class="ti ti-download"></i>Export CSV</button>
+      </div>
+    </div>
     <div class="tw"><table>
       <thead><tr><th>#</th><th>SKU</th><th>Product</th><th>Cat</th><th>Size</th><th>Colour</th><th>Units</th><th>Revenue</th><th>Orders</th><th>Share</th></tr></thead>
       <tbody>${topBySKU.map(([sku,d],i)=>{
@@ -1744,16 +1919,97 @@ function pageTopSellers(){
   })()}`;
 }
 
+// Sales sort/filter state
+let salesSort={col:'date',dir:'desc'};
+let salesFilter={channel:'',loc:'',search:''};
+
 function pageSales(){
-  const sales=[...S.sales].reverse();
-  return`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn btn-primary" onclick="showModal('sale')"><i class="ti ti-plus"></i>Log sale</button></div>
+  // Use STATIC_SALES + S.sales deduplicated
+  const seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales=[...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)),...S.sales];
+
+  // Apply filters
+  let filtered=allSales.filter(s=>{
+    if(salesFilter.channel && s.channel!==salesFilter.channel) return false;
+    if(salesFilter.loc && s.loc!==salesFilter.loc) return false;
+    if(salesFilter.search){
+      const q=salesFilter.search.toLowerCase();
+      const sk=S.skus.find(k=>k.sku===s.sku);
+      const name=sk?sk.name.toLowerCase():'';
+      if(!s.sku.toLowerCase().includes(q)&&!name.includes(q)&&!(s.ref||'').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Apply sort
+  filtered.sort((a,b)=>{
+    let av=a[salesSort.col]||'', bv=b[salesSort.col]||'';
+    if(salesSort.col==='qty'||salesSort.col==='price'){av=parseFloat(av)||0;bv=parseFloat(bv)||0;}
+    const r=av<bv?-1:av>bv?1:0;
+    return salesSort.dir==='asc'?r:-r;
+  });
+
+  const totalUnits=filtered.reduce((a,s)=>a+(s.qty||0),0);
+  const totalRev=filtered.reduce((a,s)=>a+(s.price||0),0);
+
+  const thStyle='cursor:pointer;user-select:none;white-space:nowrap;';
+  const sortIcon=(col)=>salesSort.col===col?(salesSort.dir==='asc'?'↑':'↓'):'↕';
+
+  return`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" placeholder="Search SKU / product / ref…" value="${salesFilter.search}"
+        oninput="salesFilter.search=this.value;document.getElementById('content').innerHTML=pageSales();"
+        style="width:200px;padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);outline:none;"/>
+      <select onchange="salesFilter.channel=this.value;document.getElementById('content').innerHTML=pageSales();"
+        style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
+        <option value="" ${!salesFilter.channel?'selected':''}>All channels</option>
+        ${CHANNELS.map(c=>`<option value="${c}" ${salesFilter.channel===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <select onchange="salesFilter.loc=this.value;document.getElementById('content').innerHTML=pageSales();"
+        style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
+        <option value="" ${!salesFilter.loc?'selected':''}>All locations</option>
+        ${LOCS.map(l=>`<option value="${l}" ${salesFilter.loc===l?'selected':''}>${LOC_LABEL[l]}</option>`).join('')}
+      </select>
+      ${(salesFilter.channel||salesFilter.loc||salesFilter.search)?`<button class="btn btn-sm" onclick="salesFilter={channel:'',loc:'',search:''};document.getElementById('content').innerHTML=pageSales()"><i class="ti ti-x"></i>Clear</button>`:''}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:11px;color:var(--text2)">${filtered.length} records · ${totalUnits} units · ${fmtGBP(totalRev)}</span>
+      <button class="btn btn-sm" onclick="showModal('sale')"><i class="ti ti-plus"></i>Log sale</button>
+      <button class="btn btn-sm" onclick="exportSalesCSV()"><i class="ti ti-download"></i>Export</button>
+    </div>
+  </div>
   <div class="card"><div class="tw"><table>
-    <thead><tr><th>Date</th><th>SKU</th><th>Product</th><th>Channel</th><th>Location</th><th>Qty</th><th>Price</th><th>Ref</th></tr></thead>
-    <tbody>${sales.length===0?`<tr><td colspan="8"><div class="empty"><i class="ti ti-shopping-cart"></i>No sales yet — use the AI Chat or Log Sale button</div></td></tr>`:
-    sales.map(s=>{const sk=S.skus.find(k=>k.sku===s.sku);
-      return`<tr><td style="font-size:10px;font-family:var(--mono)">${s.date}</td><td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td><td style="font-size:12px">${sk?sk.name:s.sku}</td><td style="font-size:12px">${chDot(s.channel)}</td>
-      <td>${bdg(s.loc.includes('india')?'transit':'ok',LOC_LABEL[s.loc])}</td><td style="font-family:var(--mono)">${s.qty}</td><td style="font-family:var(--mono)">${s.price?fmtGBP(s.price):'—'}</td><td style="font-size:11px;color:var(--text2)">${s.ref||'—'}</td></tr>`;
-    }).join('')}</tbody></table></div></div>`;
+    <thead><tr>
+      <th style="${thStyle}" onclick="salesSortBy('date')">Date ${sortIcon('date')}</th>
+      <th style="${thStyle}" onclick="salesSortBy('sku')">SKU ${sortIcon('sku')}</th>
+      <th>Product</th>
+      <th style="${thStyle}" onclick="salesSortBy('channel')">Channel ${sortIcon('channel')}</th>
+      <th style="${thStyle}" onclick="salesSortBy('loc')">Location ${sortIcon('loc')}</th>
+      <th style="${thStyle}" onclick="salesSortBy('qty')">Qty ${sortIcon('qty')}</th>
+      <th style="${thStyle}" onclick="salesSortBy('price')">Price ${sortIcon('price')}</th>
+      <th>Ref</th>
+    </tr></thead>
+    <tbody>${filtered.length===0?`<tr><td colspan="8"><div class="empty"><i class="ti ti-shopping-cart"></i>No sales match your filters</div></td></tr>`:
+    filtered.map(s=>{const sk=S.skus.find(k=>k.sku===s.sku);
+      return`<tr>
+        <td style="font-size:10px;font-family:var(--mono)">${s.date||'—'}</td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--text2)">${s.sku}</td>
+        <td style="font-size:12px">${sk?sk.name:s.sku}</td>
+        <td style="font-size:12px">${chDot(s.channel)}</td>
+        <td>${bdg(s.loc&&s.loc.includes('india')?'transit':'ok',LOC_LABEL[s.loc]||s.loc)}</td>
+        <td style="font-family:var(--mono)">${s.qty}</td>
+        <td style="font-family:var(--mono)">${s.price?fmtGBP(s.price):'—'}</td>
+        <td style="font-size:11px;color:var(--text2)">${s.ref||'—'}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div></div>`;
+}
+
+function salesSortBy(col){
+  if(salesSort.col===col) salesSort.dir=salesSort.dir==='asc'?'desc':'asc';
+  else { salesSort.col=col; salesSort.dir='desc'; }
+  document.getElementById('content').innerHTML=pageSales();
 }
 
 // ══ SETTINGS ═══════════════════════════════════════════════════════════════
@@ -1875,7 +2131,29 @@ function delPO(i){ if(!confirm('Delete this PO?')) return; S.pos.splice(i,1); sa
 function clearAll(){ S={skus:[],sales:[],pos:[],page:'dashboard'}; saveState(); toast('Cleared','var(--amber)'); render(); }
 function reimport(){ if(!confirm('Reset SKUs to May 2026 data? Sales and POs kept.')) return; S.skus=JSON.parse(JSON.stringify(EIRICA_DATA)); saveState(); toast('Reimported ✓'); render(); }
 function exportMasterCSV(){ const rows=[['SKU','Product','Category','Size','Colour','India WH','India FBA','UK WH','UK FBA','Total','Reorder','Status']]; S.skus.forEach(s=>rows.push([s.sku,s.name,s.category,s.size,s.color,s.stock.india||0,s.stock['india-fba']||0,s.stock.uk||0,s.stock['uk-fba']||0,tot(s),s.reorder,status(s)])); dlCSV(rows,'eirica-master.csv'); }
-function exportSalesCSV(){ const rows=[['Date','SKU','Product','Channel','Location','Qty','Price','Ref']]; S.sales.forEach(s=>{ const sk=S.skus.find(k=>k.sku===s.sku); rows.push([s.date,s.sku,sk?sk.name:'',s.channel,LOC_FULL[s.loc]||s.loc,s.qty,(s.price||0).toFixed(2),s.ref||'']); }); dlCSV(rows,'eirica-sales.csv'); }
+function exportTopSellers(){
+  const bySKU={};
+  STATIC_SALES.forEach(s=>{
+    if(!bySKU[s.sku])bySKU[s.sku]={units:0,revenue:0,orders:0};
+    bySKU[s.sku].units+=(s.qty||0);bySKU[s.sku].revenue+=(s.price||0);bySKU[s.sku].orders+=1;
+  });
+  const rows=[['Rank','SKU','Product','Category','Size','Colour','Units Sold','Revenue (GBP)','Orders','Share %']];
+  const total=Object.values(bySKU).reduce((a,d)=>a+d.units,0);
+  Object.entries(bySKU).sort((a,b)=>b[1].units-a[1].units).forEach(([sku,d],i)=>{
+    const sk=S.skus.find(s=>s.sku===sku);
+    rows.push([i+1,sku,sk?sk.name:sku,sk?sk.category:'',sk?sk.size:'',sk?sk.color:'',d.units,d.revenue.toFixed(2),d.orders,Math.round(d.units/total*100)+'%']);
+  });
+  dlCSV(rows,'eirica-top-sellers.csv');
+  toast('Top Sellers exported ✓');
+}
+
+function exportSalesCSV(){
+  const seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales=[...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)),...S.sales];
+  const rows=[['Date','SKU','Product','Channel','Location','Qty','Price','Ref']];
+  allSales.forEach(s=>{const sk=S.skus.find(k=>k.sku===s.sku);rows.push([s.date,s.sku,sk?sk.name:'',s.channel,LOC_FULL[s.loc]||s.loc,s.qty,(s.price||0).toFixed(2),s.ref||'']);});
+  dlCSV(rows,'eirica-sales.csv');
+}
 function dlCSV(rows,name){ const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n'); const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv); a.download=name; a.click(); toast('Exported ✓'); }
 
 // ══ MODALS ═════════════════════════════════════════════════════════════════
