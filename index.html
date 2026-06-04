@@ -285,7 +285,7 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     <nav class="nav">
       <div class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
       <div class="nav-item" onclick="nav('master',this)"><i class="ti ti-package"></i>Master stock</div>
-      <div class="nav-item" onclick="nav('orders',this)"><i class="ti ti-truck"></i>Purchase orders</div>
+      <div class="nav-item" onclick="nav('orders',this)"><i class="ti ti-arrows-exchange"></i>Stock Movement</div>
       <div class="nav-item" onclick="nav('sales',this)"><i class="ti ti-shopping-cart"></i>Sales log</div>
       <div class="nav-item" onclick="nav('topsellers',this)"><i class="ti ti-trending-up"></i>Top Sellers</div>
       <div class="nav-item" onclick="nav('anomalies',this)"><i class="ti ti-alert-hexagon"></i>Anomalies</div>
@@ -293,53 +293,9 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
       <div class="nav-item" onclick="nav('import',this)"><i class="ti ti-file-spreadsheet"></i>Excel Import</div>
       <div class="nav-item" onclick="nav('settings',this)"><i class="ti ti-settings"></i>Settings</div>
       <div class="nav-sec">Last Updated</div>
-      <div style="padding:6px 16px 4px;">
-        <div style="font-size:10px;color:var(--text3);line-height:1.9;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><i class="ti ti-shopping-cart" style="font-size:11px;color:var(--text3)"></i><span>Sales</span></div>
-          <div id="sb-last-sale" style="padding-left:16px;display:flex;flex-direction:column;gap:3px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">Amaz UK (WH)</span>
-              <span id="sb-sale-amz-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">Amaz UK (FBA)</span>
-              <span id="sb-sale-amz-ukfba" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">eBay</span>
-              <span id="sb-sale-ebay" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">Amaz India</span>
-              <span id="sb-sale-amz-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">Website (UK)</span>
-              <span id="sb-sale-web-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">Website (India)</span>
-              <span id="sb-sale-web-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">—</span>
-            </div>
-          </div>
-        </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.9;">
-          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><i class="ti ti-package" style="font-size:11px;color:var(--text3)"></i><span>Stock</span></div>
-          <div style="padding-left:16px;display:flex;flex-direction:column;gap:3px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">🇮🇳 India WH</span>
-              <span id="sb-stock-india" style="font-size:9px;color:var(--text2);font-family:var(--mono);">3 Jun 2026</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">🇬🇧 UK WH</span>
-              <span id="sb-stock-uk" style="font-size:9px;color:var(--text2);font-family:var(--mono);">3 Jun 2026</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:9px;color:var(--text3);">🇬🇧 UK FBA</span>
-              <span id="sb-stock-ukfba" style="font-size:9px;color:var(--text2);font-family:var(--mono);">11 May 2026</span>
-            </div>
-          </div>
-        </div>
+      <div class="nav-item" onclick="nav('lastupdated',this)" style="font-size:11px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;">
+        <span><i class="ti ti-clock" style="margin-right:6px"></i>View update log</span>
+        <i class="ti ti-chevron-right" style="font-size:10px"></i>
       </div>
     </nav>
     <div style="flex:1"></div>
@@ -800,6 +756,44 @@ function loadState(){
   }
   render();
   setTimeout(updateSidebarStamps, 150);
+  // Seed system audit notices if not already set
+  seedSystemNotices();
+}
+
+function seedSystemNotices(){
+  const existing = getNotices();
+  const sysIds = existing.map(n=>n.sysId).filter(Boolean);
+  const toAdd = [];
+
+  if(!sysIds.includes('fba-stale')){
+    toAdd.push({
+      sysId:'fba-stale', type:'warning',
+      text:'UK FBA stock was last updated 11 May 2026. FBA inventory may have changed due to sales since then. Please upload a fresh FBA inventory file.',
+      sku:'', date:'3 Jun 2026'
+    });
+  }
+  if(!sysIds.includes('india-stale')){
+    toAdd.push({
+      sysId:'india-stale', type:'warning',
+      text:'India WH stock was last updated 19 May 2026. Has any stock been dispatched from India to UK since then? If so, record it in Stock Movement to keep inventory accurate.',
+      sku:'', date:'3 Jun 2026'
+    });
+  }
+  if(!sysIds.includes('uk-low-54')){
+    toAdd.push({
+      sysId:'uk-low-54', type:'info',
+      text:'54 UK WH variants are at Low stock (1–4 units). 16 variants are at zero. Review the Reorder Queue in Stock Movement and consider raising a stock order from India.',
+      sku:'', date:'3 Jun 2026'
+    });
+  }
+
+  if(toAdd.length){
+    const updated = [...toAdd, ...existing];
+    saveNotices(updated);
+    // Refresh notice board if on dashboard
+    const nb = document.getElementById('notice-board');
+    if(nb) nb.innerHTML = renderNotices();
+  }
 }
 function saveState(){ try{ localStorage.setItem('eirica-v3',JSON.stringify(S)); }catch(e){} updateSidebarStamps(); }
 
@@ -872,13 +866,13 @@ function nav(page, el){
   S.page=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const titles={dashboard:'Dashboard',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',orders:'Purchase orders',sales:'Sales log',topsellers:'Top Sellers',anomalies:'Anomalies',import:'Excel Import',settings:'Settings'};
+  const titles={dashboard:'Dashboard',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',orders:'Stock Movement',sales:'Sales log',topsellers:'Top Sellers',anomalies:'Anomalies',lastupdated:'Last Updated',import:'Excel Import',settings:'Settings'};
   document.getElementById('page-title').textContent=titles[page]||page;
   render();
 }
 
 function render(){
-  const pages={dashboard:pageDash,chat:pageChat,master:pageMaster,locations:pageLoc,orders:pageOrders,sales:pageSales,topsellers:pageTopSellers,anomalies:pageAnomalies,import:pageImport,settings:pageSettings};
+  const pages={dashboard:pageDash,chat:pageChat,master:pageMaster,locations:pageLoc,orders:pageOrders,sales:pageSales,topsellers:pageTopSellers,anomalies:pageAnomalies,lastupdated:pageLastUpdated,import:pageImport,settings:pageSettings};
   document.getElementById('content').innerHTML=(pages[S.page]||pageDash)();
   afterRender();
 }
@@ -937,7 +931,7 @@ function pageDash(){
   const totalSales=_all.reduce((a,s)=>a+(s.qty||0),0);
   const rev=_all.reduce((a,s)=>a+(s.price||0),0);
   const openPOs=S.pos.filter(p=>p.status==='transit').length;
-  const chT={}; CHANNELS.forEach(c=>{ chT[c]=STATIC_SALES.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  const _seen2=new Set(S.sales.map(s=>s.ref+'|'+s.sku)); const _all2=[...STATIC_SALES.filter(s=>!_seen2.has(s.ref+'|'+s.sku)),...S.sales]; const chT={}; CHANNELS.forEach(c=>{ chT[c]=_all2.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
   const maxCh=Math.max(...Object.values(chT),1);
   const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
   const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
@@ -1885,55 +1879,89 @@ function pageLoc(){
 // ══ PURCHASE ORDERS ════════════════════════════════════════════════════════
 let poLocView = 'orders'; // 'orders' | 'uk' | 'india'
 
+let stockMovementTab = 'order'; // 'order' | 'shipped' | 'received'
+
+function setStockMovementTab(tab){
+  stockMovementTab = tab;
+  document.getElementById('content').innerHTML = pageOrders();
+}
+
 function pageOrders(){
   const tabs = [
-    {key:'orders', icon:'ti-truck',       label:'All POs'},
-    {key:'uk',     icon:'ti-flag',        label:'🇬🇧 UK reorder'},
-    {key:'india',  icon:'ti-flag',        label:'🇮🇳 India reorder'},
+    {key:'order',    icon:'ti-clipboard-list',  label:'Stock Order',    sub:'UK orders to India'},
+    {key:'shipped',  icon:'ti-send',            label:'Stock Shipped',   sub:'India → UK dispatch'},
+    {key:'received', icon:'ti-circle-check',    label:'Stock Received',  sub:'Received in UK'},
   ];
 
-  // Count low stock per region
-  const ukLow    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0) < 10).length;
-  const indiaLow = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0) < 10).length;
-  const counts   = {orders:'', uk:ukLow, india:indiaLow};
-
-  const tabBar = `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
-    <div style="display:flex;gap:6px;">
-      ${tabs.map(t=>`<button class="btn btn-sm${poLocView===t.key?' btn-primary':''}" onclick="setPOView('${t.key}')">
-        <i class="ti ${t.icon}"></i>${t.label}
-        ${counts[t.key]?`<span style="background:rgba(239,68,68,.25);color:#f87171;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:2px">${counts[t.key]}</span>`:''}
+  const tabBar = `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+    ${tabs.map(t=>`
+      <button onclick="setStockMovementTab('${t.key}')" style="
+        padding:14px 16px;border-radius:10px;border:1px solid ${stockMovementTab===t.key?'var(--accent)':'var(--border2)'};
+        background:${stockMovementTab===t.key?'rgba(79,142,247,.1)':'var(--surface2)'};
+        cursor:pointer;text-align:left;transition:all .15s;
+      ">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <i class="ti ${t.icon}" style="font-size:18px;color:${stockMovementTab===t.key?'var(--accent)':'var(--text2)'}"></i>
+          <span style="font-size:13px;font-weight:600;color:${stockMovementTab===t.key?'var(--accent)':'var(--text)'}">${t.label}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2);padding-left:26px">${t.sub}</div>
+        <div style="padding-left:26px;margin-top:6px;">
+          <span style="font-size:12px;font-family:var(--mono);font-weight:700;color:${stockMovementTab===t.key?'var(--accent)':'var(--text2)'}">
+            ${t.key==='order'?S.pos.filter(p=>p.status==='draft').length:
+              t.key==='shipped'?S.pos.filter(p=>p.status==='transit').length:
+              S.pos.filter(p=>p.status==='received').length} records
+          </span>
+        </div>
       </button>`).join('')}
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="showModal('po')"><i class="ti ti-plus"></i>New purchase order</button>
   </div>`;
 
-  if(poLocView==='uk')     return tabBar + renderReorderPanel('uk');
-  if(poLocView==='india')  return tabBar + renderReorderPanel('india');
+  if(stockMovementTab==='order')    return tabBar + renderStockOrder();
+  if(stockMovementTab==='shipped')  return tabBar + renderStockShipped();
+  if(stockMovementTab==='received') return tabBar + renderStockReceived();
+  return tabBar;
+}
 
-  // Default: all POs list
-  const pos=[...S.pos].reverse();
-  const critQ=S.skus.filter(s=>status(s)==='critical');
-  const lowQ=S.skus.filter(s=>status(s)==='low');
-  return tabBar + `<div class="card" style="margin-bottom:16px;"><div class="tw"><table>
-    <thead><tr><th>PO #</th><th>Supplier</th><th>Lines</th><th>Units</th><th>Status</th><th>Expected</th><th>Actions</th></tr></thead>
-    <tbody>${pos.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-truck"></i>No purchase orders yet. Use the UK or India reorder tabs to auto-generate one.</div></td></tr>`:
-    pos.map((p,i)=>{
-      const ri=S.pos.length-1-i;
-      const units=p.lines.reduce((a,l)=>a+(l.qty||0),0);
-      return`<tr>
-        <td style="font-family:var(--mono);font-size:11px">${p.num}</td>
-        <td style="font-weight:500">${p.supplier}</td>
-        <td>${p.lines.length} SKU${p.lines.length!==1?'s':''}</td>
-        <td style="font-family:var(--mono)">${units}</td>
-        <td>${bdg(p.status)}</td>
-        <td style="font-size:11px;color:var(--text2)">${p.date||'—'}</td>
-        <td style="white-space:nowrap;display:flex;gap:6px">
-          ${p.status==='draft'?`<button class="btn btn-sm" onclick="dispatchPO(${ri})"><i class="ti ti-send"></i>Mark Dispatched</button>`:''}
-          ${p.status==='transit'?`<button class="btn btn-primary btn-sm" onclick="rcvPO(${ri})"><i class="ti ti-check"></i>Mark Received</button>`:''}
-          <button class="btn btn-danger btn-sm" onclick="delPO(${ri})"><i class="ti ti-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('')}</tbody></table></div></div>
+// ── TAB 1: Stock Order (UK orders to India) ──────────────────────────────────
+function renderStockOrder(){
+  const draft = [...S.pos].filter(p=>p.status==='draft').reverse();
+  const critQ  = S.skus.filter(s=>status(s)==='critical'||status(s)==='negative');
+  const lowQ   = S.skus.filter(s=>status(s)==='low');
+
+  return `
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn btn-primary" onclick="showModal('po')"><i class="ti ti-plus"></i>New stock order</button>
+  </div>
+
+  <!-- Pending orders table -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-hd">
+      <div class="card-title"><i class="ti ti-clipboard-list"></i>Pending Stock Orders</div>
+      <span class="badge ${draft.length?'b-transit':'b-ok'}">${draft.length}</span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Order #</th><th>Supplier</th><th>SKUs</th><th>Units</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${draft.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-clipboard-list"></i>No pending orders. Click New stock order to raise one.</div></td></tr>`:
+      draft.map(p=>{
+        const ri=S.pos.indexOf(p);
+        const units=p.lines.reduce((a,l)=>a+(l.qty||0),0);
+        return`<tr>
+          <td class="mono" style="font-size:11px">${p.num}</td>
+          <td style="font-weight:500">${p.supplier||'—'}</td>
+          <td>${p.lines.length}</td>
+          <td class="mono">${units}</td>
+          <td style="font-size:11px;color:var(--text2)">${p.date||'—'}</td>
+          <td>${bdg('draft')}</td>
+          <td style="white-space:nowrap;display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="dispatchPO(${ri})"><i class="ti ti-send"></i>Mark Dispatched</button>
+            <button class="btn btn-danger btn-sm" onclick="delPO(${ri})"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <!-- Reorder queue -->
   <div class="card">
     <div class="card-hd">
       <div class="card-title"><i class="ti ti-alert-circle"></i>Reorder Queue</div>
@@ -1941,14 +1969,143 @@ function pageOrders(){
     </div>
     ${critQ.length+lowQ.length===0
       ?'<div class="empty"><i class="ti ti-circle-check"></i>All stock levels healthy</div>'
-      :[...critQ,...lowQ].map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;"><div><span style="font-weight:600">${s.name}</span><span style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-left:6px">${s.sku}</span><div style="font-size:10px;color:var(--text2);margin-top:2px">${LOCS.map(l=>`${LOC_LABEL[l]}:${s.stock[l]||0}`).join(' · ')}</div></div><div style="display:flex;gap:8px;align-items:center">${bdg(status(s))}<button class="btn btn-sm" onclick="showModal('po')">Create PO</button></div></div>`).join('')}
+      :[...critQ,...lowQ].map(s=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;">
+          <div>
+            <span style="font-weight:600">${s.name}</span>
+            <span class="mono" style="font-size:10px;color:var(--text2);margin-left:6px">${s.sku}</span>
+            <div style="font-size:10px;color:var(--text2);margin-top:2px">${LOCS.map(l=>`${LOC_LABEL[l]}:${s.stock[l]||0}`).join(' · ')}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            ${bdg(status(s))}
+            <button class="btn btn-sm" onclick="showModal('po')">Order</button>
+          </div>
+        </div>`).join('')}
   </div>`;
 }
 
-function setPOView(view){
-  poLocView = view;
-  document.getElementById('content').innerHTML = pageOrders();
+// ── TAB 2: Stock Shipped (India → UK in transit) ─────────────────────────────
+function renderStockShipped(){
+  const transit = [...S.pos].filter(p=>p.status==='transit').reverse();
+
+  return `
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-hd">
+      <div class="card-title"><i class="ti ti-send" style="color:#60a5fa"></i>Stock In Transit — India to UK</div>
+      <span class="badge b-transit">${transit.length}</span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Order #</th><th>Supplier</th><th>SKUs</th><th>Units Dispatched</th><th>Dispatch Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${transit.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-send"></i>No shipments in transit. Mark a stock order as Dispatched to track it here.</div></td></tr>`:
+      transit.map(p=>{
+        const ri=S.pos.indexOf(p);
+        const units=p.lines.reduce((a,l)=>a+(l.dispatchedQty||l.qty||0),0);
+        return`<tr>
+          <td class="mono" style="font-size:11px">${p.num}</td>
+          <td style="font-weight:500">${p.supplier||'—'}</td>
+          <td>${p.lines.length}</td>
+          <td class="mono" style="font-weight:700;color:#60a5fa">${units}</td>
+          <td style="font-size:11px;color:var(--text2)">${p.dispatchDate?p.dispatchDate.slice(0,10):p.date||'—'}</td>
+          <td>${bdg('transit')}</td>
+          <td style="white-space:nowrap;display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="rcvPO(${ri})"><i class="ti ti-circle-check"></i>Mark Received</button>
+            <button class="btn btn-danger btn-sm" onclick="delPO(${ri})"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+
+  ${transit.length ? `
+  <!-- Line item detail for transit POs -->
+  <div style="margin-top:4px;">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Shipment Details</div>
+    ${transit.map(p=>`
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-hd">
+          <div class="card-title"><span class="mono" style="font-size:11px;margin-right:8px">${p.num}</span>${p.supplier||'—'}</div>
+          <span style="font-size:11px;color:var(--text2)">${p.lines.reduce((a,l)=>a+(l.dispatchedQty||l.qty||0),0)} units in transit</span>
+        </div>
+        ${p.lines.map(l=>{
+          const sk=S.skus.find(s=>s.sku===l.sku);
+          const disp=l.dispatchedQty||l.qty||0;
+          return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;">
+            <div><span style="font-weight:600">${sk?sk.name:l.sku}</span><span class="mono" style="font-size:10px;color:var(--text2);margin-left:8px">${l.sku}</span></div>
+            <div style="display:flex;align-items:center;gap:16px">
+              <span style="font-size:11px;color:var(--text2)">Ordered: ${l.qty}</span>
+              <span style="font-family:var(--mono);font-weight:700;color:#60a5fa">Dispatched: ${disp}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`).join('')}
+  </div>` : ''}`;
 }
+
+// ── TAB 3: Stock Received (arrived in UK) ────────────────────────────────────
+function renderStockReceived(){
+  const received = [...S.pos].filter(p=>p.status==='received').reverse();
+
+  return `
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title"><i class="ti ti-circle-check" style="color:#4ade80"></i>Stock Received in UK</div>
+      <span class="badge b-ok">${received.length}</span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Order #</th><th>Supplier</th><th>SKUs</th><th>Dispatched</th><th>Received</th><th>Mismatch</th><th>Received Date</th></tr></thead>
+      <tbody>${received.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-circle-check"></i>No received shipments yet.</div></td></tr>`:
+      received.map(p=>{
+        const dispatched=p.lines.reduce((a,l)=>a+(l.dispatchedQty||l.qty||0),0);
+        const rcvd=p.lines.reduce((a,l)=>a+(l.receivedQty||l.dispatchedQty||l.qty||0),0);
+        const diff=rcvd-dispatched;
+        const hasMismatch=p.mismatches&&p.mismatches.length>0;
+        return`<tr>
+          <td class="mono" style="font-size:11px">${p.num}</td>
+          <td style="font-weight:500">${p.supplier||'—'}</td>
+          <td>${p.lines.length}</td>
+          <td class="mono">${dispatched}</td>
+          <td class="mono" style="font-weight:700;color:#4ade80">${rcvd}</td>
+          <td>${hasMismatch
+            ?`<span class="badge b-critical" style="cursor:pointer" onclick="nav('anomalies',null)">${p.mismatches.length} mismatch${p.mismatches.length>1?'es':''} ↗</span>`
+            :`<span class="badge b-ok">✓ All matched</span>`}</td>
+          <td style="font-size:11px;color:var(--text2)">${p.receivedDate?p.receivedDate.slice(0,10):'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>
+
+  ${received.length ? `
+  <!-- Received line items detail -->
+  <div style="margin-top:16px;">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Receipt Details</div>
+    ${received.map(p=>`
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-hd">
+          <div class="card-title"><span class="mono" style="font-size:11px;margin-right:8px">${p.num}</span>${p.supplier||'—'}</div>
+          ${p.mismatches&&p.mismatches.length
+            ?`<span class="badge b-critical">${p.mismatches.length} mismatch</span>`
+            :`<span class="badge b-ok">Full match</span>`}
+        </div>
+        ${p.lines.map(l=>{
+          const sk=S.skus.find(s=>s.sku===l.sku);
+          const disp=l.dispatchedQty||l.qty||0;
+          const rcvd=l.receivedQty||disp;
+          const diff=rcvd-disp;
+          return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);font-size:12px;">
+            <div><span style="font-weight:600">${sk?sk.name:l.sku}</span><span class="mono" style="font-size:10px;color:var(--text2);margin-left:8px">${l.sku}</span></div>
+            <div style="display:flex;align-items:center;gap:16px">
+              <span style="font-size:11px;color:var(--text2)">Dispatched: ${disp}</span>
+              <span style="font-family:var(--mono);font-weight:700;color:#4ade80">Received: ${rcvd}</span>
+              ${diff!==0?`<span style="font-family:var(--mono);font-weight:700;color:${diff<0?'#f87171':'#4ade80'};font-size:11px">${diff>0?'+':''}${diff}</span>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`).join('')}
+  </div>` : ''}`;
+}
+
+function setPOView(view){ stockMovementTab = view === 'orders' ? 'order' : view; document.getElementById('content').innerHTML = pageOrders(); }
+
 
 function renderReorderPanel(region){
   const isUK = region==='uk';
@@ -2531,7 +2688,139 @@ function closeModal(name){ document.getElementById('modal-'+name).classList.remo
 function closeModalClick(name,e){ if(e.target===document.getElementById('modal-'+name)) closeModal(name); }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') ['sku','sale','po'].forEach(closeModal); });
 
-// ══ EXCEL IMPORT PAGE ══════════════════════════════════════════════════════
+// ══ LAST UPDATED PAGE ══════════════════════════════════════════════════════
+function pageLastUpdated(){
+  // Compute last sale date per channel+location from STATIC_SALES
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)),...S.sales];
+
+  const lastFor = (chFn, locFn) => {
+    const matches = allSales.filter(s=>chFn(s)&&locFn(s));
+    if(!matches.length) return null;
+    return matches.map(s=>s.date).sort().pop();
+  };
+
+  const fmtD = d => {
+    if(!d) return '<span style="color:var(--text3)">—</span>';
+    const dt = new Date(d);
+    if(isNaN(dt)) return d;
+    return dt.getDate()+' '+dt.toLocaleString('en-GB',{month:'short'})+' '+dt.getFullYear();
+  };
+
+  const row = (icon, label, date, note='') => `
+    <tr>
+      <td style="padding:12px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px">
+        <i class="ti ${icon}" style="color:var(--text2)"></i>${label}
+      </td>
+      <td style="padding:12px 16px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${fmtD(date)}</td>
+      <td style="padding:12px 16px;font-size:11px;color:var(--text2)">${note}</td>
+    </tr>`;
+
+  const salesData = [
+    {icon:'ti-brand-amazon', label:'Amazon UK (Warehouse)', date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk'), note:'Seller-fulfilled orders, UK WH'},
+    {icon:'ti-brand-amazon', label:'Amazon UK (FBA)',       date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk-fba'), note:'FBA-fulfilled orders'},
+    {icon:'ti-brand-amazon', label:'Amazon India',          date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='india'||s.loc==='india-fba'), note:'Amazon.in orders'},
+    {icon:'ti-brand-ebay',   label:'eBay UK',               date:lastFor(s=>s.channel==='eBay',   s=>true), note:'All eBay orders'},
+    {icon:'ti-world',        label:'Website / Shopify (UK)',    date:lastFor(s=>s.channel==='Shopify', s=>s.loc==='uk'||s.loc==='uk-fba'), note:'Direct website orders'},
+    {icon:'ti-world',        label:'Website / Shopify (India)', date:lastFor(s=>s.channel==='Shopify', s=>s.loc==='india'||s.loc==='india-fba'), note:''},
+  ];
+
+  const stockData = [
+    {icon:'ti-flag',    label:'🇮🇳 India Warehouse', date: S.lastStockUpdateIndia  || '2026-05-19', note:'Last physical count / import'},
+    {icon:'ti-flag',    label:'🇬🇧 UK Warehouse',    date: S.lastStockUpdateUK     || '2026-06-03', note:'Last physical count / import'},
+    {icon:'ti-flag',    label:'🇬🇧 UK FBA',          date: S.lastStockUpdateUKFBA  || '2026-05-11', note:'Last FBA inventory sync'},
+    {icon:'ti-flag',    label:'🇮🇳 India FBA',       date: S.lastStockUpdateIndiaFBA || null,        note:'Not yet configured'},
+  ];
+
+  const totalOrders = allSales.length;
+  const totalUnits  = allSales.reduce((a,s)=>a+(s.qty||0),0);
+  const totalRev    = allSales.reduce((a,s)=>a+(s.price||0),0);
+  const allDates    = allSales.map(s=>s.date).filter(Boolean).sort();
+  const firstDate   = allDates[0]||'—';
+  const lastDate    = allDates[allDates.length-1]||'—';
+
+  return `
+  <!-- Summary strip -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+    <div class="metric"><div class="metric-icon"><i class="ti ti-receipt"></i></div>
+      <div class="metric-val">${totalOrders}</div><div class="metric-label">Total orders</div>
+      <div class="metric-sub">${fmtD(firstDate)} → ${fmtD(lastDate)}</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-shopping-bag"></i></div>
+      <div class="metric-val">${totalUnits}</div><div class="metric-label">Units sold</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-coins"></i></div>
+      <div class="metric-val" style="font-size:18px">${fmtGBP(totalRev)}</div><div class="metric-label">Total revenue</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-package"></i></div>
+      <div class="metric-val">${S.skus.reduce((a,s)=>a+(s.stock.uk||0)+(s.stock['uk-fba']||0)+(s.stock.india||0),0)}</div>
+      <div class="metric-label">Total stock</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- Sales last updated -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-shopping-cart"></i>Sales — Last Updated</div></div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Channel</th>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Last Sale Date</th>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Notes</th>
+        </tr></thead>
+        <tbody style="border-collapse:collapse">
+          ${salesData.map(r=>row(r.icon, r.label, r.date, r.note)).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Stock last updated -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-package"></i>Stock — Last Updated</div></div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Warehouse</th>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Last Updated</th>
+          <th style="padding:8px 16px;font-size:10px;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Notes</th>
+        </tr></thead>
+        <tbody>
+          ${stockData.map(r=>row(r.icon, r.label, r.date, r.note)).join('')}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Update history log -->
+  <div class="card" style="margin-top:16px;">
+    <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>Update History</div></div>
+    <div style="padding:0;">
+      ${[
+        {date:'3 Jun 2026',  type:'Stock',  icon:'ti-package',       color:'#4ade80', desc:'UK Warehouse physical count — all 140 variants updated'},
+        {date:'3 Jun 2026',  type:'Sales',  icon:'ti-brand-amazon',  color:'#ff9900', desc:'Amazon orders 7-day report to 3 Jun 2026 — 5 new orders'},
+        {date:'3 Jun 2026',  type:'Sales',  icon:'ti-brand-ebay',    color:'#e53238', desc:'eBay orders 1–3 Jun 2026 — 24 new orders'},
+        {date:'1 Jun 2026',  type:'Sales',  icon:'ti-brand-ebay',    color:'#e53238', desc:'eBay orders report to 1 Jun 2026 — 44 new orders'},
+        {date:'30 May 2026', type:'Sales',  icon:'ti-brand-amazon',  color:'#ff9900', desc:'Amazon May monthly report — 10 new orders'},
+        {date:'26 May 2026', type:'Sales',  icon:'ti-brand-ebay',    color:'#e53238', desc:'eBay orders 25–26 May 2026 — 11 new orders'},
+        {date:'25 May 2026', type:'Sales',  icon:'ti-brand-amazon',  color:'#ff9900', desc:'Amazon orders 19–25 May 2026 — 2 new orders'},
+        {date:'23 May 2026', type:'Stock',  icon:'ti-package',       color:'#4ade80', desc:'UK Warehouse BRA stock updated from inventory file'},
+        {date:'19 May 2026', type:'Stock',  icon:'ti-package',       color:'#4ade80', desc:'India Warehouse stock imported'},
+        {date:'11 May 2026', type:'Stock',  icon:'ti-package',       color:'#4ade80', desc:'UK FBA stock imported'},
+      ].map(h=>`
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);">
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(${h.color==='#4ade80'?'34,197,94':h.color==='#ff9900'?'255,153,0':'229,50,56'},.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ${h.icon}" style="font-size:14px;color:${h.color}"></i>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+              <span style="font-size:12px;font-weight:600">${h.desc}</span>
+              <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:var(--surface3);color:var(--text2)">${h.type}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3)">${h.date}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+
 function pageImport(){
   return `
   <div style="max-width:820px">
