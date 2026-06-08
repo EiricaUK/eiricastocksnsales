@@ -283,14 +283,13 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
       <div style="font-size:11px;color:#fff;letter-spacing:.05em;text-transform:uppercase;margin-top:8px;line-height:1.4;">Stock, Inventory &amp; Sales System</div>
     </div>
     <nav class="nav">
-      <div class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
-      <div class="nav-item" onclick="nav('master',this)"><i class="ti ti-package"></i>Master stock</div>
-      <div class="nav-item" onclick="nav('orders',this)"><i class="ti ti-arrows-exchange"></i>Stock Movement</div>
-      <div class="nav-item" onclick="nav('sales',this)"><i class="ti ti-shopping-cart"></i>Sales log</div>
-      <div class="nav-item" onclick="nav('topsellers',this)"><i class="ti ti-trending-up"></i>Top Sellers</div>
+      <div class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Summary</div>
+      <div class="nav-item" onclick="nav('stock',this)"><i class="ti ti-package"></i>Stock</div>
+      <div class="nav-item" onclick="nav('sales',this)"><i class="ti ti-shopping-cart"></i>Sales</div>
       <div class="nav-item" onclick="nav('anomalies',this)"><i class="ti ti-alert-hexagon"></i>Anomalies</div>
       <div class="nav-sec">Manage</div>
-      <div class="nav-item" onclick="nav('import',this)"><i class="ti ti-file-spreadsheet"></i>Excel Import</div>
+      <div class="nav-item" onclick="nav('dataentry',this)"><i class="ti ti-table-import"></i>Data Entry</div>
+      <div class="nav-item" onclick="nav('sop',this)"><i class="ti ti-books"></i>SOP</div>
       <div class="nav-item" onclick="nav('settings',this)"><i class="ti ti-settings"></i>Settings</div>
       <div class="nav-sec">Last Updated</div>
       <div class="nav-item" onclick="nav('lastupdated',this)" style="font-size:11px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;">
@@ -317,12 +316,10 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     <div class="topbar">
       <div class="topbar-left">
         <div class="live-dot"></div>
-        <h1 id="page-title">Dashboard</h1>
+        <h1 id="page-title">Summary</h1>
       </div>
       <div class="topbar-right">
         <button class="btn btn-ghost btn-sm" onclick="nav('chat',document.getElementById('nav-chat'))" style="border-color:rgba(212,175,55,.4);color:#D4AF37;"><i class="ti ti-bolt"></i>Eirica AI</button>
-        <button class="btn btn-ghost btn-sm" onclick="showModal('sale')"><i class="ti ti-plus"></i>Log sale</button>
-        <button class="btn btn-primary btn-sm" onclick="showModal('sku')"><i class="ti ti-plus"></i>Add SKU</button>
       </div>
     </div>
     <div class="content" id="content"></div>
@@ -866,13 +863,13 @@ function nav(page, el){
   S.page=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const titles={dashboard:'Dashboard',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',orders:'Stock Movement',sales:'Sales log',topsellers:'Top Sellers',anomalies:'Anomalies',lastupdated:'Last Updated',import:'Excel Import',settings:'Settings'};
+  const titles={dashboard:'Summary',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',stock:'Stock',orders:'Stock Movement',dataentry:'Data Entry',sales:'Sales',topsellers:'Top Sellers',anomalies:'Anomalies',lastupdated:'Last Updated',import:'Excel Import',sop:'Standard Operating Procedure',settings:'Settings'};
   document.getElementById('page-title').textContent=titles[page]||page;
   render();
 }
 
 function render(){
-  const pages={dashboard:pageDash,chat:pageChat,master:pageMaster,locations:pageLoc,orders:pageOrders,sales:pageSales,topsellers:pageTopSellers,anomalies:pageAnomalies,lastupdated:pageLastUpdated,import:pageImport,settings:pageSettings};
+  const pages={dashboard:pageDash,chat:pageChat,master:pageMaster,locations:pageLoc,stock:pageStock,orders:pageOrders,dataentry:pageDataEntry,sales:pageSalesHub,topsellers:pageTopSellers,anomalies:pageAnomalies,lastupdated:pageLastUpdated,import:pageImport,sop:pageSOP,settings:pageSettings};
   document.getElementById('content').innerHTML=(pages[S.page]||pageDash)();
   afterRender();
 }
@@ -896,7 +893,16 @@ function afterRender(){
 }
 
 // ══ DASHBOARD ═════════════════════════════════════════════════════════════
+// ── Dashboard tab state ────────────────────────────────────────────────────
+let dashTab = 'stock';
+
+function setDashTab(tab){
+  dashTab = tab;
+  document.getElementById('content').innerHTML = pageDash();
+}
+
 function pageDash(){
+
   const crit=S.skus.filter(s=>status(s)==='critical');
   const low=S.skus.filter(s=>status(s)==='low');
   const neg=S.skus.filter(s=>status(s)==='negative');
@@ -946,6 +952,86 @@ function pageDash(){
   const alertsUK    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<=(s.reorder||0)&&(s.stock.uk||0)+(s.stock['uk-fba']||0)>=0).length;
   const alertsIndia = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<=(s.reorder||0)&&(s.stock.india||0)+(s.stock['india-fba']||0)>=0).length;
 
+  
+  const tabBar = `
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);">
+      ${[
+        {key:'stock',   icon:'ti-package',      label:'Stock'},
+        {key:'sales',   icon:'ti-shopping-cart', label:'Sales'},
+        {key:'notices', icon:'ti-speakerphone',  label:'Notice Board'},
+      ].map(t=>`
+        <button onclick="setDashTab('${t.key}')" style="
+          display:flex;align-items:center;gap:7px;
+          padding:10px 20px;
+          border:none;border-bottom:2px solid ${dashTab===t.key?'var(--accent)':'transparent'};
+          margin-bottom:-2px;
+          cursor:pointer;font-size:13px;font-weight:${dashTab===t.key?'700':'500'};font-family:var(--font);
+          background:transparent;
+          color:${dashTab===t.key?'var(--accent)':'var(--text2)'};
+          transition:all .15s;
+        ">
+          <i class="ti ${t.icon}" style="font-size:15px"></i>${t.label}
+        </button>`).join('')}
+    </div>`;
+
+  if(dashTab==='sales')   return tabBar + pageDashSales();
+  if(dashTab==='notices') return tabBar + pageDashNotices();
+  return tabBar + pageDashStock();
+}
+
+function pageDashStock(){
+  // recompute needed vars
+
+  const crit=S.skus.filter(s=>status(s)==='critical');
+  const low=S.skus.filter(s=>status(s)==='low');
+  const neg=S.skus.filter(s=>status(s)==='negative');
+
+  // Global = union of UK + India alerts (any variant flagged in either region)
+  const ukNegSkus   = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<0).map(s=>s.sku));
+  const ukCritSkus  = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)===0).map(s=>s.sku));
+  const ukLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.uk||0)+(s.stock['uk-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+  const inNegSkus   = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<0).map(s=>s.sku));
+  const inCritSkus  = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)===0).map(s=>s.sku));
+  const inLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.india||0)+(s.stock['india-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+
+  const globalNeg   = new Set([...ukNegSkus,  ...inNegSkus]);
+  const globalCrit  = new Set([...ukCritSkus, ...inCritSkus]);
+  const globalLow   = new Set([...ukLowSkus,  ...inLowSkus].filter(s=>!globalCrit.has(s)));
+  const gNegCount   = globalNeg.size;
+  const gCritCount  = globalCrit.size;
+  const gLowCount   = globalLow.size;
+  const ukNegCount  = ukNegSkus.size;
+  const ukCritCount = ukCritSkus.size;
+  const ukLowCount  = ukLowSkus.size;
+  const inNegCount  = inNegSkus.size;
+  const inCritCount = inCritSkus.size;
+  const inLowCount  = inLowSkus.size;
+  const totalU=S.skus.reduce((a,s)=>a+tot(s),0);
+  // Merge STATIC_SALES + S.sales deduplicated for accurate revenue
+  // Merge with full dedup — track ref+sku+index to allow intentional duplicates (packs)
+  const _seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const _staticFiltered=STATIC_SALES.filter(s=>!_seen.has(s.ref+'|'+s.sku));
+  // For STATIC entries with same ref+sku (pack duplicates), keep all — they are intentional
+  const _all=[..._staticFiltered,...S.sales];
+  const totalSales=_all.reduce((a,s)=>a+(s.qty||0),0);
+  const rev=_all.reduce((a,s)=>a+(s.price||0),0);
+  const openPOs=S.pos.filter(p=>p.status==='transit').length;
+  const _seen2=new Set(S.sales.map(s=>s.ref+'|'+s.sku)); const _all2=[...STATIC_SALES.filter(s=>!_seen2.has(s.ref+'|'+s.sku)),...S.sales]; const chT={}; CHANNELS.forEach(c=>{ chT[c]=_all2.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  const maxCh=Math.max(...Object.values(chT),1);
+  const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
+  const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
+  const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
+  const indiaFBA= S.skus.reduce((a,s)=>a+(s.stock['india-fba']||0),0);
+  const revUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').reduce((a,s)=>a+(s.price||0),0);
+  const revIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').reduce((a,s)=>a+(s.price||0),0);
+  const GBP_TO_INR = 107;
+
+  const txUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').length;
+  const txIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').length;
+  const alertsUK    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<=(s.reorder||0)&&(s.stock.uk||0)+(s.stock['uk-fba']||0)>=0).length;
+  const alertsIndia = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<=(s.reorder||0)&&(s.stock.india||0)+(s.stock['india-fba']||0)>=0).length;
+
+ 
   return`
   <!-- ═══════════════════════════════════════════════════════════
        SECTION 1 — STOCK
@@ -957,8 +1043,8 @@ function pageDash(){
     </div>
     <!-- ── Stock Alerts (compact — UK & India embedded in Stock Overview) ── -->
 
-  <!-- ── ROW 2: Stock Overview + UK Stock Runway (horizontal) ── -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+  <!-- ── ROW 2: Stock Overview + UK Stock Runway (stacked) ── -->
+  <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px;">
 
     <!-- Stock Overview -->
     <div class="card">
@@ -1143,7 +1229,61 @@ function pageDash(){
 
   </div>
   </div>
+  `;}
 
+function pageDashSales(){
+
+  const crit=S.skus.filter(s=>status(s)==='critical');
+  const low=S.skus.filter(s=>status(s)==='low');
+  const neg=S.skus.filter(s=>status(s)==='negative');
+
+  // Global = union of UK + India alerts (any variant flagged in either region)
+  const ukNegSkus   = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<0).map(s=>s.sku));
+  const ukCritSkus  = new Set(S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)===0).map(s=>s.sku));
+  const ukLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.uk||0)+(s.stock['uk-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+  const inNegSkus   = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<0).map(s=>s.sku));
+  const inCritSkus  = new Set(S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)===0).map(s=>s.sku));
+  const inLowSkus   = new Set(S.skus.filter(s=>{ const t=(s.stock.india||0)+(s.stock['india-fba']||0); return t>0&&t<5; }).map(s=>s.sku));
+
+  const globalNeg   = new Set([...ukNegSkus,  ...inNegSkus]);
+  const globalCrit  = new Set([...ukCritSkus, ...inCritSkus]);
+  const globalLow   = new Set([...ukLowSkus,  ...inLowSkus].filter(s=>!globalCrit.has(s)));
+  const gNegCount   = globalNeg.size;
+  const gCritCount  = globalCrit.size;
+  const gLowCount   = globalLow.size;
+  const ukNegCount  = ukNegSkus.size;
+  const ukCritCount = ukCritSkus.size;
+  const ukLowCount  = ukLowSkus.size;
+  const inNegCount  = inNegSkus.size;
+  const inCritCount = inCritSkus.size;
+  const inLowCount  = inLowSkus.size;
+  const totalU=S.skus.reduce((a,s)=>a+tot(s),0);
+  // Merge STATIC_SALES + S.sales deduplicated for accurate revenue
+  // Merge with full dedup — track ref+sku+index to allow intentional duplicates (packs)
+  const _seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const _staticFiltered=STATIC_SALES.filter(s=>!_seen.has(s.ref+'|'+s.sku));
+  // For STATIC entries with same ref+sku (pack duplicates), keep all — they are intentional
+  const _all=[..._staticFiltered,...S.sales];
+  const totalSales=_all.reduce((a,s)=>a+(s.qty||0),0);
+  const rev=_all.reduce((a,s)=>a+(s.price||0),0);
+  const openPOs=S.pos.filter(p=>p.status==='transit').length;
+  const _seen2=new Set(S.sales.map(s=>s.ref+'|'+s.sku)); const _all2=[...STATIC_SALES.filter(s=>!_seen2.has(s.ref+'|'+s.sku)),...S.sales]; const chT={}; CHANNELS.forEach(c=>{ chT[c]=_all2.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  const maxCh=Math.max(...Object.values(chT),1);
+  const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
+  const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
+  const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
+  const indiaFBA= S.skus.reduce((a,s)=>a+(s.stock['india-fba']||0),0);
+  const revUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').reduce((a,s)=>a+(s.price||0),0);
+  const revIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').reduce((a,s)=>a+(s.price||0),0);
+  const GBP_TO_INR = 107;
+
+  const txUK    = _all.filter(s=>s.loc==='uk'||s.loc==='uk-fba').length;
+  const txIndia = _all.filter(s=>s.loc==='india'||s.loc==='india-fba').length;
+  const alertsUK    = S.skus.filter(s=>(s.stock.uk||0)+(s.stock['uk-fba']||0)<=(s.reorder||0)&&(s.stock.uk||0)+(s.stock['uk-fba']||0)>=0).length;
+  const alertsIndia = S.skus.filter(s=>(s.stock.india||0)+(s.stock['india-fba']||0)<=(s.reorder||0)&&(s.stock.india||0)+(s.stock['india-fba']||0)>=0).length;
+
+ 
+  return`
   <!-- ═══════════════════════════════════════════════════════════
        SECTION 2 — SALES
   ═══════════════════════════════════════════════════════════ -->
@@ -1152,8 +1292,8 @@ function pageDash(){
       <i class="ti ti-shopping-cart" style="color:#4ade80;font-size:15px"></i>
       <span style="font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.08em">Sales</span>
     </div>
-    <!-- ── ROW 1: Global Sales + Revenue + Sales by Channel (horizontal) ── -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+    <!-- ── ROW 1: Global Sales + Revenue + Sales by Channel (stacked) ── -->
+  <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:14px;">
 
     <!-- Global Sales -->
     <div class="metric">
@@ -1189,7 +1329,10 @@ function pageDash(){
 
   </div>
   </div>
+  `;}
 
+function pageDashNotices(){
+  return`
   <!-- ═══════════════════════════════════════════════════════════
        SECTION 3 — NOTICE BOARD
   ═══════════════════════════════════════════════════════════ -->
@@ -1205,8 +1348,9 @@ function pageDash(){
       ${renderNotices()}
     </div>
   </div>
-  `;
-}
+  `;}
+
+
 function getAnomalies(){
   const anomalies = [];
 
@@ -1825,7 +1969,48 @@ const MASTER_VIEWS = {
   'uk-fba':{ label:'🇬🇧 UK FBA', cols:['UK FBA'] },
 };
 
-function pageMaster(){
+// ══ STOCK PAGE (Master Stock + Stock Locations sub-tabs) ═══════════════════
+let stockPageTab = 'master';
+
+function setStockPageTab(tab){
+  stockPageTab = tab;
+  document.getElementById('content').innerHTML = pageStock();
+  afterRender();
+}
+
+function pageStock(){
+  const subTabs = [
+    {key:'master',   icon:'ti-table',          label:'Master Stock'},
+    {key:'movement', icon:'ti-arrows-exchange', label:'Stock Movement'},
+    {key:'reorder',  icon:'ti-chart-arrows-vertical', label:'Restock Prediction'},
+  ];
+
+  const tabBar = `
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);">
+      ${subTabs.map(t=>`
+        <button onclick="setStockPageTab('${t.key}')" style="
+          display:flex;align-items:center;gap:7px;
+          padding:10px 20px;
+          border:none;border-bottom:2px solid ${stockPageTab===t.key?'var(--accent)':'transparent'};
+          margin-bottom:-2px;
+          cursor:pointer;font-size:13px;font-weight:${stockPageTab===t.key?'700':'500'};font-family:var(--font);
+          background:transparent;
+          color:${stockPageTab===t.key?'var(--accent)':'var(--text2)'};
+          transition:all .15s;
+        ">
+          <i class="ti ${t.icon}" style="font-size:15px"></i>${t.label}
+        </button>`).join('')}
+    </div>`;
+
+  if(stockPageTab==='master')    return tabBar + pageMasterInner();
+  if(stockPageTab==='movement')  return tabBar + pageOrdersInner();
+  if(stockPageTab==='reorder')   return tabBar + pageReorderQueue();
+  return tabBar;
+}
+
+function pageMaster(){ return pageStock(); }
+
+function pageMasterInner(){
   const tabs = [
     {key:'all',      icon:'ti-layout-grid',   label:'All'},
     {key:'india',    icon:'ti-building-warehouse', label:'India WH'},
@@ -1951,7 +2136,9 @@ function renderMasterTbl(){
 }
 
 // ══ LOCATIONS ══════════════════════════════════════════════════════════════
-function pageLoc(){
+function pageLoc(){ return pageStock(); }
+
+function pageLocInner(){
   return LOCS.map(loc=>{
     const total=S.skus.reduce((a,s)=>a+(s.stock[loc]||0),0);
     const active=S.skus.filter(s=>s.stock[loc]>0).length;
@@ -1973,10 +2160,13 @@ let stockMovementTab = 'order'; // 'order' | 'shipped' | 'received'
 
 function setStockMovementTab(tab){
   stockMovementTab = tab;
-  document.getElementById('content').innerHTML = pageOrders();
+  stockPageTab = 'movement';
+  document.getElementById('content').innerHTML = pageStock();
+  afterRender();
 }
 
-function pageOrders(){
+function pageOrders(){ stockPageTab='movement'; return pageStock(); }
+function pageOrdersInner(){
   const tabs = [
     {key:'order',    icon:'ti-clipboard-list',  label:'Stock Order',    sub:'UK orders to India'},
     {key:'shipped',  icon:'ti-send',            label:'Stock Shipped',   sub:'India → UK dispatch'},
@@ -2015,9 +2205,8 @@ function pageOrders(){
 // ── TAB 1: Stock Order (UK orders to India) ──────────────────────────────────
 function renderStockOrder(){
   const draft = [...S.pos].filter(p=>p.status==='draft').reverse();
-  const critQ  = S.skus.filter(s=>status(s)==='critical'||status(s)==='negative');
-  const lowQ   = S.skus.filter(s=>status(s)==='low');
 
+  // UK stock = uk + uk-fba combined
   return `
   <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
     <button class="btn btn-primary" onclick="showModal('po')"><i class="ti ti-plus"></i>New stock order</button>
@@ -2051,28 +2240,275 @@ function renderStockOrder(){
     </table></div>
   </div>
 
-  <!-- Reorder queue -->
-  <div class="card">
-    <div class="card-hd">
-      <div class="card-title"><i class="ti ti-alert-circle"></i>Reorder Queue</div>
-      <span class="badge ${critQ.length+lowQ.length?'b-critical':'b-ok'}">${critQ.length+lowQ.length}</span>
-    </div>
-    ${critQ.length+lowQ.length===0
-      ?'<div class="empty"><i class="ti ti-circle-check"></i>All stock levels healthy</div>'
-      :[...critQ,...lowQ].map(s=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;">
-          <div>
-            <span style="font-weight:600">${s.name}</span>
-            <span class="mono" style="font-size:10px;color:var(--text2);margin-left:6px">${s.sku}</span>
-            <div style="font-size:10px;color:var(--text2);margin-top:2px">${LOCS.map(l=>`${LOC_LABEL[l]}:${s.stock[l]||0}`).join(' · ')}</div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            ${bdg(status(s))}
-            <button class="btn btn-sm" onclick="showModal('po')">Order</button>
-          </div>
-        </div>`).join('')}
-  </div>`;
+</div>`;
 }
+
+// ── Restock sort state ────────────────────────────────────────────────────────
+let restockSortCol = 'priority';
+let restockSortDir = 1; // 1 = asc, -1 = desc
+
+function restockSort(col){
+  if(restockSortCol === col) restockSortDir *= -1;
+  else { restockSortCol = col; restockSortDir = 1; }
+  stockPageTab = 'reorder';
+  render();
+}
+
+function pageReorderQueue(){
+  // ── Sales velocity: units sold per day per SKU (last 47 days, UK only) ──
+  const DAYS = 47;
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales]
+    .filter(s=>s.loc==='uk'||s.loc==='uk-fba');
+
+  const soldMap = {};
+  allSales.forEach(s=>{ soldMap[s.sku] = (soldMap[s.sku]||0) + (s.qty||0); });
+
+  // Target stock = 60 days cover; min order = 10 units
+  const TARGET_DAYS   = 60;
+  const MIN_ORDER     = 10;
+  const LEAD_DAYS     = 21; // estimated India→UK lead time
+
+  // Build prediction rows: only SKUs with UK stock < 5 OR <TARGET_DAYS cover
+  const rows = S.skus.map(s=>{
+    const ukStock    = (s.stock.uk||0) + (s.stock['uk-fba']||0);
+    const indiaStock = (s.stock.india||0) + (s.stock['india-fba']||0);
+    const unitsSold  = soldMap[s.sku] || 0;
+    const velocity   = unitsSold / DAYS;                          // units/day
+    const daysLeft   = velocity > 0 ? ukStock / velocity : (ukStock > 0 ? 999 : 0);
+    const suggested  = velocity > 0
+      ? Math.max(MIN_ORDER, Math.ceil(velocity * TARGET_DAYS) - ukStock)
+      : (ukStock < 5 ? MIN_ORDER : 0);
+
+    // Include if: urgent (<=1), low (<5), or runs out within TARGET_DAYS
+    if(ukStock > 5 && daysLeft >= TARGET_DAYS) return null;
+
+    let priority;
+    if(ukStock <= 1)            priority = 'urgent';
+    else if(ukStock < 5)        priority = 'low';
+    else if(daysLeft < LEAD_DAYS) priority = 'urgent';
+    else                        priority = 'watch';
+
+    return { s, ukStock, indiaStock, velocity, daysLeft, suggested, unitsSold, priority };
+  }).filter(Boolean);
+
+  const priorityOrder = {urgent:0, low:1, watch:2};
+  rows.sort((a,b)=>{
+    let av, bv;
+    switch(restockSortCol){
+      case 'name':     av=a.s.name;      bv=b.s.name;      break;
+      case 'sku':      av=a.s.sku;       bv=b.s.sku;       break;
+      case 'ukStock':  av=a.ukStock;     bv=b.ukStock;     break;
+      case 'india':    av=a.indiaStock;  bv=b.indiaStock;  break;
+      case 'velocity': av=a.velocity;    bv=b.velocity;    break;
+      case 'days':     av=a.daysLeft;    bv=b.daysLeft;    break;
+      case 'suggested':av=a.suggested;   bv=b.suggested;   break;
+      default:         av=priorityOrder[a.priority]||0; bv=priorityOrder[b.priority]||0;
+    }
+    if(av < bv) return -1 * restockSortDir;
+    if(av > bv) return  1 * restockSortDir;
+    return 0;
+  });
+
+  const urgentCount = rows.filter(r=>r.priority==='urgent').length;
+  const lowCount    = rows.filter(r=>r.priority==='low').length;
+  const watchCount  = rows.filter(r=>r.priority==='watch').length;
+  const totalSugg   = rows.reduce((a,r)=>a+r.suggested,0);
+
+  function priorityBadge(p){
+    if(p==='urgent') return '<span class="badge b-critical" style="gap:3px"><i class="ti ti-flame" style="font-size:10px"></i>Urgent</span>';
+    if(p==='low')    return '<span class="badge b-low">Low Stock</span>';
+    return                  '<span class="badge b-transit">Watch</span>';
+  }
+
+  function daysColor(d){
+    if(d<=7)  return 'var(--red)';
+    if(d<=21) return 'var(--amber)';
+    return 'var(--green)';
+  }
+
+  function velStr(v){
+    if(v===0) return 'No sales data';
+    if(v<0.1) return '<0.1 /day';
+    return v.toFixed(2)+' /day';
+  }
+
+  // Header bar
+  let html = ''
+    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+      + '<div style="display:flex;gap:14px;flex-wrap:wrap">'
+        + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales data &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET_DAYS+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD_DAYS+' days</strong></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;align-items:center">'
+        + (urgentCount ? '<span class="badge b-critical"><i class="ti ti-flame" style="font-size:10px;margin-right:3px"></i>'+urgentCount+' Urgent</span>' : '')
+        + (lowCount    ? '<span class="badge b-low">'+lowCount+' Low</span>' : '')
+        + (watchCount  ? '<span class="badge b-transit">'+watchCount+' Watch</span>' : '')
+        + (rows.length===0 ? '<span class="badge b-ok">All healthy</span>' : '')
+      + '</div>'
+    + '</div>';
+
+  if(rows.length === 0){
+    html += '<div class="empty" style="padding:40px"><i class="ti ti-circle-check"></i>All UK SKUs have sufficient stock — no restock needed</div>';
+  } else {
+    // Summary proposal card
+    html += '<div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:var(--r2);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<i class="ti ti-sparkles" style="font-size:20px;color:var(--accent)"></i>'
+        + '<div>'
+          + '<div style="font-size:13px;font-weight:700;color:var(--text)">Suggested restock: <span style="color:var(--accent)">'+totalSugg+' units</span> across <span style="color:var(--accent)">'+rows.length+' SKUs</span></div>'
+          + '<div style="font-size:11px;color:var(--text2);margin-top:2px">Select SKUs below and raise a stock order, or raise a full order for all suggested quantities.</div>'
+        + '</div>'
+      + '</div>'
+      + '<button class="btn btn-primary" onclick="restockRaiseAll()"><i class="ti ti-clipboard-list"></i>Raise Full Order</button>'
+    + '</div>';
+
+    // Table
+    html += '<div class="card">'
+      + '<div class="card-hd">'
+        + '<div class="card-title"><i class="ti ti-chart-arrows-vertical"></i>Restock Prediction — '+rows.length+' SKUs</div>'
+        + '<button class="btn btn-sm" onclick="restockRaiseSelected()"><i class="ti ti-check"></i>Raise Order for Selected</button>'
+      + '</div>'
+      + '<div class="tw"><table>'
+        + '<thead><tr>'
+          + '<th style="width:28px"><input type="checkbox" id="restock-all-chk" onchange="restockToggleAll(this.checked)" style="width:auto;cursor:pointer"/></th>'
+          + thSort('name',     'Product')
+          + thSort('sku',      'SKU')
+          + thSort('ukStock',  'UK Stock')
+          + thSort('india',    'India Stock')
+          + thSort('velocity', 'Velocity')
+          + thSort('days',     'Days Left')
+          + thSort('suggested','Suggested Qty')
+          + thSort('priority', 'Priority')
+        + '</tr></thead>'
+        + '<tbody>';
+
+    rows.forEach((r,i)=>{
+      const daysStr = r.velocity===0
+        ? (r.ukStock>0?'∞':'0')
+        : (r.daysLeft>=999?'∞':Math.round(r.daysLeft)+'d');
+      const rowBg = r.priority==='urgent' ? 'background:rgba(239,68,68,.03)' : '';
+      html += '<tr style="'+rowBg+'">'
+        + '<td><input type="checkbox" class="restock-chk" data-idx="'+i+'" style="width:auto;cursor:pointer" checked/></td>'
+        + '<td style="font-weight:600;font-size:12px">'+r.s.name+'</td>'
+        + '<td class="mono" style="font-size:10px;color:var(--text2)">'+r.s.sku+'</td>'
+        + '<td class="mono" style="font-weight:700;color:'+(r.ukStock<=1?'var(--red)':r.ukStock<5?'var(--amber)':'var(--text)')+'">'+r.ukStock+'</td>'
+        + '<td class="mono" style="color:var(--text2)">'+r.indiaStock+'</td>'
+        + '<td style="font-size:11px;color:var(--text2)">'+velStr(r.velocity)+'</td>'
+        + '<td style="font-family:var(--mono);font-size:11px;font-weight:700;color:'+daysColor(r.daysLeft)+'">'+daysStr+'</td>'
+        + '<td><div style="display:flex;align-items:center;gap:6px">'
+          + '<input type="number" value="'+r.suggested+'" min="1" style="width:64px;padding:3px 7px;font-size:11px" id="restock-qty-'+i+'"/>'
+        + '</div></td>'
+        + '<td>'+priorityBadge(r.priority)+'</td>'
+      + '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
+  }
+
+  // Wrap in outer card header
+  return '<div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      + '<div>'
+        + '<h2 style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="ti ti-chart-arrows-vertical" style="color:var(--accent)"></i>Restock Prediction</h2>'
+        + '<p style="font-size:12px;color:var(--text2);margin-top:3px">Predicted restock requirements based on sales velocity and current UK stock levels.</p>'
+      + '</div>'
+    + '</div>'
+    + html
+  + '</div>';
+}
+
+// ── Restock helpers ───────────────────────────────────────────────────────────
+function thSort(col, label){
+  const active = restockSortCol === col;
+  const icon   = active ? (restockSortDir === 1 ? ' ↑' : ' ↓') : '';
+  return '<th onclick="restockSort(\''+col+'\')" style="cursor:pointer;user-select:none;white-space:nowrap;'
+    + (active ? 'color:var(--accent);' : '')
+    + '">' + label + '<span style="font-size:10px;opacity:.7">'+icon+'</span></th>';
+}
+
+function restockToggleAll(checked){
+  document.querySelectorAll('.restock-chk').forEach(c=>{ c.checked=checked; });
+}
+
+function restockGetLines(){
+  const lines = [];
+  document.querySelectorAll('.restock-chk:checked').forEach(chk=>{
+    const i   = parseInt(chk.dataset.idx);
+    const qtyEl = document.getElementById('restock-qty-'+i);
+    const qty   = parseInt(qtyEl?.value)||0;
+    if(!qty) return;
+    // Rebuild rows list (same order as rendered)
+    const seen2 = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+    const allS2 = [...STATIC_SALES.filter(s=>!seen2.has(s.ref+'|'+s.sku)),...S.sales].filter(s=>s.loc==='uk'||s.loc==='uk-fba');
+    const soldMap2={};
+    allS2.forEach(s=>{ soldMap2[s.sku]=(soldMap2[s.sku]||0)+(s.qty||0); });
+    const DAYS2=47,TARGET2=60,LEAD2=21,MIN2=10;
+    const rows2=S.skus.map(s=>{
+      const ukS=(s.stock.uk||0)+(s.stock['uk-fba']||0);
+      const v=(soldMap2[s.sku]||0)/DAYS2;
+      const d=v>0?ukS/v:(ukS>0?999:0);
+      const sg=v>0?Math.max(MIN2,Math.ceil(v*TARGET2)-ukS):(ukS<5?MIN2:0);
+      if(ukS>5&&d>=TARGET2) return null;
+      return {s,ukS,v,d,sg};
+    }).filter(Boolean);
+    rows2.sort((a,b)=>{ const getP=r=>r.ukS<=1?0:r.ukS<5?1:r.d<LEAD2?0:2; return getP(a)-getP(b)||a.d-b.d; });
+    const row = rows2[i];
+    if(row) lines.push({sku:row.s.sku, name:row.s.name, orderedQty:qty, receivedQty:0});
+  });
+  return lines;
+}
+
+function restockRaiseAll(){
+  const seen2 = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allS2 = [...STATIC_SALES.filter(s=>!seen2.has(s.ref+'|'+s.sku)),...S.sales].filter(s=>s.loc==='uk'||s.loc==='uk-fba');
+  const soldMap2={};
+  allS2.forEach(s=>{ soldMap2[s.sku]=(soldMap2[s.sku]||0)+(s.qty||0); });
+  const DAYS2=47,TARGET2=60,MIN2=10;
+  const lines=S.skus.map(s=>{
+    const ukS=(s.stock.uk||0)+(s.stock['uk-fba']||0);
+    const v=(soldMap2[s.sku]||0)/DAYS2;
+    const d=v>0?ukS/v:(ukS>0?999:0);
+    const sg=v>0?Math.max(MIN2,Math.ceil(v*TARGET2)-ukS):(ukS<5?MIN2:0);
+    if((ukS>5&&d>=TARGET2)||sg<=0) return null;
+    return {sku:s.sku,name:s.name,orderedQty:sg,receivedQty:0};
+  }).filter(Boolean);
+  if(!lines.length){ toast('Nothing to order','var(--amber)'); return; }
+  const po={
+    id:'PO-'+Date.now(),
+    num:'PO-RS-'+String(S.pos.length+1).padStart(3,'0'),
+    supplier:'Eirica International',
+    date:new Date().toISOString().split('T')[0],
+    status:'draft',
+    lines,
+    notes:'Auto-generated from Restock Prediction'
+  };
+  S.pos.push(po);
+  saveState();
+  toast('✓ Draft PO raised — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
+  stockPageTab='movement'; stockMovementTab='order';
+  render();
+}
+
+function restockRaiseSelected(){
+  const lines = restockGetLines();
+  if(!lines.length){ toast('No SKUs selected','var(--amber)'); return; }
+  const po={
+    id:'PO-'+Date.now(),
+    num:'PO-RS-'+String(S.pos.length+1).padStart(3,'0'),
+    supplier:'Eirica International',
+    date:new Date().toISOString().split('T')[0],
+    status:'draft',
+    lines,
+    notes:'Auto-generated from Restock Prediction'
+  };
+  S.pos.push(po);
+  saveState();
+  toast('✓ Draft PO raised — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
+  stockPageTab='movement'; stockMovementTab='order';
+  render();
+}
+
+
 
 // ── TAB 2: Stock Shipped (India → UK in transit) ─────────────────────────────
 function renderStockShipped(){
@@ -2418,6 +2854,42 @@ function pageTopSellers(){
 let salesSort={col:'date',dir:'desc'};
 let salesFilter={channel:'',loc:'',search:''};
 
+// ══ SALES HUB (Sales Log + Top Sellers sub-tabs) ═══════════════════════════
+let salesPageTab = 'log';
+
+function setSalesPageTab(tab){
+  salesPageTab = tab;
+  document.getElementById('content').innerHTML = pageSalesHub();
+  afterRender();
+}
+
+function pageSalesHub(){
+  const subTabs = [
+    {key:'log',        icon:'ti-list',       label:'Sales Log'},
+    {key:'topsellers', icon:'ti-trending-up', label:'Top Sellers'},
+  ];
+
+  const tabBar = `
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);">
+      ${subTabs.map(t=>`
+        <button onclick="setSalesPageTab('${t.key}')" style="
+          display:flex;align-items:center;gap:7px;
+          padding:10px 20px;
+          border:none;border-bottom:2px solid ${salesPageTab===t.key?'var(--accent)':'transparent'};
+          margin-bottom:-2px;
+          cursor:pointer;font-size:13px;font-weight:${salesPageTab===t.key?'700':'500'};font-family:var(--font);
+          background:transparent;
+          color:${salesPageTab===t.key?'var(--accent)':'var(--text2)'};
+          transition:all .15s;
+        ">
+          <i class="ti ${t.icon}" style="font-size:15px"></i>${t.label}
+        </button>`).join('')}
+    </div>`;
+
+  if(salesPageTab==='topsellers') return tabBar + pageTopSellers();
+  return tabBar + pageSales();
+}
+
 function pageSales(){
   // Use STATIC_SALES + S.sales deduplicated
   const seen=new Set(S.sales.map(s=>s.ref+'|'+s.sku));
@@ -2454,19 +2926,19 @@ function pageSales(){
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <input type="text" placeholder="Search SKU / product / ref…" value="${salesFilter.search}"
-        oninput="salesFilter.search=this.value;document.getElementById('content').innerHTML=pageSales();"
+        oninput="salesFilter.search=this.value;document.getElementById('content').innerHTML=pageSalesHub();"
         style="width:200px;padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);outline:none;"/>
-      <select onchange="salesFilter.channel=this.value;document.getElementById('content').innerHTML=pageSales();"
+      <select onchange="salesFilter.channel=this.value;document.getElementById('content').innerHTML=pageSalesHub();"
         style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
         <option value="" ${!salesFilter.channel?'selected':''}>All channels</option>
         ${CHANNELS.map(c=>`<option value="${c}" ${salesFilter.channel===c?'selected':''}>${c}</option>`).join('')}
       </select>
-      <select onchange="salesFilter.loc=this.value;document.getElementById('content').innerHTML=pageSales();"
+      <select onchange="salesFilter.loc=this.value;document.getElementById('content').innerHTML=pageSalesHub();"
         style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
         <option value="" ${!salesFilter.loc?'selected':''}>All locations</option>
         ${LOCS.map(l=>`<option value="${l}" ${salesFilter.loc===l?'selected':''}>${LOC_LABEL[l]}</option>`).join('')}
       </select>
-      ${(salesFilter.channel||salesFilter.loc||salesFilter.search)?`<button class="btn btn-sm" onclick="salesFilter={channel:'',loc:'',search:''};document.getElementById('content').innerHTML=pageSales()"><i class="ti ti-x"></i>Clear</button>`:''}
+      ${(salesFilter.channel||salesFilter.loc||salesFilter.search)?`<button class="btn btn-sm" onclick="salesFilter={channel:'',loc:'',search:''};document.getElementById('content').innerHTML=pageSalesHub()"><i class="ti ti-x"></i>Clear</button>`:''}
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <span style="font-size:11px;color:var(--text2)">${filtered.length} records · ${totalUnits} units · ${fmtGBP(totalRev)}</span>
@@ -2504,7 +2976,7 @@ function pageSales(){
 function salesSortBy(col){
   if(salesSort.col===col) salesSort.dir=salesSort.dir==='asc'?'desc':'asc';
   else { salesSort.col=col; salesSort.dir='desc'; }
-  document.getElementById('content').innerHTML=pageSales();
+  document.getElementById('content').innerHTML=pageSalesHub();
 }
 
 // ══ SETTINGS ═══════════════════════════════════════════════════════════════
@@ -3142,6 +3614,608 @@ function downloadTemplate(){
 
 // Auto-load SheetJS on page load so it's ready
 window.addEventListener('load',()=>{ if(!window.XLSX) loadSheetJS(()=>{}); });
+
+// ── Data Entry state ─────────────────────────────────────────────────────────
+let deMainTab  = 'sales';
+let deSalesSub = 'uk-amazon';
+let deStockSub = 'order';
+
+function pageDataEntry(){
+  const salesSubs = [
+    {key:'uk-amazon',     label:'UK Amazon',    icon:'ti-brand-amazon',   chan:'Amazon',  loc:'uk'},
+    {key:'uk-ebay',       label:'UK eBay',       icon:'ti-shopping-bag',   chan:'eBay',    loc:'uk'},
+    {key:'uk-shopify',    label:'UK Shopify',    icon:'ti-building-store', chan:'Shopify', loc:'uk'},
+    {key:'india-shopify', label:'India Shopify', icon:'ti-building-store', chan:'Shopify', loc:'india'},
+    {key:'india-myntra',  label:'India Myntra',  icon:'ti-hanger',         chan:'Myntra',  loc:'india'},
+  ];
+  const stockSubs = [
+    {key:'order',    label:'Stock Order',    icon:'ti-clipboard-list', desc:'UK orders to India'},
+    {key:'shipped',  label:'Stock Shipped',  icon:'ti-send',           desc:'India \u2192 UK dispatch'},
+    {key:'received', label:'Stock Received', icon:'ti-circle-check',   desc:'Received in UK'},
+  ];
+
+  const mainTabs = `
+    <div style="display:flex;gap:4px;margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:4px;width:fit-content">
+      <button onclick="deSetMainTab('sales')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='sales'?'var(--accent)':'transparent'};color:${deMainTab==='sales'?'#fff':'var(--text2)'}">
+        <i class="ti ti-shopping-cart" style="margin-right:5px"></i>Sales
+      </button>
+      <button onclick="deSetMainTab('stock')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='stock'?'var(--accent)':'transparent'};color:${deMainTab==='stock'?'#fff':'var(--text2)'}">
+        <i class="ti ti-arrows-exchange" style="margin-right:5px"></i>Stock Movement
+      </button>
+    </div>`;
+
+  const salesSubTabs = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      ${salesSubs.map(s=>`
+        <button onclick="deSetSalesSub('${s.key}')" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid ${deSalesSub===s.key?'var(--accent)':'var(--border2)'};background:${deSalesSub===s.key?'rgba(79,142,247,.12)':'var(--surface2)'};color:${deSalesSub===s.key?'var(--accent)':'var(--text2)'};cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);transition:all .15s">
+          <i class="ti ${s.icon}" style="font-size:13px"></i>${s.label}
+        </button>`).join('')}
+    </div>`;
+
+  const stockSubTabs = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      ${stockSubs.map(s=>`
+        <button onclick="deSetStockSub('${s.key}')" style="padding:12px 14px;border-radius:var(--r2);border:1px solid ${deStockSub===s.key?'var(--accent)':'var(--border2)'};background:${deStockSub===s.key?'rgba(79,142,247,.1)':'var(--surface2)'};cursor:pointer;text-align:left;font-family:var(--font);transition:all .15s">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+            <i class="ti ${s.icon}" style="font-size:16px;color:${deStockSub===s.key?'var(--accent)':'var(--text2)'}"></i>
+            <span style="font-size:12px;font-weight:600;color:${deStockSub===s.key?'var(--accent)':'var(--text)'}">${s.label}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);padding-left:23px">${s.desc}</div>
+        </button>`).join('')}
+    </div>`;
+
+  const isSales  = deMainTab === 'sales';
+  const subLabel = isSales ? (salesSubs.find(s=>s.key===deSalesSub)?.label||'') : (stockSubs.find(s=>s.key===deStockSub)?.label||'');
+  const dropType = isSales ? 'sales' : 'stock';
+  const dropIcon = isSales ? 'ti-file-spreadsheet' : 'ti-arrows-exchange';
+
+  return `
+  <div style="max-width:900px">
+    ${mainTabs}
+    ${isSales ? salesSubTabs : stockSubTabs}
+    <div class="drop-zone" id="de-drop-${dropType}"
+         onclick="document.getElementById('de-file-${dropType}').click()"
+         ondragover="deDrag(event,'${dropType}',true)"
+         ondragleave="deDrag(event,'${dropType}',false)"
+         ondrop="deDrop(event,'${dropType}')"
+         style="margin-bottom:14px">
+      <i class="ti ${dropIcon}"></i>
+      <p><strong>Click to browse</strong> or drag & drop your ${subLabel} Excel / CSV<br>
+      <span style="font-size:11px;color:var(--text3)">Supports .xlsx \u00b7 .xls \u00b7 .csv</span></p>
+    </div>
+    <input type="file" id="de-file-${dropType}" accept=".xlsx,.xls,.csv" style="display:none"
+           onchange="deHandleFile(this.files[0],'${dropType}')"/>
+    <div id="de-preview-${dropType}"></div>
+  </div>`;
+}
+
+function deSetMainTab(tab){ deMainTab=tab; render(); }
+function deSetSalesSub(sub){ deSalesSub=sub; render(); }
+function deSetStockSub(sub){ deStockSub=sub; render(); }
+
+// ── Drag helpers ─────────────────────────────────────────────────────────────
+function deDrag(e,type,over){ e.preventDefault(); document.getElementById('de-drop-'+type).classList.toggle('drag-over',over); }
+function deDrop(e,type){ e.preventDefault(); deDrag(e,type,false); const f=e.dataTransfer.files[0]; if(f) deHandleFile(f,type); }
+
+// ── File handler ─────────────────────────────────────────────────────────────
+function deHandleFile(file, type){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      let rows = [];
+      if(ext==='csv'){
+        rows = parseCSV(ev.target.result);
+      } else {
+        if(!window.XLSX){ toast('Loading Excel parser…','var(--blue)'); loadSheetJS(()=>{ deHandleFile(file,type); }); return; }
+        rows = parseXLData(ev.target.result);
+      }
+      if(type==='sales') dePreviewSales(rows, file.name);
+      else dePreviewStock(rows, file.name);
+    } catch(err){ toast('Could not read file: '+err.message,'var(--red)'); }
+  };
+  if(ext==='csv') reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
+}
+
+// ── Column finder helper ──────────────────────────────────────────────────────
+function deFindCol(sample, ...terms){
+  if(!sample) return null;
+  const keys = Object.keys(sample).map(k=>k.toLowerCase().trim());
+  for(const t of terms){
+    const idx = keys.findIndex(k=>k.includes(t));
+    if(idx!==-1) return Object.keys(sample)[idx];
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SALES DATA ENTRY
+// ════════════════════════════════════════════════════════════════════════════
+let deSalesRows = [];
+
+function dePreviewSales(rawRows, fname){
+  if(!rawRows || !rawRows.length){ toast('No data rows found in file','var(--amber)'); return; }
+  const sample = rawRows[0];
+  const refCol   = deFindCol(sample,'ref','order','order ref','order id','order-id','order_id','transaction');
+  const skuCol   = deFindCol(sample,'sku','asin','product id','item');
+  const chanCol  = deFindCol(sample,'channel','source','platform','marketplace');
+  const locCol   = deFindCol(sample,'loc','location','fulfilled','warehouse','from');
+  const qtyCol   = deFindCol(sample,'qty','quantity','units','amount');
+  const priceCol = deFindCol(sample,'price','revenue','total','sale price','item price');
+  const dateCol  = deFindCol(sample,'date','order date','sale date','transaction date');
+
+  if(!skuCol){ toast('Could not find a SKU column — use "SKU" as the column header','var(--red)'); return; }
+  if(!qtyCol){ toast('Could not find a Qty column — use "Qty" as the column header','var(--red)'); return; }
+
+  const chanMap = {
+    'uk-amazon':'Amazon','uk-ebay':'eBay','uk-shopify':'Shopify',
+    'india-shopify':'Shopify','india-myntra':'Myntra'
+  };
+  const defaultLoc  = deSalesSub.startsWith('india') ? 'india' : 'uk';
+  const defaultChan = chanMap[deSalesSub] || 'Direct';
+  const today = new Date().toISOString().split('T')[0];
+
+  // Build the existing ref|sku set for dedup
+  const existingKeys = new Set([
+    ...STATIC_SALES.map(s=>s.ref+'|'+s.sku),
+    ...S.sales.map(s=>s.ref+'|'+s.sku)
+  ]);
+
+  deSalesRows = [];
+  rawRows.forEach(row=>{
+    const skuRaw   = String(row[skuCol]||'').trim().toUpperCase();
+    if(!skuRaw) return;
+    const matched  = S.skus.find(s=>s.sku.toUpperCase()===skuRaw);
+    const ref      = refCol   ? String(row[refCol]||'').trim()  : 'DE-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+    const channel  = chanCol  ? String(row[chanCol]||'').trim() : defaultChan;
+    const locRaw   = locCol   ? String(row[locCol]||'').trim().toLowerCase() : defaultLoc;
+    const locMap   = {'uk warehouse':'uk','uk wh':'uk','uk fba':'uk-fba','ukfba':'uk-fba','india warehouse':'india','india wh':'india','india fba':'india-fba'};
+    const loc      = locMap[locRaw] || locRaw || defaultLoc;
+    const qty      = parseInt(row[qtyCol])||1;
+    const price    = parseFloat(row[priceCol])||0;
+    const date     = dateCol && row[dateCol] ? String(row[dateCol]).trim() : today;
+    const key      = ref+'|'+skuRaw;
+    const isDup    = existingKeys.has(key);
+    deSalesRows.push({ skuRaw, matched, ref, channel, loc, qty, price, date, isDup, key });
+  });
+
+  const newRows  = deSalesRows.filter(r=>r.matched && !r.isDup);
+  const dupRows  = deSalesRows.filter(r=>r.isDup);
+  const noMatch  = deSalesRows.filter(r=>!r.matched);
+
+  const previewHTML = `
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title"><i class="ti ti-table"></i>Preview — ${fname}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="badge b-ok">${newRows.length} new</span>
+          ${dupRows.length?`<span class="badge b-draft">${dupRows.length} duplicate</span>`:''}
+          ${noMatch.length?`<span class="badge b-critical">${noMatch.length} unmatched</span>`:''}
+          <button class="btn btn-primary btn-sm" onclick="deApplySales()" ${newRows.length===0?'disabled':''}>
+            <i class="ti ti-check"></i>Apply ${newRows.length} sale${newRows.length!==1?'s':''}
+          </button>
+          <button class="btn btn-sm" onclick="document.getElementById('de-preview-sales').innerHTML=''">
+            <i class="ti ti-x"></i>Cancel
+          </button>
+        </div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr>
+          <th>Order Ref</th><th>SKU</th><th>Match</th><th>Channel</th><th>Location</th>
+          <th>Qty</th><th>Price</th><th>Date</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${deSalesRows.map(r=>{
+            let cls='', status='';
+            if(!r.matched){ cls='import-row-warn'; status='<span class="badge b-critical">No SKU</span>'; }
+            else if(r.isDup){ cls=''; status='<span class="badge b-draft">Duplicate</span>'; }
+            else { cls='import-row-ok'; status='<span class="badge b-ok">New</span>'; }
+            return `<tr class="${cls}">
+              <td class="mono">${r.ref}</td>
+              <td class="mono">${r.skuRaw}</td>
+              <td style="font-size:11px">${r.matched?`<span style="color:var(--green)">✓ ${r.matched.name}</span>`:`<span style="color:var(--red)">✗ Not found</span>`}</td>
+              <td>${r.channel}</td>
+              <td>${LOC_LABEL[r.loc]||r.loc}</td>
+              <td class="mono">${r.qty}</td>
+              <td class="mono">£${r.price.toFixed(2)}</td>
+              <td class="mono">${r.date}</td>
+              <td>${status}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+      ${noMatch.length?`<div style="padding:10px 16px;font-size:11px;color:var(--amber);border-top:1px solid var(--border)">⚠ ${noMatch.length} SKU(s) not recognised and will be skipped.</div>`:''}
+      ${dupRows.length?`<div style="padding:10px 16px;font-size:11px;color:var(--text2);border-top:1px solid var(--border)">ℹ ${dupRows.length} row(s) already exist in the Sales Log and will be skipped.</div>`:''}
+    </div>`;
+
+  document.getElementById('de-preview-sales').innerHTML = previewHTML;
+}
+
+function deApplySales(){
+  const newRows = deSalesRows.filter(r=>r.matched && !r.isDup);
+  if(!newRows.length){ toast('Nothing new to apply','var(--amber)'); return; }
+
+  let totalUnits=0, totalRev=0;
+  newRows.forEach(r=>{
+    const entry = { sku:r.matched.sku, channel:r.channel, loc:r.loc, qty:r.qty, price:r.price, ref:r.ref, date:r.date };
+    // Add to S.sales (will be deduped vs STATIC_SALES on next render via ref|sku key)
+    if(!S.sales.find(x=>x.ref===entry.ref && x.sku===entry.sku)){
+      S.sales.push(entry);
+    }
+    // Deduct stock from the relevant location
+    const sk = r.matched;
+    if(sk.stock[r.loc] !== undefined){
+      sk.stock[r.loc] = (sk.stock[r.loc]||0) - r.qty;
+    }
+    totalUnits += r.qty;
+    totalRev   += r.price;
+  });
+
+  saveState();
+
+  document.getElementById('de-preview-sales').innerHTML = `
+    <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px 20px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:12px">
+      <i class="ti ti-circle-check" style="font-size:22px"></i>
+      <div>
+        <strong>${newRows.length} sale record${newRows.length!==1?'s':''} added (${totalUnits} units · £${totalRev.toFixed(2)})</strong>
+        <div style="font-size:12px;margin-top:3px;color:var(--text2)">Stock deducted from respective locations. View the Sales Log or Dashboard to verify.</div>
+      </div>
+    </div>`;
+  deSalesRows = [];
+  toast(`✓ ${newRows.length} sale${newRows.length!==1?'s':''} logged · ${totalUnits} units · £${totalRev.toFixed(2)}`);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  STOCK MOVEMENT DATA ENTRY
+// ════════════════════════════════════════════════════════════════════════════
+let deStockRows = [];
+
+function dePreviewStock(rawRows, fname){
+  if(!rawRows||!rawRows.length){ toast('No data rows found','var(--amber)'); return; }
+  const sample = rawRows[0];
+  const skuCol  = deFindCol(sample,'sku','product','item');
+  const typeCol = deFindCol(sample,'type','movement','action','move','movement type');
+  const qtyCol  = deFindCol(sample,'qty','quantity','units');
+  const locCol  = deFindCol(sample,'loc','location','warehouse','from','to');
+  const dateCol = deFindCol(sample,'date','movement date','dispatch date');
+  const noteCol = deFindCol(sample,'note','notes','comment','remarks');
+
+  if(!skuCol){ toast('Could not find a SKU column','var(--red)'); return; }
+  if(!qtyCol){ toast('Could not find a Qty column','var(--red)'); return; }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  deStockRows = [];
+  rawRows.forEach(row=>{
+    const skuRaw  = String(row[skuCol]||'').trim().toUpperCase();
+    if(!skuRaw) return;
+    const matched = S.skus.find(s=>s.sku.toUpperCase()===skuRaw);
+    const typeRaw = typeCol ? String(row[typeCol]||'').trim().toLowerCase() : 'adjust';
+    const type    = typeRaw.includes('dispatch')?'dispatch':typeRaw.includes('receive')?'receive':'adjust';
+    const qty     = Math.abs(parseInt(row[qtyCol])||0);
+    const locRaw  = locCol ? String(row[locCol]||'').trim().toLowerCase() : '';
+    const locMap  = {'uk warehouse':'uk','uk wh':'uk','uk fba':'uk-fba','ukfba':'uk-fba','india warehouse':'india','india wh':'india','india fba':'india-fba'};
+    const loc     = locMap[locRaw] || locRaw || (type==='dispatch'?'india':type==='receive'?'uk':'uk');
+    const date    = dateCol && row[dateCol] ? String(row[dateCol]).trim() : today;
+    const note    = noteCol ? String(row[noteCol]||'').trim() : '';
+    // Determine impact
+    let impact = '', fromLoc='', toLoc='';
+    if(type==='dispatch'){  fromLoc='india'; impact=`− ${qty} from India WH → transit`; }
+    else if(type==='receive'){ toLoc='uk'; impact=`+ ${qty} to UK WH`; }
+    else { impact=(qty>=0?`+ `:'')+qty+` to ${LOC_LABEL[loc]||loc}`; }
+    deStockRows.push({ skuRaw, matched, type, qty, loc, date, note, impact, fromLoc, toLoc });
+  });
+
+  const valid    = deStockRows.filter(r=>r.matched && r.qty>0);
+  const invalid  = deStockRows.filter(r=>!r.matched);
+  const zeroQty  = deStockRows.filter(r=>r.matched && r.qty===0);
+
+  const previewHTML = `
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title"><i class="ti ti-table"></i>Preview — ${fname}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="badge b-ok">${valid.length} valid</span>
+          ${invalid.length?`<span class="badge b-critical">${invalid.length} unmatched</span>`:''}
+          ${zeroQty.length?`<span class="badge b-draft">${zeroQty.length} zero qty</span>`:''}
+          <button class="btn btn-primary btn-sm" onclick="deApplyStock()" ${valid.length===0?'disabled':''}>
+            <i class="ti ti-check"></i>Apply ${valid.length} movement${valid.length!==1?'s':''}
+          </button>
+          <button class="btn btn-sm" onclick="document.getElementById('de-preview-stock').innerHTML=''">
+            <i class="ti ti-x"></i>Cancel
+          </button>
+        </div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>SKU</th><th>Match</th><th>Type</th><th>Qty</th><th>Impact</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          ${deStockRows.map(r=>{
+            const typeColor={'dispatch':'var(--blue)','receive':'var(--green)','adjust':'var(--amber)'};
+            let cls='', status='';
+            if(!r.matched){ cls='import-row-warn'; status='<span class="badge b-critical">No SKU</span>'; }
+            else if(r.qty===0){ cls=''; status='<span class="badge b-draft">Zero qty</span>'; }
+            else { cls='import-row-ok'; status='<span class="badge b-ok">Ready</span>'; }
+            return `<tr class="${cls}">
+              <td class="mono">${r.skuRaw}</td>
+              <td style="font-size:11px">${r.matched?`<span style="color:var(--green)">✓ ${r.matched.name}</span>`:`<span style="color:var(--red)">✗ Not found</span>`}</td>
+              <td><span style="color:${typeColor[r.type]||'var(--text2)'};font-weight:600;font-size:11px;text-transform:uppercase">${r.type}</span></td>
+              <td class="mono">${r.qty}</td>
+              <td style="font-size:11px;color:var(--text2)">${r.impact}</td>
+              <td class="mono">${r.date}</td>
+              <td>${status}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+
+  document.getElementById('de-preview-stock').innerHTML = previewHTML;
+}
+
+function deApplyStock(){
+  const valid = deStockRows.filter(r=>r.matched && r.qty>0);
+  if(!valid.length){ toast('Nothing to apply','var(--amber)'); return; }
+
+  let dispatched=0, received=0, adjusted=0;
+  valid.forEach(r=>{
+    const sk = r.matched;
+    if(r.type==='dispatch'){
+      // Deduct from India WH, create a PO entry in transit
+      sk.stock.india = (sk.stock.india||0) - r.qty;
+      // Add a transit PO (mini format compatible with Stock Movement)
+      S.pos.push({
+        id: 'DE-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+        supplier:'Eirica International',
+        date: r.date,
+        status:'transit',
+        lines:[{ sku:sk.sku, name:sk.name, orderedQty:r.qty, receivedQty:0 }],
+        notes:'Imported via Data Entry · '+r.date
+      });
+      dispatched++;
+    } else if(r.type==='receive'){
+      sk.stock.uk = (sk.stock.uk||0) + r.qty;
+      // Try to find an open transit PO with matching SKU and close it
+      const openPO = S.pos.find(p=>p.status==='transit' && p.lines.some(l=>l.sku===sk.sku));
+      if(openPO){
+        const line = openPO.lines.find(l=>l.sku===sk.sku);
+        if(line){ line.receivedQty = (line.receivedQty||0) + r.qty; }
+        // Mark as received if all lines satisfied
+        const allDone = openPO.lines.every(l=>(l.receivedQty||0)>=(l.orderedQty||0));
+        if(allDone) openPO.status='received';
+      }
+      received++;
+    } else {
+      // adjust — direct delta to specified location
+      const loc = r.loc || 'uk';
+      sk.stock[loc] = (sk.stock[loc]||0) + r.qty;
+      adjusted++;
+    }
+  });
+
+  saveState();
+
+  const parts = [];
+  if(dispatched) parts.push(`${dispatched} dispatched from India`);
+  if(received)   parts.push(`${received} received to UK WH`);
+  if(adjusted)   parts.push(`${adjusted} stock adjusted`);
+
+  document.getElementById('de-preview-stock').innerHTML = `
+    <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px 20px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:12px">
+      <i class="ti ti-circle-check" style="font-size:22px"></i>
+      <div>
+        <strong>${valid.length} stock movement${valid.length!==1?'s':''} applied — ${parts.join(' · ')}</strong>
+        <div style="font-size:12px;margin-top:3px;color:var(--text2)">Check Stock Movement and Master Stock to confirm changes.</div>
+      </div>
+    </div>`;
+  deStockRows = [];
+  toast(`✓ ${valid.length} movements applied — ${parts.join(' · ')}`);
+}
+
+// ── Template downloads ────────────────────────────────────────────────────────
+function deDownloadSalesTemplate(){
+  const rows = [['Order Ref','SKU','Channel','Location','Qty','Price','Date']];
+  rows.push(['AMZ-EXAMPLE-001','SKU-50001-M-WHI','Amazon','uk','1','10.99',new Date().toISOString().split('T')[0]]);
+  rows.push(['EBAY-EXAMPLE-001','SKU-50007-M-BRO','eBay','uk','2','7.50',new Date().toISOString().split('T')[0]]);
+  const csv = rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='eirica-sales-entry-template.csv';
+  a.click();
+  toast('Sales template downloaded ✓');
+}
+
+function deDownloadStockTemplate(){
+  const rows = [['SKU','Movement Type','Qty','Location','Date','Notes']];
+  rows.push(['SKU-50001-M-WHI','dispatch','50','india',new Date().toISOString().split('T')[0],'Batch 1']);
+  rows.push(['SKU-50001-M-WHI','receive','50','uk',new Date().toISOString().split('T')[0],'Received from India']);
+  rows.push(['SKU-50007-L-BRO','adjust','5','uk',new Date().toISOString().split('T')[0],'Stock count correction']);
+  const csv = rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='eirica-stock-movement-template.csv';
+  a.click();
+  toast('Stock movement template downloaded ✓');
+}
+
+// ══ SOP PAGE ═══════════════════════════════════════════════════════════════
+function pageSOP(){
+  return `
+  <div style="max-width:960px">
+
+    <!-- ─── Header ─── -->
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <i class="ti ti-books" style="font-size:20px;color:var(--accent)"></i>
+        <h2 style="font-size:16px;font-weight:600">Standard Operating Procedure</h2>
+      </div>
+      <p style="font-size:12px;color:var(--text2);line-height:1.7">End-to-end workflow for Eirica StockOS — from raising a stock order to recording sales across all channels.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SECTION 1 — STOCK MOVEMENT
+    ══════════════════════════════════════════════════════════ -->
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid rgba(59,130,246,.25)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">1</div>
+        <span style="font-size:14px;font-weight:700;color:var(--blue)">STOCK MOVEMENT</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">India → UK</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr 28px 1fr;gap:0;align-items:start">
+
+        <!-- Step 1 -->
+        ${sopStep('ti-clipboard-list','var(--blue)','Step 1','UK Raises Stock Order',
+          'Go to <strong>Data Entry → Stock Movement → Stock Order</strong>.<br>Upload Excel with columns: SKU, Qty. System creates a draft PO and logs it under Stock Movement.',
+          ['SKU','Qty','(Optional) Notes'],true)}
+        ${sopArrow()}
+
+        <!-- Step 2 -->
+        ${sopStep('ti-send','var(--blue)','Step 2','India Ships to UK',
+          'India team opens the <strong>same Excel file</strong>, ticks the "Dispatched" column for each SKU shipped, then uploads via <strong>Data Entry → Stock Movement → Stock Shipped</strong>.<br>System deducts India WH stock and moves PO to transit.',
+          ['SKU','Qty','Dispatched ✓'],true)}
+        ${sopArrow()}
+
+        <!-- Step 3 -->
+        ${sopStep('ti-circle-check','var(--green)','Step 3','UK Confirms Receipt',
+          'UK team opens the <strong>same Excel</strong>, ticks the "Received" column for each SKU received, uploads via <strong>Data Entry → Stock Movement → Stock Received</strong>.<br>System adds to UK WH stock and closes the PO.',
+          ['SKU','Qty','Received ✓'],true)}
+        ${sopArrow()}
+
+        <!-- Step 4 -->
+        ${sopStep('ti-package','var(--green)','Step 4','UK WH Stock Updated',
+          'Dashboard automatically reflects the new UK WH totals. Master Stock, Stock Alerts and UK Runway all update instantly. No manual entry required.',
+          ['Dashboard updates','Master Stock updates','Alerts recalculate'],false)}
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SECTION 2 — SALES CHANNELS
+    ══════════════════════════════════════════════════════════ -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid rgba(34,197,94,.25)">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">2</div>
+        <span style="font-size:14px;font-weight:700;color:var(--green)">SALES CHANNELS</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">Upload orders → everything updates automatically</span>
+      </div>
+
+      <!-- Channel flow explanation -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 18px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.9">
+        For every channel: go to <strong style="color:var(--text)">Data Entry → Sales → [Channel]</strong>, upload the Excel/CSV export from that platform.
+        The system automatically deduplicates, adds new orders to the <strong style="color:var(--text)">Sales Log</strong>, updates
+        <strong style="color:var(--text)">Revenue</strong>, <strong style="color:var(--text)">Top Sellers</strong>,
+        <strong style="color:var(--text)">Stock</strong> levels and <strong style="color:var(--text)">UK Runway</strong>.
+        No double-counting — duplicate order refs are skipped.
+      </div>
+
+      <!-- UK Channels -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          🇬🇧 <span>UK Channels</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          ${sopChannel('ti-brand-amazon','#ff9900','Amazon UK — Direct','uk',
+            'Download order report from Seller Central. Upload under <strong>Data Entry → UK Amazon</strong>. Deducts UK WH stock.',
+            ['Order ID','SKU / ASIN','Qty','Price','Date'])}
+          ${sopChannel('ti-brand-amazon','#ff9900','Amazon UK — FBA','uk-fba',
+            'Download FBA order report from Seller Central. Upload under <strong>Data Entry → UK Amazon</strong>. Deducts UK FBA stock.',
+            ['Order ID','SKU','Qty','Price','Date'])}
+          ${sopChannel('ti-shopping-bag','#e53238','eBay UK','uk',
+            'Download sold items CSV from eBay Seller Hub. Upload under <strong>Data Entry → UK eBay</strong>. Deducts UK WH stock.',
+            ['Order Number','Custom Label (SKU)','Qty','Sale Price','Date'])}
+          ${sopChannel('ti-building-store','#96bf48','Shopify UK','uk',
+            'Export orders CSV from Shopify Admin → Orders → Export. Upload under <strong>Data Entry → UK Shopify</strong>.',
+            ['Order ID','SKU','Qty','Price','Date'])}
+        </div>
+      </div>
+
+      <!-- India Channels -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          🇮🇳 <span>India Channels</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          ${sopChannel('ti-building-store','#96bf48','Shopify India','india',
+            'Export orders CSV from Shopify Admin. Upload under <strong>Data Entry → India Shopify</strong>. Deducts India WH stock.',
+            ['Order ID','SKU','Qty','Price','Date'])}
+          ${sopChannel('ti-hanger','#ff3f6c','Myntra India','india',
+            'Download orders report from Myntra Seller Portal. Upload under <strong>Data Entry → India Myntra</strong>. Deducts India WH stock.',
+            ['Order ID','SKU / Style ID','Qty','MRP / Selling Price','Date'])}
+        </div>
+      </div>
+
+      <!-- What updates -->
+      <div style="margin-top:20px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:var(--r2);padding:14px 18px">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <i class="ti ti-sparkles"></i> What updates after every upload
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          ${['Sales Log','Revenue (Global + by Channel)','Top Sellers','Stock Levels (per location)','UK WH Runway','Dashboard metrics','Anomalies (if negative stock)','Last Updated stamps'].map(item=>`
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)">
+              <i class="ti ti-circle-check" style="color:var(--green);font-size:13px;flex-shrink:0"></i>${item}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+function sopStep(icon, color, label, title, body, fields, hasFile){
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px;min-width:0">
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+      <div style="width:30px;height:30px;border-radius:8px;background:${color}22;border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ${icon}" style="color:${color};font-size:15px"></i>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.07em">${label}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);line-height:1.2">${title}</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:8px">${body}</p>
+    ${hasFile ? `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 10px">
+      <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Excel columns</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${fields.map(f=>`<span style="background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;font-size:10px;font-family:var(--mono);color:var(--text2)">${f}</span>`).join('')}
+      </div>
+    </div>` : `
+    <div style="display:flex;flex-wrap:wrap;gap:4px">
+      ${fields.map(f=>`<span style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--green)">${f}</span>`).join('')}
+    </div>`}
+  </div>`;
+}
+
+function sopArrow(){
+  return `<div style="display:flex;align-items:center;justify-content:center;padding-top:18px">
+    <i class="ti ti-chevron-right" style="font-size:18px;color:var(--text3)"></i>
+  </div>`;
+}
+
+function sopChannel(icon, color, title, loc, body, fields){
+  const locLabel = {'uk':'UK WH','uk-fba':'UK FBA','india':'India WH'}[loc]||loc;
+  const locColor = loc.startsWith('india') ? '#f59e0b' : '#3b82f6';
+  return `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:13px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:7px">
+        <i class="ti ${icon}" style="font-size:17px;color:${color}"></i>
+        <span style="font-size:12px;font-weight:700;color:var(--text)">${title}</span>
+      </div>
+      <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:${locColor}22;color:${locColor};border:1px solid ${locColor}44">${locLabel}</span>
+    </div>
+    <p style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:8px">${body}</p>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 9px">
+      <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Typical columns</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">
+        ${fields.map(f=>`<span style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;font-size:10px;font-family:var(--mono);color:var(--text2)">${f}</span>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
 
 // ══ ACCESS GATE ════════════════════════════════════════════════════════════
 const ACCESS_CODE = 'Eirica@485926';
