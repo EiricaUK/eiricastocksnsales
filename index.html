@@ -2235,6 +2235,7 @@ function renderStockOrder(){
           <td>${bdg('draft')}</td>
           <td style="white-space:nowrap;display:flex;gap:6px">
             <button class="btn btn-primary btn-sm" onclick="dispatchPO(${ri})"><i class="ti ti-send"></i>Mark Dispatched</button>
+            <button class="btn btn-sm" onclick="printPO(${ri})"><i class="ti ti-printer"></i>Print</button>
             <button class="btn btn-danger btn-sm" onclick="delPO(${ri})"><i class="ti ti-trash"></i></button>
           </td>
         </tr>`;
@@ -3121,6 +3122,104 @@ let poLines=[];
 function addPOLine(){ const w=document.getElementById('po-lines'); const i=poLines.length; poLines.push({sku:'',qty:0,loc:'uk'}); const d=document.createElement('div'); d.className='po-line-row'; d.innerHTML=`<select onchange="poLines[${i}].sku=this.value" style="font-size:12px"><option value="">Select SKU…</option>${S.skus.map(s=>`<option value="${s.sku}">${s.sku} — ${s.name}</option>`).join('')}</select><input type="number" placeholder="Qty" min="1" style="font-size:12px" oninput="poLines[${i}].qty=parseInt(this.value)||0"/><select onchange="poLines[${i}].loc=this.value" style="font-size:12px">${LOCS.map(l=>`<option value="${l}">${LOC_FLAG[l]} ${LOC_LABEL[l]}</option>`).join('')}</select><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`; w.appendChild(d); }
 function savePO(){ const sup=document.getElementById('f-po-supplier').value.trim(); if(!sup){ toast('Supplier required','var(--red)'); return; } const lines=poLines.filter(l=>l.sku&&l.qty>0); if(!lines.length){ toast('Add at least one line','var(--red)'); return; } const num='PO-'+(1000+S.pos.length+1); S.pos.push({num,supplier:sup,date:document.getElementById('f-po-date').value,lines,status:'draft'}); saveState(); poLines=[]; closeModal('po'); toast(`${num} created ✓`); render(); }
 function setPOSt(i,s){ S.pos[i].status=s; saveState(); toast('Updated'); render(); }
+
+// ── Print PO ─────────────────────────────────────────────────────────────────
+function printPO(i){
+  const p = S.pos[i];
+  if(!p) return;
+  const units = p.lines.reduce((a,l)=>a+(l.orderedQty||l.qty||0),0);
+  const date  = p.date || new Date().toISOString().split('T')[0];
+
+  const rows = p.lines.map(l=>`
+    <tr>
+      <td>${l.sku||''}</td>
+      <td>${l.name||''}</td>
+      <td style="text-align:center">${l.orderedQty||l.qty||0}</td>
+      <td style="text-align:center">${l.receivedQty||0}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>${p.num||'PO'}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#111;padding:32px 40px;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #111;}
+    .brand{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+    .brand span{color:#888;font-weight:400;}
+    .po-meta{text-align:right;line-height:1.8;}
+    .po-num{font-size:18px;font-weight:700;}
+    .section{margin-bottom:20px;}
+    .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:6px;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .info-box{background:#f5f5f5;border-radius:4px;padding:10px 14px;line-height:1.8;}
+    .info-box strong{display:block;font-size:11px;color:#444;}
+    table{width:100%;border-collapse:collapse;margin-top:4px;}
+    thead tr{background:#111;color:#fff;}
+    thead th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em;}
+    tbody tr:nth-child(even){background:#f9f9f9;}
+    tbody td{padding:7px 12px;border-bottom:1px solid #e5e5e5;font-size:11px;}
+    .totals{margin-top:12px;text-align:right;font-size:13px;}
+    .totals strong{font-size:15px;}
+    .footer{margin-top:32px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:10px;color:#888;}
+    .status-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+    .notes{background:#fffbeb;border:1px solid #fcd34d;border-radius:4px;padding:8px 12px;font-size:11px;color:#78350f;margin-top:8px;}
+    @media print{body{padding:20px 24px;} .no-print{display:none;}}
+  </style>
+  </head><body>
+  <div class="header">
+    <div>
+      <div class="brand">Eirica <span>StockOS</span></div>
+      <div style="font-size:11px;color:#666;margin-top:4px">Eirica International</div>
+    </div>
+    <div class="po-meta">
+      <div class="po-num">${p.num||'DRAFT PO'}</div>
+      <div style="margin-top:4px"><span class="status-badge">${p.status||'draft'}</span></div>
+      <div style="font-size:11px;color:#666;margin-top:4px">Raised: ${date}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="info-grid">
+      <div class="info-box">
+        <strong>Supplier</strong>
+        ${p.supplier||'Eirica International'}
+      </div>
+      <div class="info-box">
+        <strong>Ship To</strong>
+        UK Warehouse
+      </div>
+    </div>
+  </div>
+
+  ${p.notes?`<div class="notes"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:.06em">Notes:</strong> ${p.notes}</div>`:''}
+
+  <div class="section" style="margin-top:16px">
+    <div class="section-title">Order Lines — ${p.lines.length} SKU${p.lines.length!==1?'s':''}</div>
+    <table>
+      <thead><tr>
+        <th>SKU</th><th>Product</th>
+        <th style="text-align:center">Ordered Qty</th>
+        <th style="text-align:center">Received Qty</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="totals">Total units ordered: <strong>${units}</strong></div>
+  </div>
+
+  <div class="footer">
+    <div>Generated by Eirica StockOS · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+    <div>© 2026 Eirica International</div>
+  </div>
+
+  <div class="no-print" style="margin-top:24px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 28px;background:#111;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit">🖨 Print / Save as PDF</button>
+  </div>
+  </body></html>`;
+
+  const win = window.open('','_blank','width=860,height=700');
+  win.document.write(html);
+  win.document.close();
+}
 
 // ── STEP 1: Mark Dispatched from India ──────────────────────────────────────
 function dispatchPO(i){
