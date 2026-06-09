@@ -2248,14 +2248,19 @@ function renderStockOrder(){
       <span class="badge ${draft.length?'b-transit':'b-ok'}">${draft.length}</span>
     </div>
     <div class="tw"><table>
-      <thead><tr><th>Order #</th><th>Supplier</th><th>SKUs</th><th>Units</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody>${draft.length===0?`<tr><td colspan="7"><div class="empty"><i class="ti ti-clipboard-list"></i>No pending orders. Click New stock order to raise one.</div></td></tr>`:
+      <thead><tr><th>Order #</th><th>Type</th><th>Supplier</th><th>SKUs</th><th>Units</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${draft.length===0?`<tr><td colspan="8"><div class="empty"><i class="ti ti-clipboard-list"></i>No pending orders. Click New stock order to raise one.</div></td></tr>`:
       draft.map(p=>{
         const ri=S.pos.indexOf(p);
         const units=p.lines.reduce((a,l)=>a+(l.qty||0),0);
+        const typeColors={'uk-wh':'var(--blue)','uk-fba':'var(--green)','india-wh':'var(--amber)'};
+        const typeBadge = p.poType
+          ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+( typeColors[p.poType]||'var(--blue)')+'22;color:'+(typeColors[p.poType]||'var(--blue)')+';border:1px solid '+(typeColors[p.poType]||'var(--blue)')+'44">'+( p.poTypeLabel||p.poType)+'</span>'
+          : '<span style="font-size:10px;color:var(--text3)">—</span>';
         return`<tr>
           <td class="mono" style="font-size:11px">${p.num}</td>
-          <td style="font-weight:500">${p.supplier||'—'}</td>
+          <td>${typeBadge}</td>
+          <td style="font-weight:500;font-size:12px">${p.supplier||'—'}</td>
           <td>${p.lines.length}</td>
           <td class="mono">${units}</td>
           <td style="font-size:11px;color:var(--text2)">${p.date||'—'}</td>
@@ -2456,80 +2461,88 @@ function restockToggleAll(checked){
   document.querySelectorAll('.restock-chk').forEach(c=>{ c.checked=checked; });
 }
 
+// ── Restock location config (mirrors pageReorderQueue) ───────────────────────
+function restockLocCfg(){
+  const loc = restockLocTab || 'uk-wh';
+  const cfgMap = {
+    'uk-wh':   { stockFn:s=>(s.stock.uk||0),                              salesFilter:r=>r.loc==='uk',                       DAYS:47, TARGET:60, LEAD:21, MIN:10, label:'UK WH',    fromLabel:'India WH → UK WH' },
+    'uk-fba':  { stockFn:s=>(s.stock['uk-fba']||0),                       salesFilter:r=>r.loc==='uk-fba',                   DAYS:47, TARGET:30, LEAD:14, MIN:10, label:'UK FBA',   fromLabel:'UK WH → UK FBA' },
+    'india-wh':{ stockFn:s=>(s.stock.india||0)+(s.stock['india-fba']||0), salesFilter:r=>r.loc==='india'||r.loc==='india-fba', DAYS:47, TARGET:90, LEAD:45, MIN:10, label:'India WH', fromLabel:'India Supplier' },
+  };
+  return { loc, ...cfgMap[loc] };
+}
+
+function restockBuildRows(cfg){
+  const { stockFn, salesFilter, DAYS, TARGET, LEAD, MIN, loc } = cfg;
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)),...S.sales].filter(salesFilter);
+  const soldMap = {};
+  allSales.forEach(s=>{ soldMap[s.sku]=(soldMap[s.sku]||0)+(s.qty||0); });
+
+  return S.skus.map(s=>{
+    const locStock = stockFn(s);
+    const v = (soldMap[s.sku]||0) / DAYS;
+    const d = v>0 ? locStock/v : (locStock>0?999:0);
+    let sg = v>0 ? Math.max(MIN, Math.ceil(v*TARGET)-locStock) : (locStock<5?MIN:0);
+    if(loc==='uk-fba') sg = Math.min(sg, Math.max(0, Math.floor((s.stock.uk||0)*0.5)));
+    if((locStock>5 && d>=TARGET) || sg<=0) return null;
+    return { s, locStock, suggested:sg };
+  }).filter(Boolean);
+}
+
 function restockGetLines(){
+  const cfg = restockLocCfg();
+  const rows = restockBuildRows(cfg);
   const lines = [];
   document.querySelectorAll('.restock-chk:checked').forEach(chk=>{
-    const i   = parseInt(chk.dataset.idx);
+    const i = parseInt(chk.dataset.idx);
     const qtyEl = document.getElementById('restock-qty-'+i);
-    const qty   = parseInt(qtyEl?.value)||0;
-    if(!qty) return;
-    // Rebuild rows list (same order as rendered)
-    const seen2 = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
-    const allS2 = [...STATIC_SALES.filter(s=>!seen2.has(s.ref+'|'+s.sku)),...S.sales].filter(s=>s.loc==='uk'||s.loc==='uk-fba');
-    const soldMap2={};
-    allS2.forEach(s=>{ soldMap2[s.sku]=(soldMap2[s.sku]||0)+(s.qty||0); });
-    const DAYS2=47,TARGET2=60,LEAD2=21,MIN2=10;
-    const rows2=S.skus.map(s=>{
-      const ukS=(s.stock.uk||0)+(s.stock['uk-fba']||0);
-      const v=(soldMap2[s.sku]||0)/DAYS2;
-      const d=v>0?ukS/v:(ukS>0?999:0);
-      const sg=v>0?Math.max(MIN2,Math.ceil(v*TARGET2)-ukS):(ukS<5?MIN2:0);
-      if(ukS>5&&d>=TARGET2) return null;
-      return {s,ukS,v,d,sg};
-    }).filter(Boolean);
-    rows2.sort((a,b)=>{ const getP=r=>r.ukS<=1?0:r.ukS<5?1:r.d<LEAD2?0:2; return getP(a)-getP(b)||a.d-b.d; });
-    const row = rows2[i];
-    if(row) lines.push({sku:row.s.sku, name:row.s.name, orderedQty:qty, receivedQty:0});
+    const qty = parseInt(qtyEl?.value)||0;
+    if(!qty || !rows[i]) return;
+    lines.push({ sku:rows[i].s.sku, name:rows[i].s.name, orderedQty:qty, receivedQty:0 });
   });
   return lines;
 }
 
-function restockRaiseAll(){
-  const seen2 = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
-  const allS2 = [...STATIC_SALES.filter(s=>!seen2.has(s.ref+'|'+s.sku)),...S.sales].filter(s=>s.loc==='uk'||s.loc==='uk-fba');
-  const soldMap2={};
-  allS2.forEach(s=>{ soldMap2[s.sku]=(soldMap2[s.sku]||0)+(s.qty||0); });
-  const DAYS2=47,TARGET2=60,MIN2=10;
-  const lines=S.skus.map(s=>{
-    const ukS=(s.stock.uk||0)+(s.stock['uk-fba']||0);
-    const v=(soldMap2[s.sku]||0)/DAYS2;
-    const d=v>0?ukS/v:(ukS>0?999:0);
-    const sg=v>0?Math.max(MIN2,Math.ceil(v*TARGET2)-ukS):(ukS<5?MIN2:0);
-    if((ukS>5&&d>=TARGET2)||sg<=0) return null;
-    return {sku:s.sku,name:s.name,orderedQty:sg,receivedQty:0};
-  }).filter(Boolean);
-  if(!lines.length){ toast('Nothing to order','var(--amber)'); return; }
-  const po={
-    id:'PO-'+Date.now(),
-    num:'PO-RS-'+String(S.pos.length+1).padStart(3,'0'),
-    supplier:'Eirica International',
-    date:new Date().toISOString().split('T')[0],
-    status:'draft',
+function restockMakePO(lines, cfg){
+  const locLabels = {'uk-wh':'UK WH','uk-fba':'UK FBA','india-wh':'India WH'};
+  const poTypeLabels = {'uk-wh':'India → UK WH','uk-fba':'UK WH → UK FBA','india-wh':'Supplier → India WH'};
+  const loc = cfg.loc;
+  return {
+    id:       'PO-'+Date.now(),
+    num:      'PO-'+loc.toUpperCase()+'-'+String(S.pos.length+1).padStart(3,'0'),
+    supplier: loc==='uk-fba' ? 'Internal Transfer (UK WH → FBA)' : loc==='india-wh' ? 'India Supplier' : 'Eirica International',
+    date:     new Date().toISOString().split('T')[0],
+    status:   'draft',
+    poType:   loc,
+    poTypeLabel: poTypeLabels[loc] || loc,
+    destLabel:  locLabels[loc] || loc,
     lines,
-    notes:'Auto-generated from Restock Prediction'
+    notes: 'Auto-generated from Restock Prediction — '+cfg.label
   };
+}
+
+function restockRaiseAll(){
+  const cfg = restockLocCfg();
+  const rows = restockBuildRows(cfg);
+  if(!rows.length){ toast('Nothing to order','var(--amber)'); return; }
+  const lines = rows.map(r=>({ sku:r.s.sku, name:r.s.name, orderedQty:r.suggested, receivedQty:0 }));
+  const po = restockMakePO(lines, cfg);
   S.pos.push(po);
   saveState();
-  toast('✓ Draft PO raised — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
+  toast('✓ Draft PO raised ('+cfg.label+') — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
   stockPageTab='movement'; stockMovementTab='order';
   render();
 }
 
 function restockRaiseSelected(){
+  const cfg = restockLocCfg();
   const lines = restockGetLines();
   if(!lines.length){ toast('No SKUs selected','var(--amber)'); return; }
-  const po={
-    id:'PO-'+Date.now(),
-    num:'PO-RS-'+String(S.pos.length+1).padStart(3,'0'),
-    supplier:'Eirica International',
-    date:new Date().toISOString().split('T')[0],
-    status:'draft',
-    lines,
-    notes:'Auto-generated from Restock Prediction'
-  };
+  const po = restockMakePO(lines, cfg);
   S.pos.push(po);
   saveState();
-  toast('✓ Draft PO raised — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
+  toast('✓ Draft PO raised ('+cfg.label+') — '+lines.length+' SKUs · '+lines.reduce((a,l)=>a+l.orderedQty,0)+' units');
   stockPageTab='movement'; stockMovementTab='order';
   render();
 }
@@ -3196,7 +3209,7 @@ function printPO(i){
     </div>
     <div class="po-meta">
       <div class="po-num">${p.num||'DRAFT PO'}</div>
-      <div style="margin-top:4px"><span class="status-badge">${p.status||'draft'}</span></div>
+      <div style="margin-top:4px"><span class="status-badge">${p.status||'draft'}</span>${p.poTypeLabel?` <span class="status-badge" style="background:#dbeafe;color:#1e40af;border-color:#93c5fd">${p.poTypeLabel}</span>`:''}</div>
       <div style="font-size:11px;color:#666;margin-top:4px">Raised: ${date}</div>
     </div>
   </div>
