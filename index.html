@@ -2373,7 +2373,7 @@ function pageReorderQueue(){
   // ── Info bar ───────────────────────────────────────────────────────────────
   let html = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
     + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD+' days</strong> &nbsp;·&nbsp; Replenish from: <strong style="color:var(--text)">'+replenish+'</strong>'
-      + (loc==='uk-fba' ? ' &nbsp;·&nbsp; <span style="color:var(--amber)">⚠ Qty capped at 50% of UK WH stock</span>' : '')
+      + (loc==='uk-fba' ? ' &nbsp;·&nbsp; <span style="color:var(--amber)">⚠ Qty = 50% of UK WH stock (only if UK WH ≥ 10 units)</span>' : '')
     + '</div>'
     + '<div style="display:flex;gap:6px;align-items:center">'
       + (urgentCount ? '<span class="badge b-critical"><i class="ti ti-flame" style="font-size:10px;margin-right:3px"></i>'+urgentCount+' Urgent</span>' : '')
@@ -2484,7 +2484,10 @@ function restockBuildRows(cfg){
     const v = (soldMap[s.sku]||0) / DAYS;
     const d = v>0 ? locStock/v : (locStock>0?999:0);
     let sg = v>0 ? Math.max(MIN, Math.ceil(v*TARGET)-locStock) : (locStock<5?MIN:0);
-    if(loc==='uk-fba') sg = Math.min(sg, Math.max(0, Math.floor((s.stock.uk||0)*0.5)));
+    if(loc==='uk-fba'){
+      const ukWH = s.stock.uk||0;
+      sg = ukWH >= 10 ? Math.min(sg, Math.floor(ukWH * 0.5)) : 0;
+    }
     if((locStock>5 && d>=TARGET) || sg<=0) return null;
     return { s, locStock, suggested:sg };
   }).filter(Boolean);
