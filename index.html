@@ -2312,6 +2312,10 @@ function pageReorderQueue(){
     const suggested  = velocity > 0
       ? Math.max(MIN_ORDER, Math.ceil(velocity * TARGET) - locStock)
       : (locStock < 5 ? MIN_ORDER : 0);
+    // UK FBA: can only send up to 50% of available UK WH stock
+    const effectiveSuggested = loc==='uk-fba'
+      ? Math.min(suggested, Math.max(0, Math.floor((s.stock.uk||0) * 0.5)))
+      : suggested;
 
     if(locStock > 5 && daysLeft >= TARGET) return null;
 
@@ -2321,7 +2325,7 @@ function pageReorderQueue(){
     else if(daysLeft < LEAD)   priority = 'urgent';
     else                       priority = 'watch';
 
-    return { s, locStock, indiaStock, ukStock, velocity, daysLeft, suggested, unitsSold, priority };
+    return { s, locStock, indiaStock, ukStock, velocity, daysLeft, suggested: effectiveSuggested, unitsSold, priority };
   }).filter(Boolean);
 
   // ── Sort ───────────────────────────────────────────────────────────────────
@@ -2363,7 +2367,9 @@ function pageReorderQueue(){
 
   // ── Info bar ───────────────────────────────────────────────────────────────
   let html = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
-    + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD+' days</strong> &nbsp;·&nbsp; Replenish from: <strong style="color:var(--text)">'+replenish+'</strong></div>'
+    + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD+' days</strong> &nbsp;·&nbsp; Replenish from: <strong style="color:var(--text)">'+replenish+'</strong>'
+      + (loc==='uk-fba' ? ' &nbsp;·&nbsp; <span style="color:var(--amber)">⚠ Qty capped at 50% of UK WH stock</span>' : '')
+    + '</div>'
     + '<div style="display:flex;gap:6px;align-items:center">'
       + (urgentCount ? '<span class="badge b-critical"><i class="ti ti-flame" style="font-size:10px;margin-right:3px"></i>'+urgentCount+' Urgent</span>' : '')
       + (lowCount    ? '<span class="badge b-low">'+lowCount+' Low</span>' : '')
