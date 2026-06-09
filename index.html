@@ -1980,11 +1980,20 @@ function setStockPageTab(tab){
   afterRender();
 }
 
+let restockLocTab = 'uk-wh'; // 'uk-wh' | 'uk-fba' | 'india-wh'
+
+function setRestockLocTab(loc){
+  restockLocTab = loc;
+  stockPageTab = 'reorder';
+  document.getElementById('content').innerHTML = pageStock();
+  afterRender();
+}
+
 function pageStock(){
   const subTabs = [
-    {key:'master',   icon:'ti-table',          label:'Master Stock'},
-    {key:'movement', icon:'ti-arrows-exchange', label:'Stock Movement'},
-    {key:'reorder',  icon:'ti-chart-arrows-vertical', label:'Restock Prediction'},
+    {key:'master',   icon:'ti-table',                  label:'Master Stock'},
+    {key:'movement', icon:'ti-arrows-exchange',         label:'Stock Movement'},
+    {key:'reorder',  icon:'ti-chart-arrows-vertical',   label:'Restock Prediction'},
   ];
 
   const tabBar = `
@@ -2006,7 +2015,25 @@ function pageStock(){
 
   if(stockPageTab==='master')    return tabBar + pageMasterInner();
   if(stockPageTab==='movement')  return tabBar + pageOrdersInner();
-  if(stockPageTab==='reorder')   return tabBar + pageReorderQueue();
+  if(stockPageTab==='reorder'){
+    const locTabs = [
+      {key:'uk-wh',    label:'🇬🇧 UK WH'},
+      {key:'uk-fba',   label:'🇬🇧 UK FBA'},
+      {key:'india-wh', label:'🇮🇳 India WH'},
+    ];
+    const locBar = `
+      <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+        ${locTabs.map(t=>`
+          <button onclick="setRestockLocTab('${t.key}')" style="
+            padding:6px 16px;border-radius:20px;border:1px solid ${restockLocTab===t.key?'var(--accent)':'var(--border2)'};
+            background:${restockLocTab===t.key?'rgba(79,142,247,.12)':'var(--surface2)'};
+            color:${restockLocTab===t.key?'var(--accent)':'var(--text2)'};
+            cursor:pointer;font-size:12px;font-weight:${restockLocTab===t.key?'700':'500'};font-family:var(--font);transition:all .15s;">
+            ${t.label}
+          </button>`).join('')}
+      </div>`;
+    return tabBar + locBar + pageReorderQueue();
+  }
   return tabBar;
 }
 
@@ -2258,58 +2285,61 @@ function restockSort(col){
 }
 
 function pageReorderQueue(){
-  // ── Sales velocity: units sold per day per SKU (last 47 days, UK only) ──
-  const DAYS = 47;
-  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
-  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales]
-    .filter(s=>s.loc==='uk'||s.loc==='uk-fba');
+  // ── Config per location ───────────────────────────────────────────────────
+  const cfg = {
+    'uk-wh':  { stockFn: s=>(s.stock.uk||0),                  salesFilter: r=>r.loc==='uk',      label:'UK WH',    DAYS:47, TARGET:60, LEAD:21, replenish:'India WH' },
+    'uk-fba': { stockFn: s=>(s.stock['uk-fba']||0),           salesFilter: r=>r.loc==='uk-fba',  label:'UK FBA',   DAYS:47, TARGET:30, LEAD:14, replenish:'UK WH → FBA' },
+    'india-wh':{ stockFn: s=>(s.stock.india||0)+(s.stock['india-fba']||0), salesFilter: r=>r.loc==='india'||r.loc==='india-fba', label:'India WH', DAYS:47, TARGET:90, LEAD:45, replenish:'India Supplier' },
+  };
+  const loc = restockLocTab || 'uk-wh';
+  const c   = cfg[loc] || cfg['uk-wh'];
+  const { stockFn, salesFilter, label, DAYS, TARGET, LEAD, MIN_ORDER=10, replenish } = {...c, MIN_ORDER:10};
 
+  // ── Sales velocity ─────────────────────────────────────────────────────────
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales].filter(salesFilter);
   const soldMap = {};
   allSales.forEach(s=>{ soldMap[s.sku] = (soldMap[s.sku]||0) + (s.qty||0); });
 
-  // Target stock = 60 days cover; min order = 10 units
-  const TARGET_DAYS   = 60;
-  const MIN_ORDER     = 10;
-  const LEAD_DAYS     = 21; // estimated India→UK lead time
-
-  // Build prediction rows: only SKUs with UK stock < 5 OR <TARGET_DAYS cover
+  // ── Build rows ─────────────────────────────────────────────────────────────
   const rows = S.skus.map(s=>{
-    const ukStock    = (s.stock.uk||0) + (s.stock['uk-fba']||0);
+    const locStock   = stockFn(s);
     const indiaStock = (s.stock.india||0) + (s.stock['india-fba']||0);
+    const ukStock    = (s.stock.uk||0) + (s.stock['uk-fba']||0);
     const unitsSold  = soldMap[s.sku] || 0;
-    const velocity   = unitsSold / DAYS;                          // units/day
-    const daysLeft   = velocity > 0 ? ukStock / velocity : (ukStock > 0 ? 999 : 0);
+    const velocity   = unitsSold / DAYS;
+    const daysLeft   = velocity > 0 ? locStock / velocity : (locStock > 0 ? 999 : 0);
     const suggested  = velocity > 0
-      ? Math.max(MIN_ORDER, Math.ceil(velocity * TARGET_DAYS) - ukStock)
-      : (ukStock < 5 ? MIN_ORDER : 0);
+      ? Math.max(MIN_ORDER, Math.ceil(velocity * TARGET) - locStock)
+      : (locStock < 5 ? MIN_ORDER : 0);
 
-    // Include if: urgent (<=1), low (<5), or runs out within TARGET_DAYS
-    if(ukStock > 5 && daysLeft >= TARGET_DAYS) return null;
+    if(locStock > 5 && daysLeft >= TARGET) return null;
 
     let priority;
-    if(ukStock <= 1)            priority = 'urgent';
-    else if(ukStock < 5)        priority = 'low';
-    else if(daysLeft < LEAD_DAYS) priority = 'urgent';
-    else                        priority = 'watch';
+    if(locStock <= 1)          priority = 'urgent';
+    else if(locStock < 5)      priority = 'low';
+    else if(daysLeft < LEAD)   priority = 'urgent';
+    else                       priority = 'watch';
 
-    return { s, ukStock, indiaStock, velocity, daysLeft, suggested, unitsSold, priority };
+    return { s, locStock, indiaStock, ukStock, velocity, daysLeft, suggested, unitsSold, priority };
   }).filter(Boolean);
 
-  const priorityOrder = {urgent:0, low:1, watch:2};
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const pOrd = {urgent:0,low:1,watch:2};
   rows.sort((a,b)=>{
-    let av, bv;
+    let av,bv;
     switch(restockSortCol){
-      case 'name':     av=a.s.name;      bv=b.s.name;      break;
-      case 'sku':      av=a.s.sku;       bv=b.s.sku;       break;
-      case 'ukStock':  av=a.ukStock;     bv=b.ukStock;     break;
-      case 'india':    av=a.indiaStock;  bv=b.indiaStock;  break;
-      case 'velocity': av=a.velocity;    bv=b.velocity;    break;
-      case 'days':     av=a.daysLeft;    bv=b.daysLeft;    break;
-      case 'suggested':av=a.suggested;   bv=b.suggested;   break;
-      default:         av=priorityOrder[a.priority]||0; bv=priorityOrder[b.priority]||0;
+      case 'name':     av=a.s.name;     bv=b.s.name;     break;
+      case 'sku':      av=a.s.sku;      bv=b.s.sku;      break;
+      case 'ukStock':  av=a.locStock;   bv=b.locStock;   break;
+      case 'india':    av=a.indiaStock; bv=b.indiaStock; break;
+      case 'velocity': av=a.velocity;   bv=b.velocity;   break;
+      case 'days':     av=a.daysLeft;   bv=b.daysLeft;   break;
+      case 'suggested':av=a.suggested;  bv=b.suggested;  break;
+      default:         av=pOrd[a.priority]||0; bv=pOrd[b.priority]||0;
     }
-    if(av < bv) return -1 * restockSortDir;
-    if(av > bv) return  1 * restockSortDir;
+    if(av<bv) return -1*restockSortDir;
+    if(av>bv) return  1*restockSortDir;
     return 0;
   });
 
@@ -2323,61 +2353,52 @@ function pageReorderQueue(){
     if(p==='low')    return '<span class="badge b-low">Low Stock</span>';
     return                  '<span class="badge b-transit">Watch</span>';
   }
+  function daysColor(d){ return d<=7?'var(--red)':d<=LEAD?'var(--amber)':'var(--green)'; }
+  function velStr(v){ if(v===0) return 'No data'; if(v<0.1) return '<0.1/day'; return v.toFixed(2)+'/day'; }
 
-  function daysColor(d){
-    if(d<=7)  return 'var(--red)';
-    if(d<=21) return 'var(--amber)';
-    return 'var(--green)';
-  }
+  // ── Stock column header label ──────────────────────────────────────────────
+  const stockColLabel = loc==='uk-wh' ? 'UK WH' : loc==='uk-fba' ? 'UK FBA' : 'India WH';
+  const altStockLabel = loc==='uk-wh' ? 'India WH' : loc==='uk-fba' ? 'UK WH' : 'UK WH';
+  const altStockFn    = loc==='uk-wh' ? r=>r.indiaStock : loc==='uk-fba' ? r=>r.ukStock : r=>r.ukStock;
 
-  function velStr(v){
-    if(v===0) return 'No sales data';
-    if(v<0.1) return '<0.1 /day';
-    return v.toFixed(2)+' /day';
-  }
+  // ── Info bar ───────────────────────────────────────────────────────────────
+  let html = '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+    + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD+' days</strong> &nbsp;·&nbsp; Replenish from: <strong style="color:var(--text)">'+replenish+'</strong></div>'
+    + '<div style="display:flex;gap:6px;align-items:center">'
+      + (urgentCount ? '<span class="badge b-critical"><i class="ti ti-flame" style="font-size:10px;margin-right:3px"></i>'+urgentCount+' Urgent</span>' : '')
+      + (lowCount    ? '<span class="badge b-low">'+lowCount+' Low</span>' : '')
+      + (watchCount  ? '<span class="badge b-transit">'+watchCount+' Watch</span>' : '')
+      + (rows.length===0 ? '<span class="badge b-ok">All healthy</span>' : '')
+    + '</div>'
+  + '</div>';
 
-  // Header bar
-  let html = ''
-    + '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
-      + '<div style="display:flex;gap:14px;flex-wrap:wrap">'
-        + '<div style="font-size:11px;color:var(--text2)">Based on <strong style="color:var(--text)">'+DAYS+' days</strong> sales data &nbsp;·&nbsp; Target cover: <strong style="color:var(--text)">'+TARGET_DAYS+' days</strong> &nbsp;·&nbsp; Lead time: <strong style="color:var(--text)">'+LEAD_DAYS+' days</strong></div>'
-      + '</div>'
-      + '<div style="display:flex;gap:6px;align-items:center">'
-        + (urgentCount ? '<span class="badge b-critical"><i class="ti ti-flame" style="font-size:10px;margin-right:3px"></i>'+urgentCount+' Urgent</span>' : '')
-        + (lowCount    ? '<span class="badge b-low">'+lowCount+' Low</span>' : '')
-        + (watchCount  ? '<span class="badge b-transit">'+watchCount+' Watch</span>' : '')
-        + (rows.length===0 ? '<span class="badge b-ok">All healthy</span>' : '')
-      + '</div>'
-    + '</div>';
-
-  if(rows.length === 0){
-    html += '<div class="empty" style="padding:40px"><i class="ti ti-circle-check"></i>All UK SKUs have sufficient stock — no restock needed</div>';
+  if(rows.length===0){
+    html += '<div class="empty" style="padding:40px"><i class="ti ti-circle-check"></i>All '+label+' SKUs have sufficient stock</div>';
   } else {
-    // Summary proposal card
-    html += '<div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:var(--r2);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">'
+    // Proposal card
+    html += '<div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:var(--r2);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">'
       + '<div style="display:flex;align-items:center;gap:10px">'
         + '<i class="ti ti-sparkles" style="font-size:20px;color:var(--accent)"></i>'
         + '<div>'
           + '<div style="font-size:13px;font-weight:700;color:var(--text)">Suggested restock: <span style="color:var(--accent)">'+totalSugg+' units</span> across <span style="color:var(--accent)">'+rows.length+' SKUs</span></div>'
-          + '<div style="font-size:11px;color:var(--text2);margin-top:2px">Select SKUs below and raise a stock order, or raise a full order for all suggested quantities.</div>'
+          + '<div style="font-size:11px;color:var(--text2);margin-top:2px">Raise a full order or select specific SKUs below.</div>'
         + '</div>'
       + '</div>'
-      + '<button class="btn btn-primary" onclick="restockRaiseAll()"><i class="ti ti-clipboard-list"></i>Raise Full Order</button>'
+      + (loc!=='india-wh' ? '<button class="btn btn-primary" onclick="restockRaiseAll()"><i class="ti ti-clipboard-list"></i>Raise Full Order</button>' : '')
     + '</div>';
 
-    // Table
     html += '<div class="card">'
       + '<div class="card-hd">'
-        + '<div class="card-title"><i class="ti ti-chart-arrows-vertical"></i>Restock Prediction — '+rows.length+' SKUs</div>'
-        + '<button class="btn btn-sm" onclick="restockRaiseSelected()"><i class="ti ti-check"></i>Raise Order for Selected</button>'
+        + '<div class="card-title"><i class="ti ti-chart-arrows-vertical"></i>'+label+' Restock Prediction — '+rows.length+' SKUs</div>'
+        + (loc!=='india-wh' ? '<button class="btn btn-sm" onclick="restockRaiseSelected()"><i class="ti ti-check"></i>Raise Order for Selected</button>' : '')
       + '</div>'
       + '<div class="tw"><table>'
         + '<thead><tr>'
           + '<th style="width:28px"><input type="checkbox" id="restock-all-chk" onchange="restockToggleAll(this.checked)" style="width:auto;cursor:pointer"/></th>'
           + thSort('name',     'Product')
           + thSort('sku',      'SKU')
-          + thSort('ukStock',  'UK Stock')
-          + thSort('india',    'India Stock')
+          + thSort('ukStock',  stockColLabel)
+          + thSort('india',    altStockLabel)
           + thSort('velocity', 'Velocity')
           + thSort('days',     'Days Left')
           + thSort('suggested','Suggested Qty')
@@ -2386,21 +2407,18 @@ function pageReorderQueue(){
         + '<tbody>';
 
     rows.forEach((r,i)=>{
-      const daysStr = r.velocity===0
-        ? (r.ukStock>0?'∞':'0')
-        : (r.daysLeft>=999?'∞':Math.round(r.daysLeft)+'d');
-      const rowBg = r.priority==='urgent' ? 'background:rgba(239,68,68,.03)' : '';
+      const daysStr = r.velocity===0 ? (r.locStock>0?'∞':'0') : (r.daysLeft>=999?'∞':Math.round(r.daysLeft)+'d');
+      const rowBg   = r.priority==='urgent' ? 'background:rgba(239,68,68,.03)' : '';
+      const stockColor = r.locStock<=1?'var(--red)':r.locStock<5?'var(--amber)':'var(--text)';
       html += '<tr style="'+rowBg+'">'
         + '<td><input type="checkbox" class="restock-chk" data-idx="'+i+'" style="width:auto;cursor:pointer" checked/></td>'
         + '<td style="font-weight:600;font-size:12px">'+r.s.name+'</td>'
         + '<td class="mono" style="font-size:10px;color:var(--text2)">'+r.s.sku+'</td>'
-        + '<td class="mono" style="font-weight:700;color:'+(r.ukStock<=1?'var(--red)':r.ukStock<5?'var(--amber)':'var(--text)')+'">'+r.ukStock+'</td>'
-        + '<td class="mono" style="color:var(--text2)">'+r.indiaStock+'</td>'
+        + '<td class="mono" style="font-weight:700;color:'+stockColor+'">'+r.locStock+'</td>'
+        + '<td class="mono" style="color:var(--text2)">'+altStockFn(r)+'</td>'
         + '<td style="font-size:11px;color:var(--text2)">'+velStr(r.velocity)+'</td>'
         + '<td style="font-family:var(--mono);font-size:11px;font-weight:700;color:'+daysColor(r.daysLeft)+'">'+daysStr+'</td>'
-        + '<td><div style="display:flex;align-items:center;gap:6px">'
-          + '<input type="number" value="'+r.suggested+'" min="1" style="width:64px;padding:3px 7px;font-size:11px" id="restock-qty-'+i+'"/>'
-        + '</div></td>'
+        + '<td><input type="number" value="'+r.suggested+'" min="1" style="width:64px;padding:3px 7px;font-size:11px" id="restock-qty-'+i+'"/></td>'
         + '<td>'+priorityBadge(r.priority)+'</td>'
       + '</tr>';
     });
@@ -2408,12 +2426,11 @@ function pageReorderQueue(){
     html += '</tbody></table></div></div>';
   }
 
-  // Wrap in outer card header
   return '<div>'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
       + '<div>'
-        + '<h2 style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="ti ti-chart-arrows-vertical" style="color:var(--accent)"></i>Restock Prediction</h2>'
-        + '<p style="font-size:12px;color:var(--text2);margin-top:3px">Predicted restock requirements based on sales velocity and current UK stock levels.</p>'
+        + '<h2 style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="ti ti-chart-arrows-vertical" style="color:var(--accent)"></i>Restock Prediction — '+label+'</h2>'
+        + '<p style="font-size:12px;color:var(--text2);margin-top:3px">Based on sales velocity and current '+label+' stock levels.</p>'
       + '</div>'
     + '</div>'
     + html
