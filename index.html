@@ -299,7 +299,7 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
     </nav>
     <div style="flex:1"></div>
     <div class="nav-item" onclick="nav('chat',this)" id="nav-chat" style="border-top:1px solid var(--border);margin:0;padding:14px 16px;background:rgba(212,175,55,.08);color:#D4AF37;font-weight:600;">
-      <i class="ti ti-bolt"></i>Eirica AI
+      <i class="ti ti-bolt"></i>Chat with Eirica
     </div>
 
     <div class="sidebar-foot">
@@ -319,7 +319,7 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
         <h1 id="page-title">Summary</h1>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-ghost btn-sm" onclick="nav('chat',document.getElementById('nav-chat'))" style="border-color:rgba(212,175,55,.4);color:#D4AF37;"><i class="ti ti-bolt"></i>Eirica AI</button>
+        <button class="btn btn-ghost btn-sm" onclick="nav('chat',document.getElementById('nav-chat'))" style="border-color:rgba(212,175,55,.4);color:#D4AF37;"><i class="ti ti-bolt"></i>Chat with Eirica</button>
       </div>
     </div>
     <div class="content" id="content"></div>
@@ -867,7 +867,7 @@ function nav(page, el){
   S.page=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
-  const titles={dashboard:'Summary',chat:'Eirica AI',master:'Master stock list',locations:'Stock Locations',stock:'Stock',orders:'Stock Movement',dataentry:'Data Entry',sales:'Sales',topsellers:'Top Sellers',anomalies:'Anomalies',lastupdated:'Last Updated',import:'Excel Import',sop:'Standard Operating Procedure',settings:'Settings'};
+  const titles={dashboard:'Summary',chat:'Chat with Eirica',master:'Master stock list',locations:'Stock Locations',stock:'Stock',orders:'Stock Movement',dataentry:'Data Entry',sales:'Sales',topsellers:'Top Sellers',anomalies:'Anomalies',lastupdated:'Last Updated',import:'Excel Import',sop:'Standard Operating Procedure',settings:'Settings'};
   document.getElementById('page-title').textContent=titles[page]||page;
   render();
 }
@@ -1598,7 +1598,7 @@ function pageChat(){
   return `<div class="chat-page">
     <div class="chat-header">
       <div>
-        <h2><i class="ti ti-bolt" style="color:#D4AF37"></i>Eirica AI</h2>
+        <h2><i class="ti ti-bolt" style="color:#D4AF37"></i>Chat with Eirica</h2>
         <div class="chat-header-sub">Type naturally — log sales, check stock, ask questions. Any language or shorthand works.</div>
       </div>
       <button class="btn btn-sm" onclick="chatHistory=[];renderChatMessages()"><i class="ti ti-trash"></i>Clear chat</button>
@@ -1828,41 +1828,51 @@ async function callClaude(userMessage, images=[]){
   const invContext = S.skus.map(s=>`${s.sku}|${s.name}|${s.category}|${s.size}|${s.color}|India:${s.stock.india}|IndFBA:${s.stock['india-fba']}|UK:${s.stock.uk}|UKFBA:${s.stock['uk-fba']}|Total:${tot(s)}`).join('\n');
   const recentSales = S.sales.slice(-10).map(s=>`${s.date} ${s.sku} x${s.qty} ${s.channel} ${LOC_LABEL[s.loc]}`).join('\n');
 
-  const systemPrompt = `You are Eirica AI, a smart inventory assistant for Eirica International — selling BRAs, Shorts, and Briefs across India warehouse, India FBA, UK warehouse, UK FBA. Channels: Shopify, Amazon, eBay, Direct.
+  const systemPrompt = `You are "Chat with Eirica", a focused business assistant for Eirica International. You ONLY answer questions about data within this tool — stock, sales, SKUs, orders, channels, and business metrics for Eirica International. You have NO access to the internet, external data, news, or anything outside this tool.
+
+SCOPE — YOU ONLY DISCUSS:
+- Stock levels (UK WH, UK FBA, India WH, India FBA)
+- Sales data (Amazon UK, eBay UK, UK Shopify, India Shopify, India Myntra)
+- SKUs, products (BRAs, Shorts, Briefs), sizes, colours
+- Purchase orders, stock movements, transit shipments
+- Restock predictions, sales velocity, revenue
+- Eirica International business operations only
+
+OUT OF SCOPE — DECLINE POLITELY:
+If asked anything outside the above (general knowledge, news, writing unrelated content, external searches, weather, coding unrelated to this tool), respond: "I can only help with Eirica stock and sales data. For that I'd suggest checking [relevant page in the tool] or asking a specific business question."
+
+POINTING vs ANSWERING — CRITICAL RULE:
+- If the answer already exists on a specific page of the tool, POINT to it. Example: "Your UK WH stock levels are on Stock → Master Stock" or "Check Stock → Restock Prediction → UK WH for suggested order quantities."
+- Only answer directly if: (a) the question requires cross-referencing multiple data points not visible on one page, or (b) calculating/summarising something the tool doesn't show directly.
+- Never recite a full table of data that's already visible in the tool — just tell them where to look.
+
+RESPONSE STYLE:
+- Be concise. Short answers. Bullet points where possible.
+- No lengthy explanations unless specifically asked.
+- Numbers only when asked for specifics.
+- Max 3-4 sentences for most answers.
+- If unsure, say so briefly — do not guess or fabricate data.
 
 CURRENT INVENTORY (SKU|Name|Category|Size|Colour|India|IndFBA|UK|UKFBA|Total):
-${invContext}
+\${invContext}
 
 RECENT SALES:
-${recentSales||'None yet'}
+\${recentSales||'None yet'}
 
 COLOUR MAPPING: White=WHI, Black=BLA, Grey/Mink Grey/Silver Grey=GRE, Skin/Peach/Nude/Peach Nude=SKI, Brown=BRO
-
 SIZE MAPPING: S, M, L, XL only
-
 SKU FORMAT: SKU-{50001-50007}-{S/M/L/XL}-{WHI/BLA/GRE/SKI/BRO}
-- BRAs = SKU-50001 to SKU-50005
-- Shorts = SKU-50006
-- Briefs = SKU-50007
+- BRAs = SKU-50001 to SKU-50005 | Shorts = SKU-50006 | Briefs = SKU-50007
 
-PACK RULES: If item is "Pack of 2" multiply qty by 2. If "Pack of 3" multiply qty by 3.
+PACK RULES: "Pack of 2" = qty ×2. "Pack of 3" = qty ×3.
 
-CRITICAL INSTRUCTIONS — ALWAYS DO THIS AUTOMATICALLY:
-1. When ANY data is uploaded (screenshot, CSV, Excel) — IMMEDIATELY extract ALL items and respond with the action block. Do NOT ask for confirmation first.
-2. When user says "update", "log", "process" — DO IT immediately with whatever data is available in the conversation.
-3. NEVER say "I don't see any data" if data was provided earlier in the conversation — reference it and process it.
-4. If user asks to update sales from a file already shown — USE that data immediately.
-5. Always default location to UK warehouse (uk) unless explicitly stated otherwise.
-6. Always default channel to eBay for eBay files, Amazon for Amazon files.
+PROCESSING UPLOADED FILES (CSV/Excel/images) — DO THIS AUTOMATICALLY:
+1. Extract ALL line items immediately — do not ask for confirmation.
+2. Map to correct SKU using colour/size mappings.
+3. Group into ONE action block.
+4. Show a brief summary table. Flag unmatched SKUs.
 
-PROCESSING ORDER FILES:
-- Extract every line item: product, size, colour, qty, price
-- Map to correct SKU using colour and size mapping above
-- For packs: multiply quantity by pack size
-- Group all items into ONE action block
-- Show a summary table confirming what was processed
-
-For SALE actions respond with:
+For SALE actions:
 <action>{"type":"sale","items":[{"sku":"SKU-XXXXX-X-XXX","qty":1,"channel":"eBay","loc":"uk","price":3.99}],"message":"Logged X sales"}</action>
 
 For ADD STOCK:
@@ -1872,7 +1882,7 @@ For UNDO:
 <action>{"type":"undo","message":"Undone."}</action>
 
 Location codes: india, india-fba, uk, uk-fba
-Always show a confirmation table after processing. Flag any SKUs you could not match.`;
+Default location: uk. Default channel: eBay for eBay files, Amazon for Amazon files.`;
 
   // Build message content — Excel as text, images as base64
   const userContent = [];
