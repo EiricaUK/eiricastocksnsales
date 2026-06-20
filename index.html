@@ -759,6 +759,8 @@ function loadState(){
   setTimeout(updateSidebarStamps, 150);
   // Seed system audit notices if not already set
   seedSystemNotices();
+  // Refresh live negative-stock notice based on current data
+  refreshAnomalyNotices();
 }
 
 function seedSystemNotices(){
@@ -787,13 +789,8 @@ function seedSystemNotices(){
       sku:'', date:'8 Jun 2026'
     });
   }
-  if(!sysIds.includes('neg-stock-jun19')){
-    toAdd.push({
-      sysId:'neg-stock-jun19', type:'negative',
-      text:'11 SKUs went negative after the 19 Jun sales import (likely colour substitutions): SKU-50001-M-WHI (-16), SKU-50007-L-BLA (-6), SKU-50007-XL-WHI (-4), SKU-50005-XL-BLA (-3), SKU-50001-M-BLA (-3), SKU-50007-M-WHI (-3), SKU-50002-XL-BLA FBA (-3), and 4 others at -1/-2. Recommend a physical UK WH stock count to confirm and reset, as was done on 3 Jun. Check Anomalies page for full list.',
-      sku:'', date:'20 Jun 2026'
-    });
-  }
+  // Note: negative-stock notice is now generated live by refreshAnomalyNotices()
+  // rather than hand-written here, so it always reflects current data.
 
   if(toAdd.length){
     const updated = [...toAdd, ...existing];
@@ -970,6 +967,7 @@ function pageDash(){
         {key:'stock',   icon:'ti-package',      label:'Stock'},
         {key:'sales',   icon:'ti-shopping-cart', label:'Sales'},
         {key:'notices', icon:'ti-speakerphone',  label:'Notice Board'},
+        {key:'reports', icon:'ti-file-text',     label:'Generate Report'},
       ].map(t=>`
         <button onclick="setDashTab('${t.key}')" style="
           display:flex;align-items:center;gap:7px;
@@ -987,6 +985,7 @@ function pageDash(){
 
   if(dashTab==='sales')   return tabBar + pageDashSales();
   if(dashTab==='notices') return tabBar + pageDashNotices();
+  if(dashTab==='reports') return tabBar + pageDashReports();
   return tabBar + pageDashStock();
 }
 
@@ -1361,6 +1360,348 @@ function pageDashNotices(){
   </div>
   `;}
 
+let reportPeriod = 'daily';
+
+function setReportPeriod(p){
+  if(p!=='daily'){ toast(p.charAt(0).toUpperCase()+p.slice(1)+' reports — coming soon','var(--amber)'); return; }
+  reportPeriod = p;
+  document.getElementById('content').innerHTML = pageDash();
+}
+
+function pageDashReports(){
+  const periodTabs = `
+    <div style="display:flex;gap:6px;margin-bottom:18px">
+      ${[
+        {key:'daily',   label:'Daily',   enabled:true},
+        {key:'weekly',  label:'Weekly',  enabled:false},
+        {key:'monthly', label:'Monthly', enabled:false},
+      ].map(p=>`
+        <button onclick="setReportPeriod('${p.key}')" style="
+          padding:7px 18px;border-radius:20px;
+          border:1px solid ${reportPeriod===p.key?'var(--accent)':'var(--border2)'};
+          background:${reportPeriod===p.key?'rgba(79,142,247,.12)':'var(--surface2)'};
+          color:${reportPeriod===p.key?'var(--accent)':p.enabled?'var(--text2)':'var(--text3)'};
+          cursor:${p.enabled?'pointer':'not-allowed'};
+          font-size:12px;font-weight:${reportPeriod===p.key?'700':'500'};font-family:var(--font);
+          opacity:${p.enabled?'1':'.55'};
+        ">
+          ${p.label}${!p.enabled?' <span style="font-size:9px">(soon)</span>':''}
+        </button>`).join('')}
+    </div>`;
+
+  if(reportPeriod!=='daily'){
+    return `
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <h2 style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="ti ti-file-text" style="color:var(--accent)"></i>Generate Report</h2>
+          <p style="font-size:12px;color:var(--text2);margin-top:3px">Daily, Weekly, and Monthly summaries of stock and sales activity.</p>
+        </div>
+      </div>
+      ${periodTabs}
+      <div class="card"><div class="empty" style="padding:48px"><i class="ti ti-calendar"></i>${reportPeriod.charAt(0).toUpperCase()+reportPeriod.slice(1)} reports will be added in a future update.</div></div>
+    </div>`;
+  }
+
+  return `
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <h2 style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="ti ti-file-text" style="color:var(--accent)"></i>Generate Report</h2>
+        <p style="font-size:12px;color:var(--text2);margin-top:3px">Daily, Weekly, and Monthly summaries of stock and sales activity.</p>
+      </div>
+    </div>
+    ${periodTabs}
+    <div id="report-output">${renderDailyReport()}</div>
+  </div>`;
+}
+
+function renderDailyReport(){
+  // Determine "today" as the most recent date with any sales activity
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales];
+  const dates = allSales.map(s=>s.date).filter(Boolean).sort();
+  const reportDate = dates.length ? dates[dates.length-1] : new Date().toISOString().split('T')[0];
+
+  const dayRows = allSales.filter(s=>s.date===reportDate);
+  const units = dayRows.reduce((a,s)=>a+(s.qty||0),0);
+  const revenue = dayRows.reduce((a,s)=>a+(s.price||0),0);
+  const orders = new Set(dayRows.map(r=>r.ref)).size;
+
+  const chanT = {};
+  CHANNELS.forEach(c=>{ chanT[c] = dayRows.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+
+  // Top 5 selling items for the day
+  const bySku = {};
+  dayRows.forEach(s=>{
+    if(!bySku[s.sku]) bySku[s.sku] = {qty:0, rev:0};
+    bySku[s.sku].qty += s.qty||0;
+    bySku[s.sku].rev += s.price||0;
+  });
+  const top5 = Object.entries(bySku)
+    .sort((a,b)=>b[1].qty-a[1].qty)
+    .slice(0,5)
+    .map(([sku,v])=>{
+      const sk = S.skus.find(s=>s.sku===sku);
+      return {sku, name:sk?sk.name:sku, qty:v.qty, rev:v.rev};
+    });
+
+  // Stock snapshot (current — no historical delta available yet)
+  const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
+  const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
+  const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
+  const negCount = S.skus.filter(s=>(s.stock.uk||0)<0||(s.stock['uk-fba']||0)<0||(s.stock.india||0)<0).length;
+
+  // Notice board items dated today (if date format matches)
+  const notices = getNotices();
+  const dateFmt = (()=>{
+    const d = new Date(reportDate);
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+  })();
+  const todaysNotices = notices.filter(n=>n.date===dateFmt);
+
+  const reportId = 'daily-report-content';
+
+  return `
+    <div class="card" id="${reportId}">
+      <div class="card-hd">
+        <div class="card-title"><i class="ti ti-calendar-event"></i>Daily Report — ${dateFmt}</div>
+        <button class="btn btn-sm" onclick="printDailyReport('${reportDate}')"><i class="ti ti-file-type-pdf"></i>Download PDF</button>
+      </div>
+
+      <div style="padding:16px">
+        <!-- Top stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Units Sold</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">${units}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Revenue</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">£${revenue.toFixed(2)}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Orders</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">${orders}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;${negCount?'border:1px solid rgba(168,85,247,.3)':''}">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Negative SKUs</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px;color:${negCount?'#c084fc':'var(--text)'}">${negCount}</div>
+          </div>
+        </div>
+
+        <!-- Channel split -->
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Sales by Channel</div>
+          ${CHANNELS.map(c=>`
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+              <span style="font-size:11px;width:70px;color:var(--text2)">${c}</span>
+              <div style="flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:${units>0?(chanT[c]/units*100):0}%;background:var(--accent);border-radius:3px"></div>
+              </div>
+              <span class="mono" style="font-size:11px;width:30px;text-align:right">${chanT[c]||0}</span>
+            </div>`).join('')}
+        </div>
+
+        <!-- Top 5 selling items -->
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Top 5 Selling Items</div>
+          ${top5.length===0
+            ? '<div style="font-size:11px;color:var(--text3);padding:8px 0">No sales recorded for this day.</div>'
+            : `<div class="tw"><table>
+                <thead><tr><th>#</th><th>Product</th><th>SKU</th><th>Units</th><th>Revenue</th></tr></thead>
+                <tbody>
+                  ${top5.map((t,i)=>`
+                    <tr>
+                      <td class="mono" style="color:var(--text3)">${i+1}</td>
+                      <td style="font-size:12px;font-weight:600">${t.name}</td>
+                      <td class="mono" style="font-size:10px;color:var(--text2)">${t.sku}</td>
+                      <td class="mono" style="font-weight:700">${t.qty}</td>
+                      <td class="mono">£${t.rev.toFixed(2)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table></div>`}
+        </div>
+
+        <!-- Stock snapshot -->
+        <div style="margin-bottom:${todaysNotices.length?'18px':'0'}">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Current Stock Snapshot</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+              <div style="font-size:9px;color:var(--text3)">UK WH</div>
+              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${ukWH.toLocaleString()}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+              <div style="font-size:9px;color:var(--text3)">UK FBA</div>
+              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${ukFBA.toLocaleString()}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+              <div style="font-size:9px;color:var(--text3)">India WH</div>
+              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${indiaWH.toLocaleString()}</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">Snapshot reflects current stock at report generation time, not historical end-of-day values.</div>
+        </div>
+
+        ${todaysNotices.length?`
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Notices Raised Today</div>
+          ${todaysNotices.map(n=>`<div style="font-size:11px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border)">${n.text}</div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+}
+
+function printDailyReport(reportDate){
+  const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
+  const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales];
+  const dayRows = allSales.filter(s=>s.date===reportDate);
+  const units = dayRows.reduce((a,s)=>a+(s.qty||0),0);
+  const revenue = dayRows.reduce((a,s)=>a+(s.price||0),0);
+  const orders = new Set(dayRows.map(r=>r.ref)).size;
+
+  const chanT = {};
+  CHANNELS.forEach(c=>{ chanT[c] = dayRows.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+
+  const bySku = {};
+  dayRows.forEach(s=>{
+    if(!bySku[s.sku]) bySku[s.sku] = {qty:0, rev:0};
+    bySku[s.sku].qty += s.qty||0;
+    bySku[s.sku].rev += s.price||0;
+  });
+  const top5 = Object.entries(bySku).sort((a,b)=>b[1].qty-a[1].qty).slice(0,5)
+    .map(([sku,v])=>{ const sk=S.skus.find(s=>s.sku===sku); return {sku,name:sk?sk.name:sku,qty:v.qty,rev:v.rev}; });
+
+  const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
+  const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
+  const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
+  const negCount = S.skus.filter(s=>(s.stock.uk||0)<0||(s.stock['uk-fba']||0)<0||(s.stock.india||0)<0).length;
+
+  const notices = getNotices();
+  const dateFmt = (()=>{
+    const d = new Date(reportDate);
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+  })();
+  const todaysNotices = notices.filter(n=>n.date===dateFmt);
+
+  const top5Rows = top5.length===0
+    ? `<tr><td colspan="4" style="text-align:center;color:#888;padding:14px">No sales recorded for this day.</td></tr>`
+    : top5.map((t,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td>${t.name}</td>
+        <td>${t.sku}</td>
+        <td style="text-align:center">${t.qty}</td>
+        <td style="text-align:right">£${t.rev.toFixed(2)}</td>
+      </tr>`).join('');
+
+  const chanRows = CHANNELS.map(c=>`
+    <tr>
+      <td>${c}</td>
+      <td style="text-align:right">${chanT[c]||0}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Daily Report — ${dateFmt}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#111;padding:32px 40px;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #111;}
+    .brand{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+    .brand span{color:#888;font-weight:400;}
+    .report-meta{text-align:right;line-height:1.8;}
+    .report-title{font-size:18px;font-weight:700;}
+    .section{margin-bottom:22px;}
+    .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:8px;}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+    .stat-box{background:#f5f5f5;border-radius:6px;padding:10px 12px;}
+    .stat-box .label{font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.05em;}
+    .stat-box .value{font-size:18px;font-weight:700;margin-top:3px;}
+    table{width:100%;border-collapse:collapse;margin-top:4px;}
+    thead tr{background:#111;color:#fff;}
+    thead th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.04em;}
+    tbody tr:nth-child(even){background:#f9f9f9;}
+    tbody td{padding:6px 10px;border-bottom:1px solid #e5e5e5;font-size:11px;}
+    .stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    .stock-box{background:#f5f5f5;border-radius:6px;padding:10px 12px;}
+    .stock-box .label{font-size:9px;color:#777;text-transform:uppercase;}
+    .stock-box .value{font-size:16px;font-weight:700;margin-top:3px;}
+    .note-text{font-size:10px;color:#888;margin-top:6px;}
+    .notice-item{font-size:11px;color:#444;padding:5px 0;border-bottom:1px solid #eee;}
+    .footer{margin-top:32px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:10px;color:#888;}
+    @media print{body{padding:20px 24px;} .no-print{display:none;}}
+  </style>
+  </head><body>
+  <div class="header">
+    <div>
+      <div class="brand">Eirica <span>StockOS</span></div>
+      <div style="font-size:11px;color:#666;margin-top:4px">Eirica International</div>
+    </div>
+    <div class="report-meta">
+      <div class="report-title">Daily Report</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">${dateFmt}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Summary</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="label">Units Sold</div><div class="value">${units}</div></div>
+      <div class="stat-box"><div class="label">Revenue</div><div class="value">£${revenue.toFixed(2)}</div></div>
+      <div class="stat-box"><div class="label">Orders</div><div class="value">${orders}</div></div>
+      <div class="stat-box"><div class="label">Negative SKUs</div><div class="value">${negCount}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Sales by Channel</div>
+    <table>
+      <thead><tr><th>Channel</th><th style="text-align:right">Units</th></tr></thead>
+      <tbody>${chanRows}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Top 5 Selling Items</div>
+    <table>
+      <thead><tr><th>#</th><th>Product</th><th>SKU</th><th style="text-align:center">Units</th><th style="text-align:right">Revenue</th></tr></thead>
+      <tbody>${top5Rows}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Current Stock Snapshot</div>
+    <div class="stock-grid">
+      <div class="stock-box"><div class="label">UK WH</div><div class="value">${ukWH.toLocaleString()}</div></div>
+      <div class="stock-box"><div class="label">UK FBA</div><div class="value">${ukFBA.toLocaleString()}</div></div>
+      <div class="stock-box"><div class="label">India WH</div><div class="value">${indiaWH.toLocaleString()}</div></div>
+    </div>
+    <div class="note-text">Snapshot reflects current stock at report generation time, not historical end-of-day values.</div>
+  </div>
+
+  ${todaysNotices.length?`
+  <div class="section">
+    <div class="section-title">Notices Raised Today</div>
+    ${todaysNotices.map(n=>`<div class="notice-item">${n.text}</div>`).join('')}
+  </div>`:''}
+
+  <div class="footer">
+    <div>Generated by Eirica StockOS · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+    <div>© 2026 Eirica International</div>
+  </div>
+
+  <div class="no-print" style="margin-top:24px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 28px;background:#111;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit">🖨 Print / Save as PDF</button>
+  </div>
+  </body></html>`;
+
+  const win = window.open('','_blank','width=860,height=700');
+  win.document.write(html);
+  win.document.close();
+}
+
 
 function getAnomalies(){
   const anomalies = [];
@@ -1526,6 +1867,38 @@ function pageAnomalies(){
 
 function getNotices(){ try{ return JSON.parse(localStorage.getItem('eirica-notices')||'[]'); }catch(e){ return []; } }
 function saveNotices(n){ try{ localStorage.setItem('eirica-notices',JSON.stringify(n)); }catch(e){} }
+
+// ── Auto-refresh the negative-stock notice based on LIVE data (called after every import) ──
+function refreshAnomalyNotices(){
+  const negSkus = [];
+  S.skus.forEach(s=>{
+    ['uk','uk-fba','india','india-fba'].forEach(loc=>{
+      const v = s.stock[loc]||0;
+      if(v<0) negSkus.push({sku:s.sku, loc, val:v});
+    });
+  });
+
+  const notices = getNotices();
+  const filtered = notices.filter(n=>n.sysId!=='neg-stock-live');
+
+  if(negSkus.length){
+    const sorted = [...negSkus].sort((a,b)=>a.val-b.val);
+    const top = sorted.slice(0,7).map(n=>`${n.sku} ${LOC_LABEL[n.loc]||n.loc} (${n.val})`).join(', ');
+    const more = negSkus.length>7 ? `, and ${negSkus.length-7} others` : '';
+    const today = new Date();
+    const dateStr = today.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][today.getMonth()]+' '+today.getFullYear();
+    filtered.unshift({
+      sysId:'neg-stock-live', type:'negative',
+      text:`${negSkus.length} SKU/location combinations are currently negative (likely colour substitutions): ${top}${more}. Recommend a physical stock count to confirm and reset. Check Anomalies page for full list.`,
+      sku:'', date:dateStr
+    });
+  }
+
+  saveNotices(filtered);
+  const nb = document.getElementById('notice-board');
+  if(nb) nb.innerHTML = renderNotices();
+}
+
 
 const NOTICE_TYPES = {
   warning: {label:'⚠️ Warning', color:'var(--amber)', bg:'rgba(245,158,11,.08)', border:'rgba(245,158,11,.25)'},
@@ -3814,6 +4187,161 @@ let deMainTab  = 'sales';
 let deSalesSub = 'uk-amazon';
 let deStockSub = 'order';
 
+// ══ DATA ENTRY — DEVELOPMENT DETAILS (incremental spec) ════════════════════
+function loadDevNotes(){
+  try{
+    const stored = localStorage.getItem('eirica-dev-notes');
+    if(!stored){
+      const seed = DEV_NOTES_SEED.map(n=>({...n}));
+      localStorage.setItem('eirica-dev-notes', JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(stored);
+  }catch(e){ return []; }
+}
+
+const DEV_NOTES_SEED = [
+  {id:'dn-seed-1', type:'learning', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'In-app translator was missing WSB (White+Skin+Black) and BWB (Brown+White+Black) 3-colour pack codes, plus the SilverG abbreviation — these were only ever fixed manually via Claude chat, never ported into the live translator. Fixed and added to live translateSKU().'},
+  {id:'dn-seed-2', type:'gap', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'Unmatched rows in Data Entry preview were silently skipped on Apply with only a small red badge — easy to miss. Added manual SKU mapping queue inline in the preview so unmatched rows can be corrected once and remembered permanently.'},
+  {id:'dn-seed-3', type:'gap', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'Notice Board did not refresh after Data Entry imports — stayed frozen on whatever was last hand-written. Built refreshAnomalyNotices() to regenerate the negative-stock notice from live data on every import and on page load.'},
+  {id:'dn-seed-4', type:'planned', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'Build an Import Reconciliation summary shown after every Apply — units in, revenue, duplicates skipped, unmatched skipped, new negatives caused.'},
+  {id:'dn-seed-5', type:'planned', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'Build an Import History log so every file imported (name, date, applied/skipped counts) is recorded and viewable later.'},
+  {id:'dn-seed-6', type:'planned', status:'done', date:'2026-06-20T00:00:00Z',
+   text:'Add a high-impact warning before Apply when a SKU would go negative or lose 50%+ of its stock from a single import.'},
+  {id:'dn-seed-7', type:'learning', status:'open', date:'2026-06-20T00:00:00Z',
+   text:'Comparison test (manual Claude edit vs in-app Data Entry on the same files) showed a 64-unit stock discrepancy purely from unmatched SKU patterns. Confirms: deterministic translator is accurate for known patterns, but new/unseen formats need a human (or this dev log) to catch before they silently disappear.'},
+  {id:'dn-seed-8', type:'planned', status:'open', date:'2026-06-20T00:00:00Z',
+   text:'Consider: Shopify and Myntra column-mapping has not yet been tested against a real export file — only Amazon and eBay have been verified. Test when first real Shopify/Myntra file is available.'},
+];
+
+function saveDevNotes(n){
+  try{ localStorage.setItem('eirica-dev-notes', JSON.stringify(n)); }catch(e){}
+}
+let devNoteFilter = 'all';
+
+function devAddNote(){
+  const text = (document.getElementById('dev-note-input')?.value||'').trim();
+  const type = document.getElementById('dev-note-type')?.value || 'planned';
+  if(!text){ toast('Enter a note first','var(--amber)'); return; }
+  const notes = loadDevNotes();
+  notes.unshift({
+    id: 'dn-'+Date.now(),
+    type, text,
+    status: 'open',
+    date: new Date().toISOString()
+  });
+  saveDevNotes(notes);
+  document.getElementById('dev-note-input').value = '';
+  render();
+  toast('✓ Note added to Development Details');
+}
+
+function devToggleStatus(id){
+  const notes = loadDevNotes();
+  const n = notes.find(x=>x.id===id);
+  if(n) n.status = n.status==='open' ? 'done' : 'open';
+  saveDevNotes(notes);
+  render();
+}
+
+function devDeleteNote(id){
+  if(!confirm('Delete this note?')) return;
+  saveDevNotes(loadDevNotes().filter(n=>n.id!==id));
+  render();
+}
+
+function devSetFilter(f){ devNoteFilter = f; render(); }
+
+function pageDevDetails(devBadge, mainTabs){
+  const notes = loadDevNotes();
+  const filtered = devNoteFilter==='all' ? notes : notes.filter(n=>n.type===devNoteFilter || (devNoteFilter==='open'&&n.status==='open') || (devNoteFilter==='done'&&n.status==='done'));
+
+  const typeMeta = {
+    gap:     {label:'Gap / Bug',       icon:'ti-bug',          color:'var(--red)'},
+    learning:{label:'Learning',        icon:'ti-bulb',         color:'#c084fc'},
+    planned: {label:'Planned Feature', icon:'ti-list-check',   color:'var(--accent)'},
+    done:    {label:'Built',           icon:'ti-circle-check', color:'var(--green)'},
+  };
+
+  const openCount = notes.filter(n=>n.status==='open').length;
+  const doneCount = notes.filter(n=>n.status==='done').length;
+
+  return `
+  <div style="max-width:900px">
+    ${devBadge}
+    ${mainTabs}
+
+    <div style="margin-bottom:16px">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:4px">Development Details</h3>
+      <p style="font-size:12px;color:var(--text2);line-height:1.6">
+        Living spec for Data Entry — gaps found, lessons learned, and features planned. Add notes here as they come up during testing or real imports, instead of building changes live. This becomes the build queue for the next development round.
+      </p>
+    </div>
+
+    <!-- Add note -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-hd"><div class="card-title"><i class="ti ti-plus"></i>Add Note</div></div>
+      <div style="padding:14px 16px;display:flex;gap:8px;align-items:flex-start">
+        <select id="dev-note-type" style="padding:7px 10px;font-size:12px;width:160px">
+          <option value="gap">Gap / Bug</option>
+          <option value="learning">Learning</option>
+          <option value="planned" selected>Planned Feature</option>
+        </select>
+        <textarea id="dev-note-input" rows="2" placeholder="Describe the gap, learning, or feature to build…" style="flex:1;padding:8px 10px;font-size:12px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font);resize:vertical"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="devAddNote()" style="margin-top:1px"><i class="ti ti-check"></i>Add</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${[
+        {key:'all',      label:'All',              count:notes.length},
+        {key:'gap',      label:'🐛 Gaps/Bugs',      count:notes.filter(n=>n.type==='gap').length},
+        {key:'learning', label:'💡 Learnings',      count:notes.filter(n=>n.type==='learning').length},
+        {key:'planned',  label:'📋 Planned',        count:notes.filter(n=>n.type==='planned').length},
+        {key:'open',     label:'Open',             count:openCount},
+        {key:'done',     label:'Done',             count:doneCount},
+      ].map(f=>`
+        <button onclick="devSetFilter('${f.key}')" style="padding:5px 12px;border-radius:20px;border:1px solid ${devNoteFilter===f.key?'var(--accent)':'var(--border2)'};background:${devNoteFilter===f.key?'rgba(79,142,247,.12)':'var(--surface2)'};color:${devNoteFilter===f.key?'var(--accent)':'var(--text2)'};cursor:pointer;font-size:11px;font-weight:${devNoteFilter===f.key?'700':'500'};font-family:var(--font)">
+          ${f.label} <span style="opacity:.6">${f.count}</span>
+        </button>`).join('')}
+    </div>
+
+    <!-- Notes list -->
+    ${filtered.length===0
+      ? '<div class="card"><div class="empty" style="padding:40px"><i class="ti ti-clipboard-text"></i>No notes yet. Add gaps, learnings, or planned features above as they come up.</div></div>'
+      : `<div style="display:flex;flex-direction:column;gap:8px">
+          ${filtered.map(n=>{
+            const meta = typeMeta[n.type]||typeMeta.planned;
+            const isDone = n.status==='done';
+            return `
+            <div class="card" style="${isDone?'opacity:.6':''}">
+              <div style="padding:12px 16px;display:flex;align-items:flex-start;gap:10px">
+                <i class="ti ${meta.icon}" style="color:${meta.color};font-size:16px;margin-top:1px;flex-shrink:0"></i>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                    <span style="font-size:10px;font-weight:700;color:${meta.color};text-transform:uppercase;letter-spacing:.05em">${meta.label}</span>
+                    <span style="font-size:10px;color:var(--text3)">${new Date(n.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</span>
+                    ${isDone?'<span class="badge b-ok" style="font-size:9px">Done</span>':''}
+                  </div>
+                  <div style="font-size:12px;color:var(--text);line-height:1.6;${isDone?'text-decoration:line-through':''}">${n.text}</div>
+                </div>
+                <div style="display:flex;gap:4px;flex-shrink:0">
+                  <button class="btn btn-sm" onclick="devToggleStatus('${n.id}')" title="${isDone?'Mark open':'Mark done'}"><i class="ti ${isDone?'ti-rotate':'ti-check'}"></i></button>
+                  <button class="btn btn-danger btn-sm" onclick="devDeleteNote('${n.id}')"><i class="ti ti-trash"></i></button>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`}
+  </div>`;
+}
+
 function pageDataEntry(){
   const salesSubs = [
     {key:'uk-amazon',     label:'UK Amazon',    icon:'ti-brand-amazon',   chan:'Amazon',  loc:'uk'},
@@ -3828,6 +4356,13 @@ function pageDataEntry(){
     {key:'received', label:'Stock Received', icon:'ti-circle-check',   desc:'Received in UK'},
   ];
 
+  const devBadge = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 14px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);border-radius:var(--r2);width:fit-content">
+      <i class="ti ti-tools" style="color:var(--amber);font-size:14px"></i>
+      <span style="font-size:11px;font-weight:600;color:var(--amber)">Under Development</span>
+      <span style="font-size:11px;color:var(--text2)">— this page is actively evolving. See Development Details tab for the current build log.</span>
+    </div>`;
+
   const mainTabs = `
     <div style="display:flex;gap:4px;margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:4px;width:fit-content">
       <button onclick="deSetMainTab('sales')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='sales'?'var(--accent)':'transparent'};color:${deMainTab==='sales'?'#fff':'var(--text2)'}">
@@ -3835,6 +4370,12 @@ function pageDataEntry(){
       </button>
       <button onclick="deSetMainTab('stock')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='stock'?'var(--accent)':'transparent'};color:${deMainTab==='stock'?'#fff':'var(--text2)'}">
         <i class="ti ti-arrows-exchange" style="margin-right:5px"></i>Stock Movement
+      </button>
+      <button onclick="deSetMainTab('history')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='history'?'var(--accent)':'transparent'};color:${deMainTab==='history'?'#fff':'var(--text2)'}">
+        <i class="ti ti-history" style="margin-right:5px"></i>Import History
+      </button>
+      <button onclick="deSetMainTab('dev')" style="padding:7px 20px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .15s;background:${deMainTab==='dev'?'var(--accent)':'transparent'};color:${deMainTab==='dev'?'#fff':'var(--text2)'}">
+        <i class="ti ti-clipboard-text" style="margin-right:5px"></i>Development Details
       </button>
     </div>`;
 
@@ -3863,8 +4404,45 @@ function pageDataEntry(){
   const dropType = isSales ? 'sales' : 'stock';
   const dropIcon = isSales ? 'ti-file-spreadsheet' : 'ti-arrows-exchange';
 
+  if(deMainTab === 'history'){
+    const hist = loadImportHistory();
+    return `
+    <div style="max-width:900px">
+      ${devBadge}
+      ${mainTabs}
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title"><i class="ti ti-history"></i>Import History — ${hist.length} import${hist.length!==1?'s':''}</div>
+        </div>
+        ${hist.length===0
+          ? '<div class="empty" style="padding:40px"><i class="ti ti-history"></i>No imports recorded yet.</div>'
+          : `<div class="tw"><table>
+              <thead><tr><th>File</th><th>Date</th><th>Applied</th><th>Duplicates</th><th>Skipped</th><th>Units</th><th>Revenue</th><th>New Negatives</th></tr></thead>
+              <tbody>
+                ${hist.map(h=>`
+                  <tr>
+                    <td style="font-size:11px;font-weight:600">${h.fname}</td>
+                    <td style="font-size:11px;color:var(--text2)">${new Date(h.date).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+                    <td class="mono" style="color:var(--green)">${h.applied}</td>
+                    <td class="mono" style="color:var(--text2)">${h.duplicates}</td>
+                    <td class="mono" style="color:${h.skipped?'var(--red)':'var(--text2)'}">${h.skipped}</td>
+                    <td class="mono">${h.units}</td>
+                    <td class="mono">£${h.revenue.toFixed(2)}</td>
+                    <td class="mono" style="color:${h.newNegatives?'#c084fc':'var(--text3)'}">${h.newNegatives||0}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table></div>`}
+      </div>
+    </div>`;
+  }
+
+  if(deMainTab === 'dev'){
+    return pageDevDetails(devBadge, mainTabs);
+  }
+
   return `
   <div style="max-width:900px">
+    ${devBadge}
     ${mainTabs}
     ${isSales ? salesSubTabs : stockSubTabs}
     <div class="drop-zone" id="de-drop-${dropType}"
@@ -3937,7 +4515,7 @@ function translateSKU(raw){
 
   const colMap = {
     'white':'WHI','black':'BLA','grey':'GRE','gray':'GRE',
-    'silver grey':'GRE','mink grey':'GRE','minkgrey':'GRE','green':'GRE',
+    'silver grey':'GRE','silverg':'GRE','mink grey':'GRE','minkgrey':'GRE','green':'GRE',
     'skin':'SKI','peach nude':'SKI','peach nudge':'SKI','nude':'SKI','peachn':'SKI','peach':'SKI',
     'brown':'BRO'
   };
@@ -3951,6 +4529,12 @@ function translateSKU(raw){
     'women panties':'50007','panties':'50007','briefs':'50007','brief':'50007',
     'sports bra':'50001','bra':'50001'
   };
+  // 3-letter multi-colour pack codes -> colour list (extend as new packs are discovered)
+  const PACK3 = {
+    'wgb': ['WHI','GRE','BLA'],
+    'wsb': ['WHI','SKI','BLA'],
+    'bwb': ['BRO','WHI','BLA'],
+  };
 
   // Pack multiplier
   let pkMult = 1;
@@ -3961,6 +4545,13 @@ function translateSKU(raw){
   function resolveSz(s){ return sizeMap[s.toLowerCase().trim()]||s.toUpperCase(); }
   function resolveProd(s){ return productMap[s.toLowerCase().trim()]||null; }
 
+  // Format: "5001-BWB-P3-XL" / "5005-WSB-P3-M" — dash-format 3-colour packs
+  const dpk = r.match(/^(?:fba-?)?(5\d{3})-([a-z]{3})-p(\d+)-([smlx]{1,2})$/i);
+  if(dpk){
+    const prod = resolveProd(dpk[1]); const packcode = dpk[2].toLowerCase(); const sz = resolveSz(dpk[4]);
+    if(prod && PACK3[packcode]) return PACK3[packcode].map(c=>({sku:'SKU-'+prod+'-'+sz+'-'+c, pkMult:1}));
+  }
+
   // Format: "5001-White-P2-M" or "5007-Black-L"
   const d1 = r.match(/^(?:fba-?)?(5\d{3})-([a-z]+(?:[- ][a-z]+)??)(?:-p\d+)?-([smlx]{1,2})$/i);
   if(d1){
@@ -3970,7 +4561,7 @@ function translateSKU(raw){
     if(prod && col) return [{sku:'SKU-'+prod+'-'+sz+'-'+col, pkMult}];
   }
 
-  // Format: "5001 (White,M)." or "FBA-5002 (Black,XL)."
+  // Format: "5001 (White,M)." or "FBA-5002 (Black,XL)." or "5001 (WGB,S) pk-3"
   const d2 = r.match(/^(?:fba-?)?(5\d{3}|[a-z][a-z\s]+?)\s*\(([^,)]+),\s*([^)]+)\)/i);
   if(d2){
     const prodKey = d2[1].trim().replace(/^fba-?/,'');
@@ -3979,9 +4570,9 @@ function translateSKU(raw){
     const colRaw = d2[2].trim().toLowerCase();
     const szRaw  = d2[3].trim().toLowerCase().split(/[\s,]/)[0];
     const sz = resolveSz(szRaw);
-    // WGB = White+Grey+Black pack
-    if(colRaw==='wgb'){
-      return ['WHI','GRE','BLA'].map(c=>({sku:'SKU-'+prod+'-'+sz+'-'+c, pkMult:1}));
+    // 3-colour packs (WGB, WSB, BWB, ...)
+    if(PACK3[colRaw]){
+      return PACK3[colRaw].map(c=>({sku:'SKU-'+prod+'-'+sz+'-'+c, pkMult:1}));
     }
     const col = resolveCol(colRaw);
     if(!col) return null;
@@ -4008,7 +4599,34 @@ function translateSKU(raw){
     if(prod && col) return [{sku:'SKU-'+prod+'-'+sz+'-'+col, pkMult}];
   }
 
+  // Format: "5003-SilverG-XL" (3-letter colour abbreviation in dash format)
+  const d5 = r.match(/^(5\d{3})-([a-z]+)-([smlx]{1,2})$/i);
+  if(d5){
+    const prod = resolveProd(d5[1]);
+    const col  = resolveCol(d5[2]);
+    const sz   = resolveSz(d5[3]);
+    if(prod && col) return [{sku:'SKU-'+prod+'-'+sz+'-'+col, pkMult}];
+  }
+
   return null;
+}
+
+// ── Manual SKU mapping queue (for rows the translator still can't match) ──────
+function loadManualMappings(){
+  try{ return JSON.parse(localStorage.getItem('eirica-manual-skumap')||'{}'); }catch(e){ return {}; }
+}
+function saveManualMappings(m){
+  try{ localStorage.setItem('eirica-manual-skumap', JSON.stringify(m)); }catch(e){}
+}
+function applyManualMapping(rawLabel, mappedSku){
+  const map = loadManualMappings();
+  map[rawLabel.trim().toLowerCase()] = mappedSku.trim().toUpperCase();
+  saveManualMappings(map);
+}
+function checkManualMapping(raw){
+  const map = loadManualMappings();
+  const key = String(raw||'').trim().toLowerCase();
+  return map[key] || null;
 }
 
 function dePreviewSales(rawRows, fname){
@@ -4101,6 +4719,15 @@ function dePreviewSales(rawRows, fname){
     const translated = translateSKU(skuRaw);
 
     if(!translated){
+      // Check manual mapping queue first (previously corrected by user)
+      const manualSku = checkManualMapping(skuRaw);
+      if(manualSku){
+        const matched = S.skus.find(s=>s.sku.toUpperCase()===manualSku.toUpperCase());
+        const key = ref+'|'+manualSku;
+        deSalesRows.push({skuRaw, matched:matched||null, ref, channel:defaultChan, loc, qty, price, date:dateRaw,
+          isDup:existingKeys.has(key), key, note:'manual map'});
+        return;
+      }
       const direct = S.skus.find(s=>s.sku.toUpperCase()===skuRaw.toUpperCase());
       deSalesRows.push({skuRaw, matched:direct||null, ref, channel:defaultChan, loc, qty, price, date:dateRaw,
         isDup:existingKeys.has(ref+'|'+(direct?.sku||skuRaw)), key:ref+'|'+skuRaw, note:''});
@@ -4122,10 +4749,43 @@ function dePreviewSales(rawRows, fname){
   const dupRows = deSalesRows.filter(r=>r.isDup);
   const noMatch = deSalesRows.filter(r=>!r.matched&&!r.isDup);
 
-  const previewHTML = `
+  deLastFname = fname;
+
+  const previewHTML = deRenderPreview(fname, newRows, dupRows, noMatch);
+  document.getElementById('de-preview-sales').innerHTML = previewHTML;
+}
+
+let deLastFname = '';
+
+// ── Reconciliation guard: flag SKUs this import would heavily deplete or push negative ──
+function deCheckHighImpact(newRows){
+  const qtyBySku = {};
+  newRows.forEach(r=>{
+    const key = r.matched.sku+'|'+r.loc;
+    qtyBySku[key] = (qtyBySku[key]||0) + r.qty;
+  });
+  const warnings = [];
+  Object.entries(qtyBySku).forEach(([key, qty])=>{
+    const [sku, loc] = key.split('|');
+    const sk = S.skus.find(s=>s.sku===sku);
+    if(!sk) return;
+    const current = sk.stock[loc]||0;
+    const after = current - qty;
+    if(current>0 && after<0){
+      warnings.push({sku, loc, current, qty, after, type:'negative'});
+    } else if(current>0 && qty/current >= 0.5){
+      warnings.push({sku, loc, current, qty, after, type:'highpct'});
+    }
+  });
+  return warnings;
+}
+
+function deRenderPreview(fname, newRows, dupRows, noMatch){
+  const highImpact = deCheckHighImpact(newRows);
+  return `
     <div class="card">
       <div class="card-hd">
-        <div class="card-title"><i class="ti ti-table"></i>Preview \u2014 ${fname}</div>
+        <div class="card-title"><i class="ti ti-table"></i>Preview — ${fname}</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span class="badge b-ok">${newRows.length} new</span>
           ${dupRows.length?`<span class="badge b-draft">${dupRows.length} duplicate</span>`:''}
@@ -4138,13 +4798,38 @@ function dePreviewSales(rawRows, fname){
           </button>
         </div>
       </div>
+      ${highImpact.length?`<div style="padding:10px 16px;background:rgba(249,115,22,.08);border-bottom:1px solid rgba(249,115,22,.2)">
+        <div style="font-size:11px;font-weight:700;color:var(--amber);display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <i class="ti ti-alert-triangle"></i>${highImpact.length} SKU(s) heavily impacted by this import:
+        </div>
+        ${highImpact.slice(0,5).map(w=>`
+          <div style="font-size:10px;color:var(--text2);padding:1px 0">
+            ${w.sku} (${LOC_LABEL[w.loc]||w.loc}): ${w.current} → ${w.after} ${w.type==='negative'?'<span style="color:var(--red)">(goes negative)</span>':'<span style="color:var(--amber)">(50%+ of stock)</span>'}
+          </div>`).join('')}
+        ${highImpact.length>5?`<div style="font-size:10px;color:var(--text3);margin-top:2px">+ ${highImpact.length-5} more</div>`:''}
+      </div>`:''}
+      ${noMatch.length?`<div style="padding:12px 16px;background:rgba(239,68,68,.08);border-bottom:1px solid rgba(239,68,68,.2)">
+        <div style="font-size:12px;font-weight:700;color:#f87171;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <i class="ti ti-alert-triangle"></i>${noMatch.length} row(s) could not be matched — map them manually below or they will be SKIPPED on apply.
+        </div>
+        ${noMatch.map((r,i)=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px">
+            <span style="color:var(--text2);min-width:200px">${r.skuRaw}</span>
+            <i class="ti ti-arrow-right" style="color:var(--text3);font-size:12px"></i>
+            <select id="de-manual-${i}" style="padding:3px 8px;font-size:11px;width:220px">
+              <option value="">— select correct SKU —</option>
+              ${S.skus.map(s=>`<option value="${s.sku}">${s.sku} (${s.name})</option>`).join('')}
+            </select>
+            <button class="btn btn-sm" onclick="deApplyManualMap(${i}, '${r.skuRaw.replace(/'/g,"\\'")}')"><i class="ti ti-check"></i>Map</button>
+          </div>`).join('')}
+      </div>`:''}
       <div class="tw"><table>
         <thead><tr>
           <th>Order Ref</th><th>Raw Label</th><th>Mapped SKU</th><th>Ch</th><th>Loc</th>
           <th>Qty</th><th>Price</th><th>Date</th><th>Status</th>
         </tr></thead>
         <tbody>
-          ${deSalesRows.map(r=>{
+          ${[...newRows,...dupRows,...noMatch].map(r=>{
             let cls='',status='';
             if(!r.matched&&!r.isDup){cls='import-row-warn';status='<span class="badge b-critical">No match</span>';}
             else if(r.isDup){cls='';status='<span class="badge b-draft">Duplicate</span>';}
@@ -4154,36 +4839,69 @@ function dePreviewSales(rawRows, fname){
               <td style="font-size:10px;color:var(--text3)">${r.skuRaw}</td>
               <td style="font-size:11px">${r.matched
                 ?`<span style="color:var(--green);font-family:var(--mono)">${r.matched.sku}</span>${r.note?` <span style="color:var(--text3);font-size:10px">${r.note}</span>`:''}`
-                :`<span style="color:var(--red)">\u2717 unmatched</span>`}</td>
+                :`<span style="color:var(--red)">✗ unmatched</span>`}</td>
               <td style="font-size:11px">${r.channel}</td>
               <td style="font-size:11px">${LOC_LABEL[r.loc]||r.loc}</td>
               <td class="mono">${r.qty}</td>
-              <td class="mono">\xa3${r.price.toFixed(2)}</td>
+              <td class="mono">£${r.price.toFixed(2)}</td>
               <td class="mono" style="font-size:10px">${r.date}</td>
               <td>${status}</td>
             </tr>`;
           }).join('')}
         </tbody>
       </table></div>
-      ${noMatch.length?`<div style="padding:10px 16px;font-size:11px;color:var(--amber);border-top:1px solid var(--border)">\u26a0 ${noMatch.length} row(s) could not be matched to a SKU and will be skipped.</div>`:''}
     </div>`;
+}
 
-  document.getElementById('de-preview-sales').innerHTML = previewHTML;
+function deApplyManualMap(idx, rawLabel){
+  const sel = document.getElementById('de-manual-'+idx);
+  const chosenSku = sel?.value;
+  if(!chosenSku){ toast('Select a SKU first','var(--amber)'); return; }
+  applyManualMapping(rawLabel, chosenSku);
+  const matched = S.skus.find(s=>s.sku.toUpperCase()===chosenSku.toUpperCase());
+  deSalesRows.forEach(r=>{
+    if(r.skuRaw===rawLabel && !r.matched){
+      r.matched = matched||null;
+      r.note = 'manual map';
+      r.key = r.ref+'|'+chosenSku;
+    }
+  });
+  const newRows = deSalesRows.filter(r=>r.matched&&!r.isDup);
+  const dupRows = deSalesRows.filter(r=>r.isDup);
+  const noMatch = deSalesRows.filter(r=>!r.matched&&!r.isDup);
+  document.getElementById('de-preview-sales').innerHTML = deRenderPreview(deLastFname, newRows, dupRows, noMatch);
+  toast('✓ Mapped '+rawLabel+' → '+chosenSku+' (remembered for future imports)');
 }
 
 
+// ── Import history log ─────────────────────────────────────────────────────────
+function loadImportHistory(){
+  try{ return JSON.parse(localStorage.getItem('eirica-import-history')||'[]'); }catch(e){ return []; }
+}
+function saveImportHistory(h){
+  try{ localStorage.setItem('eirica-import-history', JSON.stringify(h.slice(0,100))); }catch(e){}
+}
+function logImport(record){
+  const hist = loadImportHistory();
+  hist.unshift(record);
+  saveImportHistory(hist);
+}
+
 function deApplySales(){
-  const newRows = deSalesRows.filter(r=>r.matched && !r.isDup);
+  const newRows  = deSalesRows.filter(r=>r.matched && !r.isDup);
+  const dupRows  = deSalesRows.filter(r=>r.isDup);
+  const skipRows = deSalesRows.filter(r=>!r.matched && !r.isDup);
   if(!newRows.length){ toast('Nothing new to apply','var(--amber)'); return; }
 
   let totalUnits=0, totalRev=0;
+  const stockBefore = {};
+  newRows.forEach(r=>{ if(!(r.matched.sku in stockBefore)) stockBefore[r.matched.sku]=JSON.stringify(r.matched.stock); });
+
   newRows.forEach(r=>{
     const entry = { sku:r.matched.sku, channel:r.channel, loc:r.loc, qty:r.qty, price:r.price, ref:r.ref, date:r.date };
-    // Add to S.sales (will be deduped vs STATIC_SALES on next render via ref|sku key)
     if(!S.sales.find(x=>x.ref===entry.ref && x.sku===entry.sku)){
       S.sales.push(entry);
     }
-    // Deduct stock from the relevant location
     const sk = r.matched;
     if(sk.stock[r.loc] !== undefined){
       sk.stock[r.loc] = (sk.stock[r.loc]||0) - r.qty;
@@ -4192,14 +4910,68 @@ function deApplySales(){
     totalRev   += r.price;
   });
 
+  // Count newly-negative SKUs caused by this import
+  let newNegatives = 0;
+  Object.keys(stockBefore).forEach(sku=>{
+    const before = JSON.parse(stockBefore[sku]);
+    const sk = S.skus.find(s=>s.sku===sku);
+    if(!sk) return;
+    ['uk','uk-fba','india','india-fba'].forEach(loc=>{
+      const b = before[loc]||0, a = sk.stock[loc]||0;
+      if(b>=0 && a<0) newNegatives++;
+    });
+  });
+
   saveState();
 
+  // Log this import to history
+  logImport({
+    fname: deLastFname,
+    date: new Date().toISOString(),
+    applied: newRows.length,
+    duplicates: dupRows.length,
+    skipped: skipRows.length,
+    units: totalUnits,
+    revenue: +totalRev.toFixed(2),
+    newNegatives
+  });
+
+  // Refresh Notice Board / Anomalies for any new issues this import caused
+  refreshAnomalyNotices();
+
   document.getElementById('de-preview-sales').innerHTML = `
-    <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:16px 20px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:12px">
-      <i class="ti ti-circle-check" style="font-size:22px"></i>
-      <div>
-        <strong>${newRows.length} sale record${newRows.length!==1?'s':''} added (${totalUnits} units · £${totalRev.toFixed(2)})</strong>
-        <div style="font-size:12px;margin-top:3px;color:var(--text2)">Stock deducted from respective locations. View the Sales Log or Dashboard to verify.</div>
+    <div class="card" style="border-color:rgba(34,197,94,.3)">
+      <div style="padding:16px 20px;background:rgba(34,197,94,.06);display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">
+        <i class="ti ti-circle-check" style="font-size:24px;color:var(--green)"></i>
+        <div>
+          <strong style="font-size:14px;color:var(--green)">${newRows.length} sale record${newRows.length!==1?'s':''} applied</strong>
+          <div style="font-size:12px;margin-top:2px;color:var(--text2)">Stock deducted from respective locations.</div>
+        </div>
+      </div>
+      <div style="padding:14px 20px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Reconciliation</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Units In</div>
+            <div style="font-size:18px;font-weight:700;font-family:var(--mono)">${totalUnits}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Revenue</div>
+            <div style="font-size:18px;font-weight:700;font-family:var(--mono)">£${totalRev.toFixed(2)}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Duplicates Skipped</div>
+            <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--text2)">${dupRows.length}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;${skipRows.length?'border:1px solid rgba(239,68,68,.3)':''}">
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase">Unmatched Skipped</div>
+            <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:${skipRows.length?'var(--red)':'var(--text2)'}">${skipRows.length}</div>
+          </div>
+        </div>
+        ${newNegatives?`<div style="margin-top:10px;padding:8px 12px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:6px;font-size:11px;color:#c084fc">
+          <i class="ti ti-alert-circle"></i> ${newNegatives} SKU(s) went negative from this import — check Anomalies page. Notice Board updated.
+        </div>`:''}
+        ${skipRows.length?`<div style="margin-top:8px;font-size:11px;color:var(--text2)">Unmatched rows were skipped — re-import the file after adding manual mappings to recover them.</div>`:''}
       </div>
     </div>`;
   deSalesRows = [];
@@ -4491,10 +5263,52 @@ function pageSOP(){
           <i class="ti ti-sparkles"></i> What updates after every upload
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-          ${['Sales Log','Revenue (Global + by Channel)','Top Sellers','Stock Levels (per location)','UK WH Runway','Dashboard metrics','Anomalies (if negative stock)','Last Updated stamps'].map(item=>`
+          ${['Sales Log','Revenue (Global + by Channel)','Top Sellers','Stock Levels (per location)','UK WH Runway','Dashboard metrics','Anomalies (if negative stock)','Last Updated stamps','Notice Board (live)','Import History'].map(item=>`
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)">
               <i class="ti ti-circle-check" style="color:var(--green);font-size:13px;flex-shrink:0"></i>${item}
             </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SECTION 3 — LEARNED SKU PATTERNS
+    ══════════════════════════════════════════════════════════ -->
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid rgba(168,85,247,.25)">
+        <div style="width:26px;height:26px;border-radius:50%;background:#a855f7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">3</div>
+        <span style="font-size:14px;font-weight:700;color:#c084fc">LEARNED SKU PATTERNS</span>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7">
+        Every SKU label format the Data Entry translator currently recognises. This list grows over time as new Amazon/eBay label formats are discovered — each new pattern is added here and to the live translator at the same time, so coverage never resets.
+      </p>
+      <div class="card">
+        <div class="tw"><table>
+          <thead><tr><th>Pattern Type</th><th>Example Label</th><th>Resolves To</th></tr></thead>
+          <tbody>
+            ${[
+              ['Dash format + pack', '5001-White-P2-M', 'SKU-50001-M-WHI ×2'],
+              ['Dash format (no pack)', '5003-Black-L', 'SKU-50003-L-BLA'],
+              ['Parenthesis format', '5001 (White,M).', 'SKU-50001-M-WHI'],
+              ['FBA prefix + parenthesis', 'FBA-5002 (Black,XL).', 'SKU-50002-XL-BLA'],
+              ['Named product (parenthesis)', 'Women Panties (White,S)', 'SKU-50007-S-WHI'],
+              ['Named product (parenthesis)', 'Linzing Inner Shorts (Black,L)', 'SKU-50006-L-BLA'],
+              ['3-colour pack — WGB', '5001 (WGB,S) pk-3', 'White+Grey+Black ×1 each'],
+              ['3-colour pack — WSB', '5001 (WSB,M) pk-3', 'White+Skin+Black ×1 each'],
+              ['3-colour pack — BWB', '5005-BWB-P3-XL', 'Brown+White+Black ×1 each'],
+              ['Abbreviation — Silver Grey', '5003-SilverG-XL', 'GRE colour code'],
+              ['Abbreviation — Mink Grey', '5007-MinkGrey-P2-M', 'GRE colour code'],
+              ['Abbreviation — Peach Nude', '5007-PeachN-P3-S', 'SKI colour code'],
+            ].map(([type,ex,res])=>`
+              <tr>
+                <td style="font-size:11px;font-weight:600">${type}</td>
+                <td class="mono" style="font-size:10px;color:var(--text2)">${ex}</td>
+                <td class="mono" style="font-size:10px;color:var(--green)">${res}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table></div>
+        <div style="padding:10px 16px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)">
+          Unmatched labels can be mapped manually in Data Entry — the mapping is remembered permanently for future imports.
         </div>
       </div>
     </div>
