@@ -351,7 +351,7 @@ label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-wei
 <div class="overlay" id="modal-sale" onclick="closeModalClick('sale',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <h2><i class="ti ti-shopping-cart" style="color:var(--green)"></i>Log a sale</h2>
-    <div class="form-row cols2"><div><label>SKU *</label><select id="f-sale-sku"></select></div><div><label>Channel *</label><select id="f-sale-ch"><option>Shopify</option><option>Amazon</option><option>eBay</option><option>Direct</option></select></div></div>
+    <div class="form-row cols2"><div><label>SKU *</label><select id="f-sale-sku"></select></div><div><label>Channel *</label><select id="f-sale-ch"><option>Shopify</option><option value="Amazon">Amazon UK</option><option value="Amazon India">Amazon India</option><option>eBay</option><option>Direct</option></select></div></div>
     <div class="form-row cols2">
       <div><label>Fulfilled from *</label><select id="f-sale-loc"><option value="india">🇮🇳 India warehouse</option><option value="india-fba">🇮🇳 India FBA</option><option value="uk">🇬🇧 UK warehouse</option><option value="uk-fba">🇬🇧 UK FBA</option></select></div>
       <div><label>Quantity *</label><input id="f-sale-qty" type="number" value="1" min="1"/></div>
@@ -380,8 +380,12 @@ const LOCS = ['india','india-fba','uk','uk-fba'];
 const LOC_LABEL = {'india':'India WH','india-fba':'India FBA','uk':'UK WH','uk-fba':'UK FBA'};
 const LOC_FULL  = {'india':'India warehouse','india-fba':'India FBA','uk':'UK warehouse','uk-fba':'UK FBA'};
 const LOC_FLAG  = {'india':'🇮🇳','india-fba':'🇮🇳','uk':'🇬🇧','uk-fba':'🇬🇧'};
-const CHANNELS  = ['Shopify','Amazon','eBay','Direct'];
-const CH_COLOR  = {'Shopify':'#96bf48','Amazon':'#ff9900','eBay':'#e53238','Direct':'#4f8ef7'};
+const CHANNELS  = ['Shopify','Amazon','Amazon India','eBay','Direct'];
+const CH_COLOR  = {'Shopify':'#96bf48','Amazon':'#ff9900','Amazon India':'#cc7a00','eBay':'#e53238','Direct':'#4f8ef7'};
+// Display labels only — the underlying stored channel value on sale records stays 'Amazon' etc.
+// so existing data, dedup keys, and imports are unaffected. Use CH_LABEL[ch] wherever a channel
+// name is shown to a person.
+const CH_LABEL  = {'Shopify':'Shopify','Amazon':'Amazon UK','Amazon India':'Amazon India','eBay':'eBay','Direct':'Direct'};
 const CAT_BADGE = {'BRA':'b-bra','Short':'b-short','Brief':'b-brief'};
 
 // ══ EIRICA DATA (140 variants from Excel) ══════════════════════════════════
@@ -828,7 +832,7 @@ function updateSidebarStamps(){
   set('sb-sale-amz-uk',    lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk'));
   set('sb-sale-amz-ukfba', lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk-fba'));
   set('sb-sale-ebay',      lastFor(s=>s.channel==='eBay',   s=>true));
-  set('sb-sale-amz-india', lastFor(s=>s.channel==='Amazon', s=>s.loc==='india'||s.loc==='india-fba'));
+  set('sb-sale-amz-india', lastFor(s=>s.channel==='Amazon India', s=>true));
   set('sb-sale-web-uk',    lastFor(s=>s.channel==='Shopify',s=>s.loc==='uk'||s.loc==='uk-fba'));
   set('sb-sale-web-india', lastFor(s=>s.channel==='Shopify',s=>s.loc==='india'||s.loc==='india-fba'));
 
@@ -856,7 +860,7 @@ function bdg(st,lbl){ return `<span class="badge ${bdgC[st]||'b-draft'}">${lbl||
 function catBdg(c){ return `<span class="badge ${CAT_BADGE[c]||'b-draft'}">${c}</span>`; }
 function fmtGBP(n){ return '£'+Number(n||0).toFixed(2); }
 function nowStr(){ return new Date().toISOString().slice(0,16).replace('T',' '); }
-function chDot(ch){ return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]||'#888'};margin-right:5px;vertical-align:middle"></span>${ch}`; }
+function chDot(ch){ return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]||'#888'};margin-right:5px;vertical-align:middle"></span>${CH_LABEL[ch]||ch}`; }
 function toast(msg,col='var(--green)'){
   const t=document.getElementById('toast');
   t.textContent=msg;
@@ -1333,7 +1337,7 @@ function pageDashSales(){
     <div class="card" style="margin:0;">
       <div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>Sales by Channel</div></div>
       <div class="card-body">
-        ${CHANNELS.map(ch=>`<div class="ch-row"><div style="width:68px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]};flex-shrink:0;display:inline-block"></span>${ch}</div><div class="ch-bg"><div class="ch-fill" style="width:${Math.round(chT[ch]/maxCh*100)}%;background:${CH_COLOR[ch]}"></div></div><div style="width:36px;text-align:right;font-size:12px;font-family:var(--mono)">${chT[ch]}</div></div>`).join('')}
+        ${CHANNELS.map(ch=>`<div class="ch-row"><div style="width:88px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_COLOR[ch]};flex-shrink:0;display:inline-block"></span>${CH_LABEL[ch]||ch}</div><div class="ch-bg"><div class="ch-fill" style="width:${Math.round(chT[ch]/maxCh*100)}%;background:${CH_COLOR[ch]}"></div></div><div style="width:36px;text-align:right;font-size:12px;font-family:var(--mono)">${chT[ch]}</div></div>`).join('')}
       </div>
     </div>
 
@@ -1417,102 +1421,165 @@ function pageDashReports(){
 }
 
 function renderDailyReport(){
-  // Determine "today" as the most recent date with any sales activity
+  // Determine the most recent date with sales activity (chronological sort, not string sort)
   const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
   const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales];
-  const dates = allSales.map(s=>s.date).filter(Boolean).sort();
-  const reportDate = dates.length ? dates[dates.length-1] : new Date().toISOString().split('T')[0];
+  const validDates = allSales.map(s=>s.date).filter(Boolean).map(d=>({raw:d, t:new Date(d).getTime()})).filter(d=>!isNaN(d.t));
+  validDates.sort((a,b)=>a.t-b.t);
+  const reportDate = validDates.length ? validDates[validDates.length-1].raw : new Date().toISOString().split('T')[0];
+
+  // The actual current date/time — used for the report header, regardless of data date
+  const now = new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const nowStr = now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear()+' · '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 
   const dayRows = allSales.filter(s=>s.date===reportDate);
   const units = dayRows.reduce((a,s)=>a+(s.qty||0),0);
   const revenue = dayRows.reduce((a,s)=>a+(s.price||0),0);
   const orders = new Set(dayRows.map(r=>r.ref)).size;
+  const revenueUK    = dayRows.filter(s=>(s.loc||'').startsWith('uk')).reduce((a,s)=>a+(s.price||0),0);
+  const revenueIndia = dayRows.filter(s=>(s.loc||'').startsWith('india')).reduce((a,s)=>a+(s.price||0),0);
 
+  // Report-level channel labels: Amazon -> Amazon UK, plus Amazon India
+  const REPORT_CHANNELS = [
+    {key:'Amazon', label:'Amazon UK'},
+    {key:'Amazon India', label:'Amazon India'},
+    {key:'eBay', label:'eBay'},
+    {key:'Shopify', label:'Shopify'},
+    {key:'Direct', label:'Direct'},
+  ];
   const chanT = {};
-  CHANNELS.forEach(c=>{ chanT[c] = dayRows.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  REPORT_CHANNELS.forEach(c=>{ chanT[c.key] = dayRows.filter(s=>s.channel===c.key).reduce((a,s)=>a+(s.qty||0),0); });
 
-  // Top 5 selling items for the day
+  // Top 3 selling items for the day
   const bySku = {};
   dayRows.forEach(s=>{
     if(!bySku[s.sku]) bySku[s.sku] = {qty:0, rev:0};
     bySku[s.sku].qty += s.qty||0;
     bySku[s.sku].rev += s.price||0;
   });
-  const top5 = Object.entries(bySku)
+  const top3 = Object.entries(bySku)
     .sort((a,b)=>b[1].qty-a[1].qty)
-    .slice(0,5)
+    .slice(0,3)
     .map(([sku,v])=>{
       const sk = S.skus.find(s=>s.sku===sku);
       return {sku, name:sk?sk.name:sku, qty:v.qty, rev:v.rev};
     });
 
+  // Items sold — one combined list, each row tagged with its channel + colour
+  const channelItemRows = [];
+  REPORT_CHANNELS.forEach(c=>{
+    const rows = dayRows.filter(s=>s.channel===c.key);
+    if(!rows.length) return;
+    const bySkuC = {};
+    rows.forEach(s=>{
+      if(!bySkuC[s.sku]) bySkuC[s.sku] = {qty:0, rev:0};
+      bySkuC[s.sku].qty += s.qty||0;
+      bySkuC[s.sku].rev += s.price||0;
+    });
+    Object.entries(bySkuC)
+      .sort((a,b)=>b[1].qty-a[1].qty)
+      .forEach(([sku,v])=>{
+        const sk = S.skus.find(s=>s.sku===sku);
+        channelItemRows.push({channel:c.label, color:CH_COLOR[c.key]||'#888', sku, name:sk?sk.name:sku, qty:v.qty, rev:v.rev});
+      });
+  });
+
   // Stock snapshot (current — no historical delta available yet)
   const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
   const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
   const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
-  const negCount = S.skus.filter(s=>(s.stock.uk||0)<0||(s.stock['uk-fba']||0)<0||(s.stock.india||0)<0).length;
 
-  // Notice board items dated today (if date format matches)
-  const notices = getNotices();
   const dateFmt = (()=>{
     const d = new Date(reportDate);
-    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+    const months2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate()+' '+months2[d.getMonth()]+' '+d.getFullYear();
   })();
-  const todaysNotices = notices.filter(n=>n.date===dateFmt);
 
   const reportId = 'daily-report-content';
 
   return `
     <div class="card" id="${reportId}">
       <div class="card-hd">
-        <div class="card-title"><i class="ti ti-calendar-event"></i>Daily Report — ${dateFmt}</div>
+        <div>
+          <div class="card-title"><i class="ti ti-calendar-event"></i>Daily Report — ${nowStr}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;margin-left:22px">Sales data as of ${dateFmt}</div>
+        </div>
         <button class="btn btn-sm" onclick="printDailyReport('${reportDate}')"><i class="ti ti-file-type-pdf"></i>Download PDF</button>
       </div>
 
       <div style="padding:16px">
-        <!-- Top stats -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-          <div style="background:var(--surface2);border-radius:8px;padding:12px">
-            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Units Sold</div>
-            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">${units}</div>
-          </div>
-          <div style="background:var(--surface2);border-radius:8px;padding:12px">
-            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Revenue</div>
-            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">£${revenue.toFixed(2)}</div>
-          </div>
-          <div style="background:var(--surface2);border-radius:8px;padding:12px">
-            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Orders</div>
-            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px">${orders}</div>
-          </div>
-          <div style="background:var(--surface2);border-radius:8px;padding:12px;${negCount?'border:1px solid rgba(168,85,247,.3)':''}">
-            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Negative SKUs</div>
-            <div style="font-size:20px;font-weight:700;font-family:var(--mono);margin-top:3px;color:${negCount?'#c084fc':'var(--text)'}">${negCount}</div>
-          </div>
-        </div>
-
-        <!-- Channel split -->
-        <div style="margin-bottom:18px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Sales by Channel</div>
-          ${CHANNELS.map(c=>`
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
-              <span style="font-size:11px;width:70px;color:var(--text2)">${c}</span>
-              <div style="flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
-                <div style="height:100%;width:${units>0?(chanT[c]/units*100):0}%;background:var(--accent);border-radius:3px"></div>
+        <!-- Summary | Sales by Channel | Stock Snapshot — 3 columns -->
+        <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Summary</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div style="background:var(--surface2);border-radius:8px;padding:12px">
+                <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Units Sold (Global)</div>
+                <div style="font-size:24px;font-weight:700;font-family:var(--mono);margin-top:3px">${units}</div>
               </div>
-              <span class="mono" style="font-size:11px;width:30px;text-align:right">${chanT[c]||0}</span>
-            </div>`).join('')}
+              <div style="background:var(--surface2);border-radius:8px;padding:12px">
+                <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Orders</div>
+                <div style="font-size:24px;font-weight:700;font-family:var(--mono);margin-top:3px">${orders}</div>
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Revenue (Global)</div>
+                <div style="font-size:24px;font-weight:700;font-family:var(--mono);margin-top:3px">£${revenue.toFixed(2)}</div>
+              </div>
+              <div style="display:flex;gap:16px;padding-left:14px;border-left:1px solid var(--border)">
+                <div>
+                  <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">UK</div>
+                  <div style="font-size:14px;font-weight:700;font-family:var(--mono);margin-top:1px">£${revenueUK.toFixed(2)}</div>
+                </div>
+                <div>
+                  <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">India</div>
+                  <div style="font-size:14px;font-weight:700;font-family:var(--mono);margin-top:1px">£${revenueIndia.toFixed(2)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Sales by Channel</div>
+            ${REPORT_CHANNELS.map(c=>`
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                <span style="width:7px;height:7px;border-radius:50%;background:${CH_COLOR[c.key]};flex-shrink:0;display:inline-block"></span>
+                <span style="font-size:11px;color:var(--text2)">${c.label}</span>
+                <span class="mono" style="font-size:11px;font-weight:700;margin-left:auto">${chanT[c.key]||0}</span>
+              </div>`).join('')}
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Current Stock Snapshot</div>
+            <div style="background:var(--surface2);border-radius:8px;overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border)">
+                <span style="font-size:11px;color:var(--text2)">UK WH</span>
+                <span class="mono" style="font-size:14px;font-weight:700">${ukWH.toLocaleString()}</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border)">
+                <span style="font-size:11px;color:var(--text2)">UK FBA</span>
+                <span class="mono" style="font-size:14px;font-weight:700">${ukFBA.toLocaleString()}</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px">
+                <span style="font-size:11px;color:var(--text2)">India WH</span>
+                <span class="mono" style="font-size:14px;font-weight:700">${indiaWH.toLocaleString()}</span>
+              </div>
+            </div>
+            <div style="font-size:9px;color:var(--text3);margin-top:5px">Snapshot at generation time, not historical.</div>
+          </div>
         </div>
 
-        <!-- Top 5 selling items -->
-        <div style="margin-bottom:18px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Top 5 Selling Items</div>
-          ${top5.length===0
+        <!-- Top 3 selling items -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Top 3 Selling Items</div>
+          ${top3.length===0
             ? '<div style="font-size:11px;color:var(--text3);padding:8px 0">No sales recorded for this day.</div>'
             : `<div class="tw"><table>
                 <thead><tr><th>#</th><th>Product</th><th>SKU</th><th>Units</th><th>Revenue</th></tr></thead>
                 <tbody>
-                  ${top5.map((t,i)=>`
+                  ${top3.map((t,i)=>`
                     <tr>
                       <td class="mono" style="color:var(--text3)">${i+1}</td>
                       <td style="font-size:12px;font-weight:600">${t.name}</td>
@@ -1524,45 +1591,59 @@ function renderDailyReport(){
               </table></div>`}
         </div>
 
-        <!-- Stock snapshot -->
-        <div style="margin-bottom:${todaysNotices.length?'18px':'0'}">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Current Stock Snapshot</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-              <div style="font-size:9px;color:var(--text3)">UK WH</div>
-              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${ukWH.toLocaleString()}</div>
-            </div>
-            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-              <div style="font-size:9px;color:var(--text3)">UK FBA</div>
-              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${ukFBA.toLocaleString()}</div>
-            </div>
-            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
-              <div style="font-size:9px;color:var(--text3)">India WH</div>
-              <div style="font-size:16px;font-weight:700;font-family:var(--mono)">${indiaWH.toLocaleString()}</div>
+        <!-- Items sold by channel — one compact table, colour-coded by channel -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Items Sold by Channel</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              ${REPORT_CHANNELS.map(c=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)"><span style="width:7px;height:7px;border-radius:50%;background:${CH_COLOR[c.key]};display:inline-block"></span>${c.label}</span>`).join('')}
             </div>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:6px">Snapshot reflects current stock at report generation time, not historical end-of-day values.</div>
+          ${channelItemRows.length===0
+            ? '<div style="font-size:11px;color:var(--text3);padding:8px 0">No sales recorded for this day.</div>'
+            : `<div class="tw"><table>
+                <thead><tr><th>Channel</th><th>Product</th><th>SKU</th><th>Units</th><th>Revenue</th></tr></thead>
+                <tbody>
+                  ${channelItemRows.map(r=>`
+                    <tr>
+                      <td style="font-size:11px"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${r.color};flex-shrink:0;display:inline-block"></span>${r.channel}</span></td>
+                      <td style="font-size:12px">${r.name}</td>
+                      <td class="mono" style="font-size:10px;color:var(--text2)">${r.sku}</td>
+                      <td class="mono" style="font-weight:700">${r.qty}</td>
+                      <td class="mono">£${r.rev.toFixed(2)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table></div>`}
         </div>
-
-        ${todaysNotices.length?`
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Notices Raised Today</div>
-          ${todaysNotices.map(n=>`<div style="font-size:11px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border)">${n.text}</div>`).join('')}
-        </div>`:''}
       </div>
     </div>`;
 }
 
 function printDailyReport(reportDate){
+  // The actual current date/time — used for the report title, regardless of data date
+  const now = new Date();
+  const months0=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const nowStr = now.getDate()+' '+months0[now.getMonth()]+' '+now.getFullYear()+' · '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
   const seen = new Set(S.sales.map(s=>s.ref+'|'+s.sku));
   const allSales = [...STATIC_SALES.filter(s=>!seen.has(s.ref+'|'+s.sku)), ...S.sales];
   const dayRows = allSales.filter(s=>s.date===reportDate);
   const units = dayRows.reduce((a,s)=>a+(s.qty||0),0);
   const revenue = dayRows.reduce((a,s)=>a+(s.price||0),0);
   const orders = new Set(dayRows.map(r=>r.ref)).size;
+  const revenueUK    = dayRows.filter(s=>(s.loc||'').startsWith('uk')).reduce((a,s)=>a+(s.price||0),0);
+  const revenueIndia = dayRows.filter(s=>(s.loc||'').startsWith('india')).reduce((a,s)=>a+(s.price||0),0);
 
+  // Report-level channel labels: Amazon -> Amazon UK, plus Amazon India
+  const REPORT_CHANNELS = [
+    {key:'Amazon', label:'Amazon UK'},
+    {key:'Amazon India', label:'Amazon India'},
+    {key:'eBay', label:'eBay'},
+    {key:'Shopify', label:'Shopify'},
+    {key:'Direct', label:'Direct'},
+  ];
   const chanT = {};
-  CHANNELS.forEach(c=>{ chanT[c] = dayRows.filter(s=>s.channel===c).reduce((a,s)=>a+(s.qty||0),0); });
+  REPORT_CHANNELS.forEach(c=>{ chanT[c.key] = dayRows.filter(s=>s.channel===c.key).reduce((a,s)=>a+(s.qty||0),0); });
 
   const bySku = {};
   dayRows.forEach(s=>{
@@ -1570,25 +1651,41 @@ function printDailyReport(reportDate){
     bySku[s.sku].qty += s.qty||0;
     bySku[s.sku].rev += s.price||0;
   });
-  const top5 = Object.entries(bySku).sort((a,b)=>b[1].qty-a[1].qty).slice(0,5)
+  const top3 = Object.entries(bySku).sort((a,b)=>b[1].qty-a[1].qty).slice(0,3)
     .map(([sku,v])=>{ const sk=S.skus.find(s=>s.sku===sku); return {sku,name:sk?sk.name:sku,qty:v.qty,rev:v.rev}; });
+
+  // Items sold — one combined list, each row tagged with its channel + colour
+  const channelItemRows = [];
+  REPORT_CHANNELS.forEach(c=>{
+    const rows = dayRows.filter(s=>s.channel===c.key);
+    if(!rows.length) return;
+    const bySkuC = {};
+    rows.forEach(s=>{
+      if(!bySkuC[s.sku]) bySkuC[s.sku] = {qty:0, rev:0};
+      bySkuC[s.sku].qty += s.qty||0;
+      bySkuC[s.sku].rev += s.price||0;
+    });
+    Object.entries(bySkuC)
+      .sort((a,b)=>b[1].qty-a[1].qty)
+      .forEach(([sku,v])=>{
+        const sk = S.skus.find(s=>s.sku===sku);
+        channelItemRows.push({channel:c.label, color:CH_COLOR[c.key]||'#888', sku, name:sk?sk.name:sku, qty:v.qty, rev:v.rev});
+      });
+  });
 
   const ukWH    = S.skus.reduce((a,s)=>a+(s.stock['uk']||0),0);
   const ukFBA   = S.skus.reduce((a,s)=>a+(s.stock['uk-fba']||0),0);
   const indiaWH = S.skus.reduce((a,s)=>a+(s.stock['india']||0),0);
-  const negCount = S.skus.filter(s=>(s.stock.uk||0)<0||(s.stock['uk-fba']||0)<0||(s.stock.india||0)<0).length;
 
-  const notices = getNotices();
   const dateFmt = (()=>{
     const d = new Date(reportDate);
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
   })();
-  const todaysNotices = notices.filter(n=>n.date===dateFmt);
 
-  const top5Rows = top5.length===0
-    ? `<tr><td colspan="4" style="text-align:center;color:#888;padding:14px">No sales recorded for this day.</td></tr>`
-    : top5.map((t,i)=>`
+  const top3Rows = top3.length===0
+    ? `<tr><td colspan="5" style="text-align:center;color:#888;padding:14px">No sales recorded for this day.</td></tr>`
+    : top3.map((t,i)=>`
       <tr>
         <td>${i+1}</td>
         <td>${t.name}</td>
@@ -1597,95 +1694,148 @@ function printDailyReport(reportDate){
         <td style="text-align:right">£${t.rev.toFixed(2)}</td>
       </tr>`).join('');
 
-  const chanRows = CHANNELS.map(c=>`
-    <tr>
-      <td>${c}</td>
-      <td style="text-align:right">${chanT[c]||0}</td>
-    </tr>`).join('');
+  const channelKeyHTML = REPORT_CHANNELS.map(c=>
+    `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#666;margin-right:12px"><span style="width:7px;height:7px;border-radius:50%;background:${CH_COLOR[c.key]};display:inline-block"></span>${c.label}</span>`
+  ).join('');
+
+  const channelItemTableRows = channelItemRows.length===0
+    ? `<tr><td colspan="5" style="text-align:center;color:#888;padding:14px">No sales recorded for this day.</td></tr>`
+    : channelItemRows.map(r=>`
+      <tr>
+        <td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${r.color};display:inline-block;flex-shrink:0"></span>${r.channel}</span></td>
+        <td>${r.name}</td>
+        <td>${r.sku}</td>
+        <td style="text-align:center">${r.qty}</td>
+        <td style="text-align:right">£${r.rev.toFixed(2)}</td>
+      </tr>`).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>Daily Report — ${dateFmt}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#111;padding:32px 40px;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #111;}
-    .brand{font-size:22px;font-weight:800;letter-spacing:-.5px;}
-    .brand span{color:#888;font-weight:400;}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#111;padding:24px 36px;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #111;}
+    .logo-mark{display:flex;align-items:center;gap:11px;}
+    .logo-icon{width:42px;height:42px;border-radius:10px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-family:'Segoe UI',Arial,sans-serif;flex-shrink:0;}
+    .logo-text{line-height:1.25;}
+    .logo-name{font-size:18px;font-weight:800;letter-spacing:.04em;}
+    .logo-sub{font-size:9px;font-weight:600;letter-spacing:.14em;color:#888;}
     .report-meta{text-align:right;line-height:1.8;}
     .report-title{font-size:18px;font-weight:700;}
-    .section{margin-bottom:22px;}
+    .section{margin-bottom:16px;}
     .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:8px;}
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+    .summary-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:18px;margin-bottom:16px;}
+    .stats-col{display:grid;grid-template-columns:1fr;gap:8px;}
+    .stats-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .rev-box{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+    .rev-split{display:flex;gap:14px;padding-left:12px;border-left:1px solid #ddd;}
+    .rev-split-label{display:block;font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.05em;}
+    .rev-split-val{display:block;font-size:13px;font-weight:700;margin-top:1px;}
     .stat-box{background:#f5f5f5;border-radius:6px;padding:10px 12px;}
     .stat-box .label{font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.05em;}
-    .stat-box .value{font-size:18px;font-weight:700;margin-top:3px;}
+    .stat-box .value{font-size:20px;font-weight:700;margin-top:3px;}
+    .stat-box.small .value{font-size:15px;}
     table{width:100%;border-collapse:collapse;margin-top:4px;}
     thead tr{background:#111;color:#fff;}
     thead th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.04em;}
     tbody tr:nth-child(even){background:#f9f9f9;}
-    tbody td{padding:6px 10px;border-bottom:1px solid #e5e5e5;font-size:11px;}
+    tbody td{padding:4px 10px;border-bottom:1px solid #e5e5e5;font-size:10.5px;}
     .stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
     .stock-box{background:#f5f5f5;border-radius:6px;padding:10px 12px;}
     .stock-box .label{font-size:9px;color:#777;text-transform:uppercase;}
     .stock-box .value{font-size:16px;font-weight:700;margin-top:3px;}
+    .stock-stack{background:#f5f5f5;border-radius:6px;overflow:hidden;max-width:280px;}
+    .stock-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #e5e5e5;font-size:11px;color:#444;}
+    .stock-row-last{border-bottom:none;}
+    .stock-val{font-size:13px;font-weight:700;color:#111;}
+    .chan-compact{max-width:280px;}
+    .chan-compact-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #f0f0f0;}
+    .chan-compact-row:last-child{border-bottom:none;}
+    .chan-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
+    .chan-compact-label{font-size:11px;color:#444;}
+    .chan-compact-val{font-size:12px;font-weight:700;margin-left:auto;}
     .note-text{font-size:10px;color:#888;margin-top:6px;}
-    .notice-item{font-size:11px;color:#444;padding:5px 0;border-bottom:1px solid #eee;}
     .footer{margin-top:32px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:10px;color:#888;}
     @media print{body{padding:20px 24px;} .no-print{display:none;}}
   </style>
   </head><body>
   <div class="header">
-    <div>
-      <div class="brand">Eirica <span>StockOS</span></div>
-      <div style="font-size:11px;color:#666;margin-top:4px">Eirica International</div>
+    <div class="logo-mark">
+      <div class="logo-icon">E</div>
+      <div class="logo-text">
+        <div class="logo-name">EIRICA</div>
+        <div class="logo-sub">INTERNATIONAL</div>
+      </div>
     </div>
     <div class="report-meta">
       <div class="report-title">Daily Report</div>
-      <div style="font-size:12px;color:#666;margin-top:4px">${dateFmt}</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">${nowStr}</div>
+      <div style="font-size:10px;color:#999;margin-top:2px">Sales data as of ${dateFmt}</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Summary</div>
-    <div class="stats-grid">
-      <div class="stat-box"><div class="label">Units Sold</div><div class="value">${units}</div></div>
-      <div class="stat-box"><div class="label">Revenue</div><div class="value">£${revenue.toFixed(2)}</div></div>
-      <div class="stat-box"><div class="label">Orders</div><div class="value">${orders}</div></div>
-      <div class="stat-box"><div class="label">Negative SKUs</div><div class="value">${negCount}</div></div>
+    <div class="summary-grid">
+      <div>
+        <div class="section-title">Summary</div>
+        <div class="stats-row2" style="margin-bottom:8px">
+          <div class="stat-box"><div class="label">Units Sold (Global)</div><div class="value">${units}</div></div>
+          <div class="stat-box"><div class="label">Orders</div><div class="value">${orders}</div></div>
+        </div>
+        <div class="stat-box rev-box">
+          <div class="rev-box-main">
+            <div class="label">Revenue (Global)</div>
+            <div class="value">£${revenue.toFixed(2)}</div>
+          </div>
+          <div class="rev-split">
+            <div><span class="rev-split-label">UK</span><span class="rev-split-val">£${revenueUK.toFixed(2)}</span></div>
+            <div><span class="rev-split-label">India</span><span class="rev-split-val">£${revenueIndia.toFixed(2)}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Sales by Channel</div>
+        <div class="chan-compact">
+          ${REPORT_CHANNELS.map(c=>`
+            <div class="chan-compact-row">
+              <span class="chan-dot" style="background:${CH_COLOR[c.key]}"></span>
+              <span class="chan-compact-label">${c.label}</span>
+              <span class="chan-compact-val">${chanT[c.key]||0}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Current Stock Snapshot</div>
+        <div class="stock-stack">
+          <div class="stock-row"><span>UK WH</span><span class="stock-val">${ukWH.toLocaleString()}</span></div>
+          <div class="stock-row"><span>UK FBA</span><span class="stock-val">${ukFBA.toLocaleString()}</span></div>
+          <div class="stock-row stock-row-last"><span>India WH</span><span class="stock-val">${indiaWH.toLocaleString()}</span></div>
+        </div>
+        <div class="note-text">Snapshot at generation time, not historical.</div>
+      </div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Sales by Channel</div>
-    <table>
-      <thead><tr><th>Channel</th><th style="text-align:right">Units</th></tr></thead>
-      <tbody>${chanRows}</tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Top 5 Selling Items</div>
+    <div class="section-title">Top 3 Selling Items</div>
     <table>
       <thead><tr><th>#</th><th>Product</th><th>SKU</th><th style="text-align:center">Units</th><th style="text-align:right">Revenue</th></tr></thead>
-      <tbody>${top5Rows}</tbody>
+      <tbody>${top3Rows}</tbody>
     </table>
   </div>
 
   <div class="section">
-    <div class="section-title">Current Stock Snapshot</div>
-    <div class="stock-grid">
-      <div class="stock-box"><div class="label">UK WH</div><div class="value">${ukWH.toLocaleString()}</div></div>
-      <div class="stock-box"><div class="label">UK FBA</div><div class="value">${ukFBA.toLocaleString()}</div></div>
-      <div class="stock-box"><div class="label">India WH</div><div class="value">${indiaWH.toLocaleString()}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="section-title" style="margin-bottom:0">Items Sold by Channel</div>
+      <div>${channelKeyHTML}</div>
     </div>
-    <div class="note-text">Snapshot reflects current stock at report generation time, not historical end-of-day values.</div>
+    <table>
+      <thead><tr><th>Channel</th><th>Product</th><th>SKU</th><th style="text-align:center">Units</th><th style="text-align:right">Revenue</th></tr></thead>
+      <tbody>${channelItemTableRows}</tbody>
+    </table>
   </div>
-
-  ${todaysNotices.length?`
-  <div class="section">
-    <div class="section-title">Notices Raised Today</div>
-    ${todaysNotices.map(n=>`<div class="notice-item">${n.text}</div>`).join('')}
-  </div>`:''}
 
   <div class="footer">
     <div>Generated by Eirica StockOS · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
@@ -3243,7 +3393,7 @@ function pageTopSellers(){
   const maxUnits=topBySKU[0]?.[1]?.units||1;
   const maxCh=Math.max(...Object.values(byChannel).map(c=>c.units),1);
   const maxLoc=Math.max(...Object.values(byLocation).map(l=>l.units),1);
-  const CH_CLR={Shopify:'#96bf48',Amazon:'#ff9900',eBay:'#e53238',Direct:'#4f8ef7'};
+  const CH_CLR={Shopify:'#96bf48',Amazon:'#ff9900','Amazon India':'#cc7a00',eBay:'#e53238',Direct:'#4f8ef7'};
   return `
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
     <div class="metric"><div class="metric-icon"><i class="ti ti-receipt"></i></div><div class="metric-val">${totalOrders}</div><div class="metric-label">Total orders</div></div>
@@ -3254,7 +3404,7 @@ function pageTopSellers(){
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hd"><div class="card-title"><i class="ti ti-trophy"></i>Top Selling Variants</div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:11px;color:var(--text2)">Amazon & eBay - 17 Apr to 1 Jun 2026</span>
+        <span style="font-size:11px;color:var(--text2)">Amazon UK & eBay - 17 Apr to 1 Jun 2026</span>
         <button class="btn btn-sm" onclick="exportTopSellers()"><i class="ti ti-download"></i>Export CSV</button>
       </div>
     </div>
@@ -3291,7 +3441,7 @@ function pageTopSellers(){
     <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>By Channel</div></div><div class="card-body">
       ${CHANNELS.map(ch=>{const d=byChannel[ch]||{units:0,revenue:0};
         return`<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;">
-          <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_CLR[ch]};display:inline-block"></span>${ch}</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${CH_CLR[ch]};display:inline-block"></span>${CH_LABEL[ch]||ch}</span>
           <span style="font-family:var(--mono);font-weight:700;color:var(--accent)">${d.units}</span></div>
           <div style="height:5px;background:var(--surface3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(d.units/maxCh*100)}%;background:${CH_CLR[ch]};border-radius:3px"></div></div>
           <div style="font-size:10px;color:var(--text2);margin-top:3px">${fmtGBP(d.revenue)} · ${totalUnits?Math.round(d.units/totalUnits*100):0}%</div></div>`;
@@ -3400,7 +3550,7 @@ function pageSales(){
       <select onchange="salesFilter.channel=this.value;document.getElementById('content').innerHTML=pageSalesHub();"
         style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
         <option value="" ${!salesFilter.channel?'selected':''}>All channels</option>
-        ${CHANNELS.map(c=>`<option value="${c}" ${salesFilter.channel===c?'selected':''}>${c}</option>`).join('')}
+        ${CHANNELS.map(c=>`<option value="${c}" ${salesFilter.channel===c?'selected':''}>${CH_LABEL[c]||c}</option>`).join('')}
       </select>
       <select onchange="salesFilter.loc=this.value;document.getElementById('content').innerHTML=pageSalesHub();"
         style="padding:6px 10px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);">
@@ -3478,7 +3628,7 @@ function pageSettings(){
         <button class="btn btn-danger" onclick="if(confirm('Clear all data?'))clearAll()"><i class="ti ti-trash"></i>Clear all</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-        ${[['Variants',S.skus.length],['Sales',S.sales.length],['POs',S.pos.length],['Channels','Shopify · Amazon · eBay · Direct'],['Locations','India WH · India FBA · UK WH · UK FBA'],['Data','May 2026 import']].map(([k,v])=>`<div style="padding:10px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)"><div style="font-size:10px;color:var(--text2);margin-bottom:2px">${k}</div><div style="font-weight:600">${v}</div></div>`).join('')}
+        ${[['Variants',S.skus.length],['Sales',S.sales.length],['POs',S.pos.length],['Channels','Shopify · Amazon UK · Amazon India · eBay · Direct'],['Locations','India WH · India FBA · UK WH · UK FBA'],['Data','May 2026 import']].map(([k,v])=>`<div style="padding:10px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)"><div style="font-size:10px;color:var(--text2);margin-bottom:2px">${k}</div><div style="font-weight:600">${v}</div></div>`).join('')}
       </div>
     </div>
   </div>`;
@@ -3848,7 +3998,7 @@ function pageLastUpdated(){
   const salesData = [
     {icon:'ti-brand-amazon', label:'Amazon UK (Warehouse)', date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk'), note:'Seller-fulfilled orders, UK WH'},
     {icon:'ti-brand-amazon', label:'Amazon UK (FBA)',       date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='uk-fba'), note:'FBA-fulfilled orders'},
-    {icon:'ti-brand-amazon', label:'Amazon India',          date:lastFor(s=>s.channel==='Amazon', s=>s.loc==='india'||s.loc==='india-fba'), note:'Amazon.in orders'},
+    {icon:'ti-brand-amazon', label:'Amazon India',          date:lastFor(s=>s.channel==='Amazon India', s=>true), note:'Amazon.in orders'},
     {icon:'ti-brand-ebay',   label:'eBay UK',               date:lastFor(s=>s.channel==='eBay',   s=>true), note:'All eBay orders'},
     {icon:'ti-world',        label:'Website / Shopify (UK)',    date:lastFor(s=>s.channel==='Shopify', s=>s.loc==='uk'||s.loc==='uk-fba'), note:'Direct website orders'},
     {icon:'ti-world',        label:'Website / Shopify (India)', date:lastFor(s=>s.channel==='Shopify', s=>s.loc==='india'||s.loc==='india-fba'), note:''},
@@ -4344,11 +4494,12 @@ function pageDevDetails(devBadge, mainTabs){
 
 function pageDataEntry(){
   const salesSubs = [
-    {key:'uk-amazon',     label:'UK Amazon',    icon:'ti-brand-amazon',   chan:'Amazon',  loc:'uk'},
-    {key:'uk-ebay',       label:'UK eBay',       icon:'ti-shopping-bag',   chan:'eBay',    loc:'uk'},
-    {key:'uk-shopify',    label:'UK Shopify',    icon:'ti-building-store', chan:'Shopify', loc:'uk'},
-    {key:'india-shopify', label:'India Shopify', icon:'ti-building-store', chan:'Shopify', loc:'india'},
-    {key:'india-myntra',  label:'India Myntra',  icon:'ti-hanger',         chan:'Myntra',  loc:'india'},
+    {key:'uk-amazon',     label:'UK Amazon',     icon:'ti-brand-amazon',   chan:'Amazon',       loc:'uk'},
+    {key:'uk-ebay',       label:'UK eBay',       icon:'ti-shopping-bag',   chan:'eBay',         loc:'uk'},
+    {key:'uk-shopify',    label:'UK Shopify',    icon:'ti-building-store', chan:'Shopify',      loc:'uk'},
+    {key:'india-amazon',  label:'India Amazon',  icon:'ti-brand-amazon',   chan:'Amazon India', loc:'india'},
+    {key:'india-shopify', label:'India Shopify', icon:'ti-building-store', chan:'Shopify',      loc:'india'},
+    {key:'india-myntra',  label:'India Myntra',  icon:'ti-hanger',         chan:'Myntra',       loc:'india'},
   ];
   const stockSubs = [
     {key:'order',    label:'Stock Order',    icon:'ti-clipboard-list', desc:'UK orders to India'},
@@ -4840,7 +4991,7 @@ function deRenderPreview(fname, newRows, dupRows, noMatch){
               <td style="font-size:11px">${r.matched
                 ?`<span style="color:var(--green);font-family:var(--mono)">${r.matched.sku}</span>${r.note?` <span style="color:var(--text3);font-size:10px">${r.note}</span>`:''}`
                 :`<span style="color:var(--red)">✗ unmatched</span>`}</td>
-              <td style="font-size:11px">${r.channel}</td>
+              <td style="font-size:11px">${CH_LABEL[r.channel]||r.channel}</td>
               <td style="font-size:11px">${LOC_LABEL[r.loc]||r.loc}</td>
               <td class="mono">${r.qty}</td>
               <td class="mono">£${r.price.toFixed(2)}</td>
