@@ -2873,7 +2873,7 @@ function pageReorderQueue(){
   const rows = S.skus.map(s=>{
     const locStock   = stockFn(s);
     const indiaStock = (s.stock.india||0) + (s.stock['india-fba']||0);
-    const ukStock    = (s.stock.uk||0) + (s.stock['uk-fba']||0);
+    const ukStock    = (s.stock.uk||0);
     const unitsSold  = soldMap[s.sku] || 0;
     const velocity   = unitsSold / DAYS;
     const daysLeft   = velocity > 0 ? locStock / velocity : (locStock > 0 ? 999 : 0);
@@ -3065,7 +3065,9 @@ function restockGetLines(){
     const qtyEl = document.getElementById('restock-qty-'+i);
     const qty = parseInt(qtyEl?.value)||0;
     if(!qty || !rows[i]) return;
-    lines.push({ sku:rows[i].s.sku, name:rows[i].s.name, orderedQty:qty, receivedQty:0 });
+    const line = { sku:rows[i].s.sku, name:rows[i].s.name, orderedQty:qty, receivedQty:0 };
+    if(cfg.loc==='uk-fba') line.ukWhStockAtOrder = rows[i].s.stock.uk||0;
+    lines.push(line);
   });
   return lines;
 }
@@ -3092,7 +3094,11 @@ function restockRaiseAll(){
   const cfg = restockLocCfg();
   const rows = restockBuildRows(cfg);
   if(!rows.length){ toast('Nothing to order','var(--amber)'); return; }
-  const lines = rows.map(r=>({ sku:r.s.sku, name:r.s.name, orderedQty:r.suggested, receivedQty:0 }));
+  const lines = rows.map(r=>{
+    const line = { sku:r.s.sku, name:r.s.name, orderedQty:r.suggested, receivedQty:0 };
+    if(cfg.loc==='uk-fba') line.ukWhStockAtOrder = r.s.stock.uk||0;
+    return line;
+  });
   const po = restockMakePO(lines, cfg);
   S.pos.push(po);
   saveState();
@@ -3731,11 +3737,13 @@ function printPO(i){
   if(!p) return;
   const units = p.lines.reduce((a,l)=>a+(l.orderedQty||l.qty||0),0);
   const date  = p.date || new Date().toISOString().split('T')[0];
+  const isUkFba = p.poType==='uk-fba';
 
   const rows = p.lines.map(l=>`
     <tr>
       <td>${l.sku||''}</td>
       <td>${l.name||''}</td>
+      ${isUkFba ? `<td style="text-align:center;color:#444">${l.ukWhStockAtOrder!=null?l.ukWhStockAtOrder:'—'}</td>` : ''}
       <td style="text-align:center">${l.orderedQty||l.qty||0}</td>
       <td style="text-align:center">${l.receivedQty||0}</td>
     </tr>`).join('');
@@ -3800,11 +3808,13 @@ function printPO(i){
     <table>
       <thead><tr>
         <th>SKU</th><th>Product</th>
+        ${isUkFba ? '<th style="text-align:center">UK WH Stock</th>' : ''}
         <th style="text-align:center">Ordered Qty</th>
         <th style="text-align:center">Received Qty</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    ${isUkFba ? '<div style="font-size:10px;color:#888;margin-top:6px">"UK WH Stock" shows the UK Warehouse quantity available at the time this order was raised for FBA replenishment.</div>' : ''}
     <div class="totals">Total units ordered: <strong>${units}</strong></div>
   </div>
 
